@@ -2,113 +2,13 @@ import pygame
 from Assets import *
 from Buttons import *
 from ShipParams import *
-
-# class Menu:
-#     """Buttons will be slected in from top to down, from left to right"""
-#
-#     menu_num = 0
-#     buttons_arr = []
-#     selected = []
-#     is2D = False
-#
-#     def __init__(self, background, menu_num):
-#
-#         self.background = background
-#         self.menu_num = menu_num
-#
-#         if np.ndim(buttons_arr) == 1:
-#             self.selected = [0]
-#
-#             for x in buttons_arr:
-#                 self.buttons_arr.append(make_button(x))
-#
-#         elif np.ndim(buttons_arr) == 2:
-#             self.selected = [0,0]
-#             self.is2D = True
-#         else:
-#             print('Wrong dimentions!')
-#
-#         self.run_menu()
-#
-#     def up(self):
-#
-#         if self.selected[0] > 0:
-#             self.selected[0] += -1
-#
-#             if self.is2D:
-#                 self.buttons_arr[self.selected[0]+1][self.selected[1]].deselect()
-#                 self.buttons_arr[self.selected[0]][self.selected[1]].select()
-#             else:
-#                 self.buttons_arr[self.selected[0]+1].deselect()
-#                 self.buttons_arr[self.selected[0]].select()
-#
-#     def down(self):
-#
-#         if self.selected[0] < len(self.buttons_arr):
-#             self.selected[0] += 1
-#
-#             if self.is2D:
-#                 self.buttons_arr[self.selected[0]-1][self.selected[1]].deselect()
-#                 self.buttons_arr[self.selected[0]][self.selected[1]].select()
-#             else:
-#                 self.buttons_arr[self.selected[0]-1].deselect()
-#                 self.buttons_arr[self.selected[0]].select()
-#
-#     def right(self):
-#
-#         if self.selected[1] < len(self.buttons_arr):
-#             self.selected[1] += 1
-#
-#             self.buttons_arr[self.selected[0]][self.selected[1]-1].deselect()
-#             self.buttons_arr[self.selected[0]][self.selected[1]].select()
-#
-#     def left(self):
-#
-#         if self.selected[1] > 0:
-#             self.selected[1] += -1
-#
-#             self.buttons_arr[self.selected[0]][self.selected[1]+1].deselect()
-#             self.buttons_arr[self.selected[0]][self.selected[1]].select()
-#
-#     def run_menu(self):
-#
-#         while(t[self.menu_num]==True):
-#
-#             screen.blit(self.background, (0,0))
-#
-#             for x in self.buttons_arr:
-#                 screen.blit(x.image, x.rect)
-#
-#                 screen.blit(pygame.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
-#
-#             pygame.display.flip()
-#
-#             for event in pygame.event.get():
-#                 if event.type == pygame.QUIT:
-#                     sys.exit()
-#                 keys = pygame.key.get_pressed()
-#
-#                 if keys[pygame.K_UP]: self.up()
-#
-#                 if keys[pygame.K_DOWN]: self.down()
-#
-#                 if keys[pygame.K_RIGHT]: self.right()
-#
-#                 if keys[pygame.K_LEFT]: self.left()
-#
-#                 if keys[pygame.K_RETURN]:
-#                     self.buttons_arr[selected[0]][selected[1]].action()
-#                     t[self.menu_num] = False
-#
-#                 if keys[pygame.K_ESCAPE]:
-#                     pygame.time.set_timer(pygame.USEREVENT+1, 300)
-#                     t[self.menu_num] = False
-#
+from Scripts import *
 
 def pause_menu():
 
     global t
     print(t)
+
     temporary_BG = screen.copy()
     b_continue = B_Continue((200, 200, 100, 30))
     b_startover = B_Start_Over((200, 250, 100, 30))
@@ -116,12 +16,18 @@ def pause_menu():
     selection = 0
     menu[0].select()
     screen.blit(menu_BG, (0,0))     #draw dark background on previous
-    #draw buttons
-    for x in menu:
-        screen.blit(x.image, x.rect)
 
-        screen.blit(pygame.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
-    while(t[0]==True):
+    menu_run = True
+    #draw buttons
+
+    while(menu_run):
+
+        screen_draw()
+
+        for x in menu:
+            screen.blit(x.image, x.rect)
+
+            screen.blit(pygame.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
 
         pygame.display.flip()
 
@@ -129,6 +35,12 @@ def pause_menu():
             if event.type == pygame.QUIT:
                 sys.exit()
             keys = pygame.key.get_pressed()
+
+            if event.type == pygame.USEREVENT+1:
+                global t
+                for x in range(len(t)):
+                    t[x] = True
+                pygame.time.set_timer(pygame.USEREVENT+1, 0)
 
             if keys[pygame.K_UP]:
 
@@ -160,13 +72,21 @@ def pause_menu():
 
                 menu[selection].action()
                 if selection == 0:
+                    menu_run = False
                     t[0] = False
                     pygame.time.set_timer(pygame.USEREVENT+1, 300)
 
             if keys[pygame.K_ESCAPE]:
-                pygame.time.set_timer(pygame.USEREVENT+1, 300)
-                t[0] = False
+                if (t[0] == True):
+                    menu_run = False
+                    t[0] = False
+                    pygame.time.set_timer(pygame.USEREVENT+1, 300)
+                else:
+                    pygame.time.set_timer(pygame.USEREVENT+1, 0)
+                    pygame.time.set_timer(pygame.USEREVENT+1, 300)
 
+
+    return threading.Thread(target =screen_redraw)
 
 def main_menu():
 
@@ -180,12 +100,15 @@ def main_menu():
     selection = 0
     menu[0].select()
 
+    global menu_run
+    menu_run = False
+
     #draw buttons
     for x in menu:
         screen.blit(x.image, x.rect)
 
         screen.blit(pygame.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
-    while(1):
+    while(menu_run):
 
         pygame.display.flip()
 
@@ -226,7 +149,10 @@ def main_menu():
 
                 menu[selection].action()
                 if selection == 0:
-                    t = False
+                    global menu_ru
+                    menu_run = False
+                    print("st")
+
 
 def death_menu():
 
@@ -246,7 +172,7 @@ def death_menu():
         screen.blit(pygame.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
 
     while(True):
-        move_all_objects()
+        move_movable()
 
         for x in asteroids:
             bound_pass(x)
@@ -259,16 +185,8 @@ def death_menu():
                 i.remove()
             else:
                 i.time_count +=1
-        screen.blit(BG, (0,0))
 
-        for object in asteroids:
-            draw_rotating(object)
-
-        for object in projectiles:
-            draw_rotating(object)
-
-        for object in effects:
-            draw_rotating(object)
+        screen_draw()
 
         for x in menu:
             screen.blit(x.image, x.rect)
@@ -316,6 +234,7 @@ def death_menu():
 
                 menu[selection].action()
                 t[0] = False
+    return None
 
 def player_set():
 
@@ -331,13 +250,15 @@ def player_set():
     selection = [0,0]
     menu[0][0].select()
 
+    menu_run = True
+
     #draw buttons
     for x in menu:
         for y in x:
             screen.blit(y.image, y.rect)
 
             screen.blit(pygame.font.Font.render(y.font, y.text, 0, WHITE), y.rect)
-    while(1):
+    while(menu_run):
 
         screen.blit(temporary_BG, (0,0))
         for y in menu:
@@ -408,5 +329,7 @@ def player_set():
             if keys[pygame.K_RETURN]:
 
                 menu[selection[0]][selection[1]].action()
-                if selection == 0:
+                if selection[0] == 1 and selection[1] == 0:
                     t[0] = False
+                    print("breaking")
+                    menu_run = False

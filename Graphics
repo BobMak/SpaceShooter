@@ -1,0 +1,112 @@
+import threading
+
+class Graphics(threading.Thread):
+
+    def __init__():
+        super().__init__()
+
+        fps = 60
+
+    def run():
+
+        while(1):
+            #########      Drwaing      ################
+
+            screen.blit(BG, (0,0))
+
+            #########      Drwaing      ################
+
+    #        draw_rotating(obj)
+            for pl in player_group:
+                draw_rotating(pl)
+                speed = np.sqrt(pl.speed[0]**2 + pl.speed[1]**2)
+                if speed > 8:
+                    blur(pl, speed)
+
+                '''Check the hull group sprites'''
+                # for x in pl.player_hull_group:
+                    # pygame.draw.rect(screen, (0,255,0), x.rect)
+
+            for object in asteroids:
+                draw_rotating(object)
+
+            for object in noclip_asteroids:
+                draw_rotating(object)
+
+            for object in glow:
+                object.update()
+
+            """TEST"""
+            for x in script_mob_group:
+                draw_rotating(x)
+            """/TEST"""
+
+            for object in projectiles:
+                draw_rotating(object)
+                blur(object, object.speed_max)
+
+            for object in missiles:
+                draw_rotating(object)
+                if object.aim != None:
+                    draw_triangle(object.aim, (0,255,0), 40, 2)
+
+            for object in effects:
+                draw_rotating(object)
+
+            for object in interface:
+                screen.blit(object.image, object.rect)
+
+            for pl in player_group:
+                pl.show_HP()
+
+                for x in pl.shields:
+                    draw_rotating(x)
+                    x.show_HP()
+
+                for x in pl.turrets:
+
+                    try:
+                        draw_triangle(x.locked, (255, 0, 0), x.locked.rect.width, 1)
+                        draw_triangle(x.predict_pos, (255, 0, 0), 5, 1)
+                    except:
+                        pass
+
+                for x in pl.orbiting:
+
+                    try:
+                        draw_triangle(x.locked, (255, 0, 0), x.locked.rect.width, 1)
+                        draw_triangle(x.predict_pos, (255, 0, 0), 5, 1)
+                    except:
+                        pass
+                    draw_rotating(x)
+
+            #test.rotate(1)
+
+            # for x in test.sub_group:
+            #     pygame.draw.rect(screen, (0,255,0), x.rect)
+            """colliding rects test"""
+            # for z in pl.player_hull_group:
+            #     pygame.draw.rect(screen, (0,255,0), z.rect)
+
+            for x in player_group:
+
+                for x_2 in x.mounts:
+                    x_2.bg_rect.x = x_2.rect.x+3
+                    x_2.bg_rect.y = x_2.rect.y+3
+
+                    try:
+                        screen.blit(x_2.bg, x_2.bg_rect)
+                    except:
+                        ptint('wrong')
+
+                    draw_rotating(x_2)
+
+            pygame.display.flip()
+
+            for object in effects:
+                object.update()
+
+            for x in noclip_asteroids:
+                x.update()
+
+            clock.tick(fps)

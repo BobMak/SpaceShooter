@@ -192,19 +192,24 @@ def bound_collision(obj):
 
 def bound_pass(obj):
 
-    if (obj.rect.centerx < -obj.rect.width
-        or obj.rect.centerx > width + obj.rect.width):
+    if (obj.position[0] < -obj.rect.width
+     or obj.position[0] > width):
 
-        obj.rect.centerx += -(width + obj.rect.width) * np.sign(obj.rect.centerx)
+        # obj.rect = obj.rect.move((-(width + obj.rect.width) * np.sign(obj.rect.centerx)), 0)
+        # obj.rect.centerx += -(width + obj.rect.width) * np.sign(obj.rect.centerx)
+        obj.position[0] += -(width + obj.rect.width) * np.sign(obj.rect.x)
+        # except: pass
 
-    if (obj.rect.centery < -obj.rect.width
-        or obj.rect.centery > height+obj.rect.width):
+    if (obj.position[1] < -obj.rect.height
+     or obj.position[1] > height):
+        # obj.rect = obj.rect.move(0, (-(height + obj.rect.width) * np.sign(obj.rect.centery)))
+        obj.position[1] += -(height + obj.rect.height) * np.sign(obj.rect.y)
+        # except: pass
 
-        obj.rect.centery += -(height + obj.rect.height) * np.sign(obj.rect.centery)
-
-def move_all_objects():
-    for object in Assets.all_objects:
-        object.rect = object.rect.move(object.speed)
+def move_movable():
+    for object in Assets.movable:
+        # modify position to avoid loss of <1 values when moving
+        object.modify_position()
 
 def spawn_wave(realGuy):
     level = Assets.level

@@ -4,6 +4,7 @@ t = [True, True, True, True]
 score = 0
 FPS = 30
 
+map_size = m_width, m_size = 3000, 3000
 size = width, height = 720, 576
 BLACK = 0, 0, 0
 WHITE = 255, 255, 255
@@ -14,12 +15,14 @@ ball_speed_limit = 10
 
 #####################      Ships       ####################
 
-#rotation rate, acceleration, deacceleration, enviroment deacceleration, hull, shields, type(mass)
-SHIP_CONSTANTS = [[10, 0.25, 0.20, 0.05, 10, 10, 2],
-                  [5, 0.1, 0.05, 0.02, 30, 20, 8],
-                  [10, 0.25, 0.20, 0.05, 10, 10, 4],
-                  [],
+#              rotation rate    deacceleration        hull   shields type(mass)
+ #                      acceleration    env. deacceleration
+SHIP_CONSTANTS = [[1.6666, 0.4166, 0.0333,   0.0083,    5,      2,      1],
+                  [  1.25,  0.025, 0.0125,    0.005,   15,      5,      2],
+                  [   2.5, 0.0625,   0.05,   0.0125,  7.5,    2.5,      1],
+                  [   1.2,   0.03,   0.01,     0.01,    2,      2,      1],
                   []]
+
 
 picked_ship = 2
 EXPL = 9

@@ -7,6 +7,7 @@ import pygame
 import pygame.gfxdraw as gfx
 from Menus import main_menu, player_set
 
+
 pygame.init()
 
 try:

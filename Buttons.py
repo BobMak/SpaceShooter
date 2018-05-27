@@ -5,7 +5,8 @@ from Assets import *
 from Classes import *
 from Controls import *
 from Funcs import *
-from MainLoop import *
+# from MainLoop import *
+from Scripts import *
 
 class Button(pygame.sprite.Sprite):
 
@@ -57,7 +58,7 @@ class B_Start_Over(Button):
 
             object.speed = [0,0]
             object.kill()
-        for object in all_objects:
+        for object in movable:
             object.kill()
         for object in interface:
             object.kill()
@@ -65,8 +66,10 @@ class B_Start_Over(Button):
         realGuy = ship_assign(ShipParams.picked_ship, ShipParams.start_lives,
                               player=True)
         Assets.level = 0
+
         spawn_wave(realGuy)
-        main_loop(realGuy)
+        main_loop_exp(realGuy)
+        """NOT REMOVED EXTRA THREADS"""
 
 class B_New_Game(Button):
     '3'
@@ -88,13 +91,8 @@ class B_New_Game(Button):
         realGuy = ship_assign(ShipParams.picked_ship, ShipParams.start_lives,
                               player=True)
 
-        mob = Script_Mob(ship_3, 250, 200)
-        c= Agressor(bad_thing, 0, 0)
-        c.rush()
-
-        spawn_wave(realGuy)
-
-        main_loop(realGuy)
+        main_loop_exp(realGuy)
+        print("This not suposed to be here...")
 
 class B_Stats(Button):
     '4'
@@ -124,6 +122,7 @@ class B_Ship_Highlihgts(Button):
 
         super().__init__(rect)
         self.ship_number = ship_number
+        self.text = SHIPS_TEXTS[ship_number]
 
         self.main_image = SHIPS_IMGS[ship_number]
         ship_rect = self.main_image.get_rect()

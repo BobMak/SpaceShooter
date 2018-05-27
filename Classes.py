@@ -6,39 +6,93 @@ import ShipParams as sp
 import Funcs as f, Funcs
 from Assets import *
 
-import tensorflow as tf
+
+class Vulnerable():
+    """
+    Inherited by all damagble classes.
+    """
+    def __init__(self, hp):
+
+        self.hp = hp
+
+    def damage(self, damage):
+
+        self.hp += -max(0, damage)
 
 
-class Colliding(pygame.sprite.Sprite):
-    '''Colliding(width, height, distance, angle, source)
+class Moving():
+    """
+    Inherited by all classes that can move by themselves.
+    """
+    def __init__(self):
+         self.speed = [0.0, 0.0]
+
+         self.position = [self.rect.x, self.rect.y]
+
+         movable.add(self)
+
+    def modify_position(self):
+        "modifyes position with respect to <1 values of acceleration"
+        self.position[0] += self.speed[0]
+        self.position[1] += self.speed[1]
+
+        self.rect = pygame.Rect(self.position[0], self.position[1],
+                                self.rect.width, self.rect.height)
+
+    def slow_down(self):
+
+        self.speed[0] += (self.ENV_DEACCELERATION
+                          *abs(np.cos(np.deg2rad(self.look_dir-90.0)))
+                          *-np.sign(self.speed[0]))
+
+        self.speed[1] += (self.ENV_DEACCELERATION
+                          *abs(np.sin(np.deg2rad(self.look_dir-90.0)))
+                          *-np.sign(self.speed[1]))
+
+    def accelerate(self, temp):
+
+        self.speed[0] += temp*np.cos(np.deg2rad(self.look_dir-90.0))
+        self.speed[1] += temp*np.sin(np.deg2rad(self.look_dir-90.0))
+
+
+class Colliding(pygame.sprite.Sprite, Moving):
+    '''
+    Colliding(width, height, distance, angle, source)
     Smaller collision rect container for more complex forms.
-    should be rotated with source object with "orbit_rotate"'''
+    should be rotated with source object with "orbit_rotate"
+    '''
+
     def __init__(self, width, height, distance, angle, source):
 
-        super().__init__()
+        pygame.sprite.Sprite.__init__(self)
         self.rect = pygame.Rect((source.rect.x
-                               + (np.deg2rad(numpy.cos(angle)) * distance)),
+                               + (np.deg2rad(np.cos(angle)) * distance)),
                                 (source.rect.y
-                               + np.deg2rad(numpy.sin(angle)) * distance),
-                                width, height)
+                               + np.deg2rad(np.sin(angle)) * distance),
+                                 width, height)
+
         self.speed = source.speed
         self.angle = angle
         self.source = source
         self.distance = distance
         self.orbit_ang = angle
-        all_objects.add(self)
+
+        Moving.__init__(self)
 
 
-class FX(pygame.sprite.Sprite):
-
-    speed = [0,0]
+class FX(pygame.sprite.Sprite, Moving):
 
     def __init__(self, rect, duration):
 
-        super().__init__()
+        pygame.sprite.Sprite.__init__(self)
+
         self.timer = duration
         self.time_count = 0
         self.rect = rect
+
+        # Requires rect to already be there
+        Moving.__init__(self)
+
         time_dependent.add(self)
 
 
@@ -49,12 +103,13 @@ class FX_Glow(FX):
     def __init__(self, rect, duration, radius, length, color, speed=(0,0)):
         global glow
 
-        super().__init__(rect, duration)
+        FX.__init__(self, rect, duration)
         self.radius = radius
         self.color = color
         self.length = length
         self.speed = speed
         glow.add(self)
+
     #draw
     def update(self):
         """
@@ -88,7 +143,7 @@ class FX_Track(FX):
                 fading=None, enlarging=None, rotating=None, color=None,
                 look_dir=None, speed=None):
         '''density - [0-1]'''
-        super().__init__(rect, duration)
+        FX.__init__(self, rect, duration)
 
         self.updates = []
         self.fading_count = 0
@@ -135,7 +190,6 @@ class FX_Track(FX):
             self.speed = speed
 
         effects.add(self)
-        all_objects.add(self)
 
     def enlarge(self):
 
@@ -182,7 +236,7 @@ class FX_Track(FX):
 
 class Object(pygame.sprite.Sprite):
     '''Object(image, x, y, width=None, height=None)'''
-    speed = [0, 0]
+
     look_dir = 0
     rotated_image = 0
     rotated_rect = 0
@@ -191,7 +245,6 @@ class Object(pygame.sprite.Sprite):
     time_count = 0
     timer = 0
     type = 0
-    hp = 0
 
     def __init__(self, image, x, y, width=None, height=None):
 
@@ -219,33 +272,17 @@ class Object(pygame.sprite.Sprite):
        # Update the position of this object by setting the values of rect.x and rect.y
        self.rect = self.image.get_rect()
        self.rotated_rect = self.rect
-    #    self.rect.inflate(self.rect.width-width, self.rect.height-height)
+
        self.rect.centerx = x
        self.rect.centery = y
        self.radius = self.rect.width
 
-       all_objects.add(self)
-
-    def slow_down(self):
-        if self.speed[1] == 0:
-            rad = 90
-        else:
-            rad = abs(numpy.arctan(self.speed[0]/self.speed[1]))
-
-        self.speed[0] += -(self.ENV_DEACCELERATION*numpy.sign(self.speed[0]))
-                            # + (abs(self.speed[0]/100)
-                            #     *np.sin(rad)*numpy.sign(self.speed[0])))
-        self.speed[1] += -(self.ENV_DEACCELERATION*numpy.sign(self.speed[1]))
-                            # + (abs(self.speed[1]/100)
-                            #     *np.cos(rad)*numpy.sign(self.speed[1])))
-
-    def accelerate(self, temp):
-        self.speed[0] += temp*numpy.cos(numpy.deg2rad(self.look_dir-90))
-        self.speed[1] += temp*numpy.sin(numpy.deg2rad(self.look_dir-90))
+       # movable.add(self)
 
     def rotate(self, dir):
 
-        if self.look_dir > 360:
+        # Ensure that look_dir is in range [0 - 360)
+        if self.look_dir > 359:
             self.look_dir += dir - 360
         elif self.look_dir < 0:
             self.look_dir += 360 + dir
@@ -258,19 +295,21 @@ class Object(pygame.sprite.Sprite):
                                                           -self.look_dir)
 
     def get_aim_dir(self, aim):
-
+        """
+        Returns the angle specifying direction to 'aim' object
+        """
         x = None
         dx = self.rect.centerx - aim.rect.centerx
         dy = self.rect.centery - aim.rect.centery
 
         if dx > 0 and dy < 0:
-            aim_dir = abs(numpy.rad2deg(numpy.arctan(dx/dy)))
+            aim_dir = abs(np.rad2deg(np.arctan(dx/dy)))
         elif dx < 0 and dy < 0:
-            aim_dir = abs(numpy.rad2deg(numpy.arctan(dy/dx)))
+            aim_dir = abs(np.rad2deg(np.arctan(dy/dx)))
         elif dx > 0 and dy > 0:
-            aim_dir = abs(numpy.rad2deg(numpy.arctan(dy/dx)))
+            aim_dir = abs(np.rad2deg(np.arctan(dy/dx)))
         elif dx < 0 and dy > 0:
-            aim_dir = abs(numpy.rad2deg(numpy.arctan(dx/dy)))
+            aim_dir = abs(np.rad2deg(np.arctan(dx/dy)))
         else:
             aim_dir = 0
 
@@ -291,7 +330,7 @@ class Object(pygame.sprite.Sprite):
     def get_distance(self, obj):
         """returns distance to object x"""
 
-        return numpy.sqrt((self.rect.x - obj.rect.x)**2
+        return np.sqrt((self.rect.x - obj.rect.x)**2
                         + (self.rect.y - obj.rect.y)**2)
 
     def get_real_distance(self, obj):
@@ -307,7 +346,7 @@ class Object(pygame.sprite.Sprite):
                     - (obj.rect.centerx + x*(sp.width+obj.rect.width)))
                 b = (self.rect.centery
                     - (obj.rect.centery + y*(sp.height+obj.rect.height)))
-                dist = numpy.sqrt(a**2 + b**2)
+                dist = np.sqrt(a**2 + b**2)
                 all_directions_distances.append(dist)
 
         return min(all_directions_distances)
@@ -324,7 +363,7 @@ class Object(pygame.sprite.Sprite):
                 b = (self.rect.centery
                     - (aim.rect.centery + y*(sp.height+aim.rect.height)))
 
-                dist = numpy.sqrt(a**2 + b**2)
+                dist = np.sqrt(a**2 + b**2)
                 all_directions_distances.append(dist)
 
         best = all_directions_distances.index(min(all_directions_distances))
@@ -340,13 +379,8 @@ class Object(pygame.sprite.Sprite):
         aim = Object(blanc, a, b)
         return self.get_aim_dir(aim)
 
-    def damage(self, obj):
-        buff = copy.copy(self.hp)
-        self.hp += -max(0,obj.hp)
-        obj.damage(buff)
 
-
-class Player(Object):
+class Player(Object, Moving, Vulnerable):
     '''Player(image, x, y, lives, bolt=0,
               complex_sh=-1, width=None, height=None)'''
     global score
@@ -385,6 +419,9 @@ class Player(Object):
         self.speed = [0,0]
         self.lives = lives
         super().__init__(image, x, y, width=width, height=height)
+        Moving.__init__(self)
+        Vulnerable.__init__(self, SHIP_HP[complex_sh])
+        """#################FIX HP###################"""
 
         if player == True:
 
@@ -393,7 +430,7 @@ class Player(Object):
             for i in range(lives):
                 r = Object(live,270 + 35*(1+i),20,30, 30)
                 r.add(interface)
-                all_objects.remove(r)
+                movable.remove(r)
 
             for x in complex_rects[complex_sh]:
                 b = Colliding(x[0], x[1], x[2], x[3], self)
@@ -450,13 +487,17 @@ class Player(Object):
                 pygame.time.set_timer(pygame.USEREVENT+2, 500)
 
             else:
-                Menus.death_menu()
+                # Video thread termination call
+                pygame.time.set_timer(pygame.USEREVENT+5, 10)
+
                 s = open('C:/vova/scores.txt', 'r')
-                if int(s.read()) < score:
+                if int(s.read()) < sp.score:
                     s.close()
                     s = open('C:/vova/scores.txt', 'w')
-                    s.write(str(score))
+                    s.write(str(sp.score))
                 s.close()
+
+                Menus.death_menu()
 
     def damage(self, dmg):
 
@@ -538,10 +579,10 @@ class Mounted(Object):
 
         super().__init__(image, width, height,
                          (mounted_on.rect.x + mounted_on.rect.width//4
-                          + distance*np.cos(numpy.deg2rad(mounted_on.look_dir
+                          + distance*np.cos(np.deg2rad(mounted_on.look_dir
                                                             + look_dir -90))),
                          (mounted_on.rect.y + mounted_on.rect.height//4
-                          + distance*np.sin(numpy.deg2rad(mounted_on.look_dir
+                          + distance*np.sin(np.deg2rad(mounted_on.look_dir
                                                             + look_dir -90)))
                         )
 
@@ -563,10 +604,10 @@ class Mounted(Object):
             return True
 
         elif abs(x) > 180:
-             self.rotate(5*numpy.sign(x))
+             self.rotate(5*np.sign(x))
 
         else:
-             self.rotate(-5*numpy.sign(x))
+             self.rotate(-5*np.sign(x))
 
     def init_orbit(self, orbit_coef, d_ang, min, max, distance):
 
@@ -696,11 +737,11 @@ class T_PreAim(Turret):
     def get_predict_pos(self):
 
         self.predict_pos.rect = copy.copy(self.locked.rect)
-        length = numpy.sqrt((self.rect.x - self.locked.rect.x)**2
+        length = np.sqrt((self.rect.x - self.locked.rect.x)**2
                           + (self.rect.y - self.locked.rect.y)**2)
 
         try:
-            if (self.prj_speed*numpy.cos(numpy.deg2rad(self.look_dir))) != -99:
+            if (self.prj_speed*np.cos(np.deg2rad(self.look_dir))) != -99:
                 self.predict_pos.rect.centerx += (round(self.locked.speed[0]
                                                        *length/self.prj_speed)
                                                         *(1/self.prj_speed + 1))
@@ -709,7 +750,7 @@ class T_PreAim(Turret):
             pass
 
         try:
-            if (self.prj_speed*numpy.sin(numpy.deg2rad(self.look_dir))) != -99:
+            if (self.prj_speed*np.sin(np.deg2rad(self.look_dir))) != -99:
                 self.predict_pos.rect.centery += (round(self.locked.speed[1]
                                                        *length/self.prj_speed)
                                                         *(1/self.prj_speed + 1))
@@ -946,10 +987,11 @@ class Agressor(Script_Mob):
 
     def __init__(self, image, x, y):
 
-        super().__init__(image, x, y, 0)
+        super().__init__(image, x, y, 3)
         self.assign_goal(player_group.sprites()[0])
         asteroids.add(self)
         self.look_dir = random.randint(0, 358)
+        self.speed = [random.randint(0, 358)/100, random.randint(0, 358)/100]
 
     def rush(self):
         dist = self.get_distance(self.goal)
@@ -997,7 +1039,7 @@ class Agressor(Script_Mob):
             self.to_do_list.append(self.rush)
 
 
-class Asteroid(Object):
+class Asteroid(Object, Moving, Vulnerable):
 
     noclip_count =0
     noclip_timer = 30
@@ -1009,6 +1051,10 @@ class Asteroid(Object):
 
         super().__init__(pygame.transform.scale(image, (10*type, 10*type)),
                         x, y, width=type*10, height=type*10)
+
+        Moving.__init__(self)
+        Vulnerable.__init__(self, 1)
+
         self.type = type
         asteroids.add(self)
         self.image = pygame.transform.scale(image, (10*type, 10*type))
@@ -1019,7 +1065,7 @@ class Asteroid(Object):
         self.look_dir = random.randint(-180, 180)
         self.hp = self.type * 2
 
-        all_objects.add(self)
+        # movable.add(self)
         asteroids.add(self)
         self.rotate(0)
 
@@ -1110,17 +1156,30 @@ class Adv_Asteroid(Asteroid):
         self.kill()
 
 
-class Projectile(Object):
+class Zone(pygame.sprite.Sprite, Vulnerable):
+
+    def __init__(self, x, y, radius, hp, time):
+
+        pygame.sprite.Sprite.__init__(self)
+        Vulnerable.__init__(self, hp)
+        self.radius = radius
+        self.time_count = 0
+        self.timer = time
+        self.rect = pygame.Rect(x, y, 1, 1)
+
+
+class Projectile(Object, Moving, Vulnerable):
 
     def __init__(self, bolt, x, y, distance, width=None, height=None):
 
         super().__init__(prj_imgs[bolt], x, y, width=width, height=height)
+        Moving.__init__(self)
+        Vulnerable.__init__(self, bolt_damage[bolt])
 
         self.speed_max = prj_speeds[bolt]
-        self.hp = bolt_damage[bolt]
         self.timer = distance
 
-        all_objects.add(self)
+        # movable.add(self)
         projectiles.add(self)
         time_dependent.add(self)
 
@@ -1138,7 +1197,7 @@ class Projectile(Object):
 
 class Missile(Projectile):
 
-    # how often aim-updaing function to be launched
+    # how often aim-updaing function to run
     compute_tempo = 5
     compute_count = 0
 
@@ -1168,10 +1227,10 @@ class Missile(Projectile):
         # if abs(x) < self.d_ang:
         #     pass
         if abs(x) > 180:
-             self.rotate(self.d_ang*numpy.sign(x))
+             self.rotate(self.d_ang*np.sign(x))
 
         else:
-            self.rotate(-self.d_ang*numpy.sign(x))
+            self.rotate(-self.d_ang*np.sign(x))
 
     def lock_closest(self):
         arr = []
@@ -1229,10 +1288,7 @@ class Missile(Projectile):
 
     def blow_up(self):
 
-        x = Object(blanc, self.rect.x, self.rect.y)
-        x.radius = self.hit_range
-        x.hp = self.hp
-        x.timer = 2
+        x = Zone(self.rect.x, self.rect.y, self.hit_range, self.hp, 2)
         f.FX_explosion(self.rect.centerx, self.rect.centery,
                        xpl=expN, radius=(60,60))
         hit_waves.add(x)
@@ -1240,7 +1296,7 @@ class Missile(Projectile):
         self.kill()
 
 
-class Animation(Object):
+class Animation(Object, Moving):
     '''
     Animation(images_arr, width, height, x, y,
               rand = False, finit = True, type = 0,
@@ -1266,6 +1322,8 @@ class Animation(Object):
                 type=0, hold_f=None, delay=0):
 
         super().__init__(images_arr[0], x, y, width=width, height=height)
+        Moving.__init__(self)
+
         self.images_arr = images_arr
         if rand:
             self.look_dir = random.randint(-180, 180)
@@ -1277,7 +1335,7 @@ class Animation(Object):
         self.delay = delay
         self.hold_frame = hold_f
         self.finit = finit
-        all_objects.add(self)
+        # movable.add(self)
 
     def hold(self):
 
@@ -1339,7 +1397,7 @@ class Shield(Animation):
         self.look_dir = 0
         self.rotate(0)
         self.speed = source.speed
-        self.type = 1
+        self.type = type
         self.HP = source.S_HP
 
         self.rect.width = width
@@ -1350,8 +1408,8 @@ class Shield(Animation):
         source.shields.add(self)
 
     def update(self):
-        self.rect.x = self.source.rect.x
-        self.rect.y = self.source.rect.y
+        self.rect.centerx = self.source.rect.centerx
+        self.rect.centery = self.source.rect.centery 
 
     def down(self):
         self.type = 3
@@ -1364,9 +1422,6 @@ class Shield(Animation):
 
         if self.HP < 0:
             self.down()
-            # self.remove()
-            # self.source.shield_lock = True
-            # pygame.time.set_timer(pygame.USEREVENT+4, 2000)
 
     def show_HP(self):
 

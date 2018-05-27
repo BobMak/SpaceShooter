@@ -5,42 +5,62 @@ from Assets import *
 from Funcs import *
 from Controls import *
 from Menus import *
-import Scripts
 
 import threading
 
+clock = pygame.time.Clock()
 fps = 40
 
-clock = pygame.time.Clock()
 
-def main_loop(realGuy):
-
-    pl = realGuy
+def main_loop_exp(realGuy):
 
     global score
     global fps
     global SPAWNING_WAVE
 
+    pl = realGuy
+
     for x, y in enumerate(pl.turrets):
         y.number = x
 
+    global video
+    video = threading.Thread(target =screen_redraw, daemon=True)
+    # input = threading.Thread(target =get_input)
+    # logic = threading.Thread(target =logic_update)
+
+    video.start()
+#
+# def logic_update():
+#     """
+#     Movement threader
+#     """
     while(1):
-
+        # <NO BLITTING HERE>
         keys = pygame.key.get_pressed()
+        # Gettin in pause menue
+        if keys[pygame.K_ESCAPE] and t[0] == True:
 
-        if keys[pygame.K_ESCAPE]:
-            Menus.pause_menu()
+            pygame.time.set_timer(pygame.USEREVENT+5, 10)
+            pygame.time.set_timer(pygame.USEREVENT+1, 300)
+            t[0] = False
+
+            video = Menus.pause_menu()
+            video.start()
+            print("back in game")
+            print(threading.activeCount())
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
 
+            # Release all key locks
             if event.type == pygame.USEREVENT+1:
                 global t
                 for x in range(len(t)):
                     t[x] = True
                 pygame.time.set_timer(pygame.USEREVENT+1, 0)
 
+            # Spawn player if no asteroid in range
             if event.type == pygame.USEREVENT+2:
 
                 pygame.time.set_timer(pygame.USEREVENT+2, 0)
@@ -63,13 +83,21 @@ def main_loop(realGuy):
                     print('next time')
                     pygame.time.set_timer(pygame.USEREVENT+2, 100)
 
+            # Spawn wave
             if event.type == pygame.USEREVENT+3:
                 print('spawning')
                 spawn_wave(pl)
+                global SPAWNING_WAVE
                 SPAWNING_WAVE = False
                 pygame.time.set_timer(pygame.USEREVENT+3, 0)
 
-        ###########     Movement        ###########
+        # Perform users input
+        for pl in player_group:
+
+            for x in pl.arr_input:
+                x(pl, keys)
+
+            bound_pass(pl)
 
         move_movable()
 
@@ -84,9 +112,6 @@ def main_loop(realGuy):
         """/TEST"""
 
         for pl in player_group:
-
-            for x in pl.arr_input:
-                x(pl, keys)
 
             pl.slow_down()
             bound_pass(pl)
@@ -157,7 +182,6 @@ def main_loop(realGuy):
                     if len(asteroids) == 0:
                         pygame.time.set_timer(pygame.USEREVENT+3, 2000)
                     i.damage(2*i_2.type)
-                    score += i_2.type*10
 
             for x in pl.turrets:
                 x.auto_fire()
@@ -172,7 +196,6 @@ def main_loop(realGuy):
 
                 if len(asteroids) == 0:
                     pygame.time.set_timer(pygame.USEREVENT+3, 2000)
-                score += i_2.type*10
 
         for i in missiles:
             for i_2 in pygame.sprite.spritecollide(i, asteroids, 0):
@@ -180,7 +203,6 @@ def main_loop(realGuy):
                 i.blow_up()
                 if len(asteroids) == 0:
                     pygame.time.set_timer(pygame.USEREVENT+3, 2000)
-                score += i_2.type*10
 
         for i in time_dependent:
             if i.timer < i.time_count:
@@ -188,107 +210,140 @@ def main_loop(realGuy):
             else:
                 i.time_count +=1
 
+        global SPAWNING_WAVE
+
         if len(asteroids) == 0 and not SPAWNING_WAVE:
             print('spawning...')
             pygame.time.set_timer(pygame.USEREVENT+3, 2000)
             SPAWNING_WAVE = True
-        #########      Drwaing      ################
 
-        screen.blit(BG, (0,0))
+        # logic tick
+        clock.tick(LOGIC_PER_SECOND)
 
-        #########      Drwaing      ################
+        # </NO BLITTING HERE>
 
-#        draw_rotating(obj)
-        for pl in player_group:
-            draw_rotating(pl)
-            speed = np.sqrt(pl.speed[0]**2 + pl.speed[1]**2)
-            if speed > 8:
-                blur(pl, speed)
 
-            '''Check the hull group sprites'''
-            # for x in pl.player_hull_group:
-                # pygame.draw.rect(screen, (0,255,0), x.rect)
+def screen_draw():
+    """
+    Draws all game scene, does not flip.
+    """
+    for object in effects:
+        object.update()
 
-        for object in asteroids:
-            draw_rotating(object)
+    for x in noclip_asteroids:
+        x.update()
 
-        for object in noclip_asteroids:
-            draw_rotating(object)
+    screen.blit(BG, (0,0))
 
-        for object in glow:
-            object.update()
+    for pl in player_group:
+        try:draw_rotating(pl)
+        except:print("player faild to be drawn")
+        speed = np.sqrt(pl.speed[0]**2 + pl.speed[1]**2)
+        if speed > 8:
+            blur(pl, speed)
 
-        """TEST"""
-        for x in script_mob_group:
-            draw_rotating(x)
-        """/TEST"""
+        '''Check the hull group sprites'''
+        # for x in pl.player_hull_group:
+            # pygame.draw.rect(screen, (0,255,0), x.rect)
 
-        for object in projectiles:
+    for object in asteroids:
+        draw_rotating(object)
+
+    for object in noclip_asteroids:
+        draw_rotating(object)
+
+    for object in glow:
+        object.update()
+
+    """TEST"""
+    for x in script_mob_group:
+        draw_rotating(x)
+    """/TEST"""
+
+    for object in projectiles:
+        try:
             draw_rotating(object)
             blur(object, object.speed_max)
+        except:
+            print("projectile fails to be drawn")
 
-        for object in missiles:
-            draw_rotating(object)
-            if object.aim != None:
-                draw_triangle(object.aim, (0,255,0), 40, 2)
+    for object in missiles:
+        draw_rotating(object)
+        if object.aim != None:
+            draw_triangle(object.aim, (0,255,0), 40, 2)
 
-        for object in effects:
-            draw_rotating(object)
+    for object in effects:
+        draw_rotating(object)
 
-        for object in interface:
-            screen.blit(object.image, object.rect)
+    for object in interface:
+        screen.blit(object.image, object.rect)
 
-        for pl in player_group:
-            pl.show_HP()
+    for pl in player_group:
+        pl.show_HP()
 
-            for x in pl.shields:
-                draw_rotating(x)
-                x.show_HP()
+        for x in pl.shields:
+            draw_rotating(x)
+            x.show_HP()
 
-            for x in pl.turrets:
+        for x in pl.turrets:
 
-                try:
-                    draw_triangle(x.locked, (255, 0, 0), x.locked.rect.width, 1)
-                    draw_triangle(x.predict_pos, (255, 0, 0), 5, 1)
-                except:
-                    pass
+            try:
+                draw_triangle(x.locked, (255, 0, 0), x.locked.rect.width, 1)
+                draw_triangle(x.predict_pos, (255, 0, 0), 5, 1)
+            except:
+                pass
 
-            for x in pl.orbiting:
+        for x in pl.orbiting:
 
-                try:
-                    draw_triangle(x.locked, (255, 0, 0), x.locked.rect.width, 1)
-                    draw_triangle(x.predict_pos, (255, 0, 0), 5, 1)
-                except:
-                    pass
-                draw_rotating(x)
+            try:
+                draw_triangle(x.locked, (255, 0, 0), x.locked.rect.width, 1)
+                draw_triangle(x.predict_pos, (255, 0, 0), 5, 1)
+            except:
+                pass
+            draw_rotating(x)
 
-        #test.rotate(1)
+    #test.rotate(1)
 
-        # for x in test.sub_group:
-        #     pygame.draw.rect(screen, (0,255,0), x.rect)
-        """colliding rects test"""
-        # for z in pl.player_hull_group:
-        #     pygame.draw.rect(screen, (0,255,0), z.rect)
+    # for x in test.sub_group:
+    #     pygame.draw.rect(screen, (0,255,0), x.rect)
+    """colliding rects test"""
+    # for z in pl.player_hull_group:
+    #     pygame.draw.rect(screen, (0,255,0), z.rect)
 
-        for x in player_group:
+    for x in player_group:
 
-            for x_2 in x.mounts:
-                x_2.bg_rect.x = x_2.rect.x+3
-                x_2.bg_rect.y = x_2.rect.y+3
+        for x_2 in x.mounts:
+            x_2.bg_rect.x = x_2.rect.x+3
+            x_2.bg_rect.y = x_2.rect.y+3
 
-                try:
-                    screen.blit(x_2.bg, x_2.bg_rect)
-                except:
-                    ptint('wrong')
+            try:
+                screen.blit(x_2.bg, x_2.bg_rect)
+            except:
+                ptint('wrong')
 
-                draw_rotating(x_2)
+            draw_rotating(x_2)
+
+
+def screen_redraw():
+    """
+    Drwaing
+    """
+    alive = True
+    while(alive):
+
+        for event in pygame.event.get():
+
+            if event.type == pygame.USEREVENT+5:
+
+                pygame.time.set_timer(pygame.USEREVENT+5, 0)
+                alive = False
+
+        screen_draw()
 
         pygame.display.flip()
 
-        for object in effects:
-            object.update()
+        clock.tick(FRAMES_PER_SECOND)
 
-        for x in noclip_asteroids:
-            x.update()
 
-        clock.tick(fps)
+def spawn_mob():
+    mob = Script_Mob(ship_3, 250, 200)

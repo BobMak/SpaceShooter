@@ -82,7 +82,7 @@ def listen_shield(player, keys):
     if  keys[pygame.K_c] and player.locks[3] == False:
 
         Funcs.shields(player)
-        print(len(all_objects))
+        print(len(movable))
         #special_lock = True
     else:
         for x in player.shields:
