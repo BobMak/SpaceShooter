@@ -5,7 +5,7 @@ from Assets import *
 from Classes import *
 from Controls import *
 from Funcs import *
-# from MainLoop import *
+
 from Scripts import *
 
 class Button(pygame.sprite.Sprite):
@@ -68,8 +68,7 @@ class B_Start_Over(Button):
         Assets.level = 0
 
         spawn_wave(realGuy)
-        main_loop_exp(realGuy)
-        """NOT REMOVED EXTRA THREADS"""
+        main_loop(realGuy)
 
 class B_New_Game(Button):
     '3'
@@ -91,8 +90,7 @@ class B_New_Game(Button):
         realGuy = ship_assign(ShipParams.picked_ship, ShipParams.start_lives,
                               player=True)
 
-        main_loop_exp(realGuy)
-        print("This not suposed to be here...")
+        main_loop(realGuy)
 
 class B_Stats(Button):
     '4'

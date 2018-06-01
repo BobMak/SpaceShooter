@@ -2,6 +2,7 @@ import pygame
 from Assets import *
 from Buttons import *
 from ShipParams import *
+
 from Scripts import *
 
 def pause_menu():
@@ -10,9 +11,10 @@ def pause_menu():
     print(t)
 
     temporary_BG = screen.copy()
-    b_continue = B_Continue((200, 200, 100, 30))
+    b_continue  =   B_Continue((200, 200, 100, 30))
     b_startover = B_Start_Over((200, 250, 100, 30))
-    menu = [b_continue, b_startover]
+    b_exit      =       B_Exit((200, 300, 100, 30))
+    menu = [b_continue, b_startover, b_exit]
     selection = 0
     menu[0].select()
     screen.blit(menu_BG, (0,0))     #draw dark background on previous

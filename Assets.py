@@ -95,7 +95,9 @@ shld_6 = pygame.image.load("assets\\animations\\Shields\\shield_1_fade_40x40_6.p
 shld_7 = pygame.image.load("assets\\animations\\Shields\\shield_1_fade_40x40_7.png")
 
 model_BG = pygame.image.load("assets\\ModelBG.bmp")
+
 BG = pygame.transform.scale(pygame.image.load("assets\\BG_720.png"), (size[0], size[1]))
+
 menu_BG = pygame.image.load("assets\\menu_BG.png")
 menu_button = pygame.image.load("assets\\menu_button.png")
 menu_button_selected = pygame.image.load("assets\\menu_button_selected.png")
@@ -109,9 +111,9 @@ prj_imgs =  [bolt_1, bolt_3, bolt_2, missile_1]
 bolt_damage = [6, 40, 14, 90, 100, 300]
 n_bolts = 3
 
-msl_max_speeds = [10]
+msl_max_speeds = [5]
 msl_d_angs = [5, 10, 3]
-msl_d_speeds = [1, 3, 2]
+msl_d_speeds = [0.25, 0.5, 0.8]
 msl_distances = [500, 300, 100]
 msl_hit_ranges = [50, 20, 100]
 

@@ -5,6 +5,7 @@ from Assets import *
 from Funcs import *
 from Controls import *
 from Menus import *
+from Classes import *
 
 import threading
 
@@ -12,7 +13,7 @@ clock = pygame.time.Clock()
 fps = 40
 
 
-def main_loop_exp(realGuy):
+def main_loop(realGuy):
 
     global score
     global fps
@@ -23,31 +24,34 @@ def main_loop_exp(realGuy):
     for x, y in enumerate(pl.turrets):
         y.number = x
 
-    global video
-    video = threading.Thread(target =screen_redraw, daemon=True)
+    global graphics
+    graphics = threading.Thread(target =screen_redraw, daemon=True)
     # input = threading.Thread(target =get_input)
     # logic = threading.Thread(target =logic_update)
 
-    video.start()
-#
-# def logic_update():
-#     """
-#     Movement threader
-#     """
+    graphics.start()
+
+    """
+                    <TESTING ZONE>
+            Spawn components to test here
+    """
+    # agr = Agressor(bad_thing, 100, 100)
+    """
+                    </TESTING ZONE>
+    """
     while(1):
         # <NO BLITTING HERE>
         keys = pygame.key.get_pressed()
         # Gettin in pause menue
         if keys[pygame.K_ESCAPE] and t[0] == True:
-
+            # To stop graphics thread
             pygame.time.set_timer(pygame.USEREVENT+5, 10)
+            # To unblock esc button
             pygame.time.set_timer(pygame.USEREVENT+1, 300)
             t[0] = False
 
-            video = Menus.pause_menu()
-            video.start()
-            print("back in game")
-            print(threading.activeCount())
+            graphics = Menus.pause_menu()
+            graphics.start()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -75,17 +79,14 @@ def main_loop_exp(realGuy):
                 buff_sp.rect.centerx = width/2
                 buff_sp.rect.centery = height/2
                 if len(pygame.sprite.spritecollide(buff_sp, asteroids, 0)) == 0:
-                    print('Here you go')
                     interface.empty()
                     pl = ship_assign(sp.picked_ship, pl.lives, True)
 
                 else:
-                    print('next time')
                     pygame.time.set_timer(pygame.USEREVENT+2, 100)
 
             # Spawn wave
             if event.type == pygame.USEREVENT+3:
-                print('spawning')
                 spawn_wave(pl)
                 global SPAWNING_WAVE
                 SPAWNING_WAVE = False
@@ -131,8 +132,6 @@ def main_loop_exp(realGuy):
             for x in pl.orbiting:
                 bound_pass(x)
                 orbit_eliptic(pl, x)
-            # for i in x.mounts:
-            #     orbit_rotate(x, i, 5, 30, 2)
 
         for x in projectiles:
             bound_pass(x)
@@ -147,7 +146,7 @@ def main_loop_exp(realGuy):
 
             bound_pass(x)
             x.slow_down()
-            # x.accelerate(-x.ENV_DEACCELERATION)
+
         ##########      Logic       #########
 
         for x in hit_waves:
@@ -165,15 +164,12 @@ def main_loop_exp(realGuy):
 
             for z in pl.player_hull_group:
 
-                # try:
                 for i in pygame.sprite.spritecollide(z, asteroids, 0):
                     if i not in noclip_asteroids:
                         i.damage(pl.type*1)
 
                         if pl.damage(2):
                             break
-                # # except:
-                #     print('excep')
 
             for i in pl.shields:
                 for i_2 in pygame.sprite.spritecollide(i, asteroids, 0):

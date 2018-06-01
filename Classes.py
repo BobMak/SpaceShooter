@@ -487,7 +487,7 @@ class Player(Object, Moving, Vulnerable):
                 pygame.time.set_timer(pygame.USEREVENT+2, 500)
 
             else:
-                # Video thread termination call
+                # graphics thread termination call
                 pygame.time.set_timer(pygame.USEREVENT+5, 10)
 
                 s = open('C:/vova/scores.txt', 'r')
@@ -871,8 +871,11 @@ class Script_Mob(Player):
         self.ENV_DEACCELERATION = sp.SHIP_CONSTANTS[picked_ship][3]
         self.HP = sp.SHIP_CONSTANTS[picked_ship][4]
         self.S_HP = sp.SHIP_CONSTANTS[picked_ship][5]
-        self.assign_goal(player_group.sprites()[0])
-        self.follow()
+        try:
+            self.assign_goal(player_group.sprites()[0])
+            self.follow()
+        except:
+            pass
 
     def assign_goal(self, obj=None, x=None, y=None):
         """
@@ -951,16 +954,18 @@ class Script_Mob(Player):
             self.to_do_list.remove(self.go)
 
     def go_to(self, obj=None, x=None, y=None):
-        """go_to(obj=None, x=None, y=None)
-        interface function. Stop after reaching the goal"""
-
+        """
+        go_to(obj=None, x=None, y=None)
+        interface function. Stop after reaching the goal
+        """
         self.assign_goal(obj=obj, x=x, y=y)
         self.to_do_list.append(self.go)
 
     def follow(self):
-        """follow()
-        follow the goal untill met stop_following()"""
-
+        """
+        follow()
+        follow the goal untill met stop_following()
+        """
         if self.go not in self.to_do_list:
             self.to_do_list.append(self.go)
 
@@ -968,12 +973,15 @@ class Script_Mob(Player):
             self.to_do_list.append(self.follow)
 
     def stop_following(self):
-
+        """
+        stop_following()
+        Removes follow() and itself from to_do_list
+        """
         self.to_do_list.remove(self.follow)
         self.to_do_list.remove(self.stop_following)
 
     def update(self):
-        """Exevute all functions in to_do_list if there is any goal"""
+        """Execute all functions in to_do_list if there is any goal"""
         if self.goal in player_group:
             [x() for x in self.to_do_list]
         else:
@@ -988,10 +996,15 @@ class Agressor(Script_Mob):
     def __init__(self, image, x, y):
 
         super().__init__(image, x, y, 3)
-        self.assign_goal(player_group.sprites()[0])
+        # Assign goal if
+        try:
+            self.assign_goal(player_group.sprites()[0])
+        except:
+            pass
+
         asteroids.add(self)
         self.look_dir = random.randint(0, 358)
-        self.speed = [random.randint(0, 358)/100, random.randint(0, 358)/100]
+        self.speed = [random.uniform(-3, 3), random.uniform(-3, 3)]
 
     def rush(self):
         dist = self.get_distance(self.goal)
@@ -1003,6 +1016,7 @@ class Agressor(Script_Mob):
                 t = self.look_dir - abs(self.get_aim_dir(self.goal))
             else:
                 ang = np.arctan(self.speed[0]/self.speed[1])
+                # Direction of motion
                 spe = Object(blanc,
                              int(self.rect.centerx+30*np.sin(ang)
                                  *np.sign(self.speed[1])),
@@ -1058,9 +1072,9 @@ class Asteroid(Object, Moving, Vulnerable):
         self.type = type
         asteroids.add(self)
         self.image = pygame.transform.scale(image, (10*type, 10*type))
-        self.speed = [speed[0] + random.randint(-self.velo_deviation,
+        self.speed = [speed[0] + random.uniform(-self.velo_deviation,
                                                  self.velo_deviation),
-                      speed[1] + random.randint(-self.velo_deviation,
+                      speed[1] + random.uniform(-self.velo_deviation,
                                                  self.velo_deviation)]
         self.look_dir = random.randint(-180, 180)
         self.hp = self.type * 2
@@ -1409,7 +1423,7 @@ class Shield(Animation):
 
     def update(self):
         self.rect.centerx = self.source.rect.centerx
-        self.rect.centery = self.source.rect.centery 
+        self.rect.centery = self.source.rect.centery
 
     def down(self):
         self.type = 3
