@@ -125,6 +125,7 @@ class FX_Track(FX):
     '''
     FX_Track(image, rect, duration, fading=None,
              enlarging=None, rotating=None)
+    :duration - in logic ticks (there is LOGIC_PER_SECOND ticks per second).
     :fading - [x, y], where x is the rate from 0 (no fade)
     to 255 (max fade) with which effect will fade each y frames.
     :enlarging - [x, y], x - rate of effect's size deviation
@@ -871,11 +872,6 @@ class Script_Mob(Player):
         self.ENV_DEACCELERATION = sp.SHIP_CONSTANTS[picked_ship][3]
         self.HP = sp.SHIP_CONSTANTS[picked_ship][4]
         self.S_HP = sp.SHIP_CONSTANTS[picked_ship][5]
-        try:
-            self.assign_goal(player_group.sprites()[0])
-            self.follow()
-        except:
-            pass
 
     def assign_goal(self, obj=None, x=None, y=None):
         """
@@ -950,7 +946,6 @@ class Script_Mob(Player):
                     self.accelerate(self.ACCELERATION)
 
         else:
-            # self.accelerate(-self.DEACCELERATION)
             self.to_do_list.remove(self.go)
 
     def go_to(self, obj=None, x=None, y=None):
@@ -982,6 +977,7 @@ class Script_Mob(Player):
 
     def update(self):
         """Execute all functions in to_do_list if there is any goal"""
+        # Excecute all todo dunctions if goal is player
         if self.goal in player_group:
             [x() for x in self.to_do_list]
         else:
@@ -1005,6 +1001,7 @@ class Agressor(Script_Mob):
         asteroids.add(self)
         self.look_dir = random.randint(0, 358)
         self.speed = [random.uniform(-3, 3), random.uniform(-3, 3)]
+
 
     def rush(self):
         dist = self.get_distance(self.goal)
@@ -1086,7 +1083,13 @@ class Asteroid(Object, Moving, Vulnerable):
     def crash(self):
         global asteroids
 
-        f.FX_explosion(self.rect.centerx, self.rect.centery)
+        if self.type >2:
+            for x in range(6):
+                FX_Track(particle, self.rect, 50,
+                         look_dir=(random.randint(0,350)),
+                         speed=[self.speed[0] + random.uniform(-1,1),
+                                self.speed[1] + random.uniform(-1,1)],
+                         color=(120,100,100,150))
 
         if self.type > 1:
             arr = []
@@ -1129,11 +1132,6 @@ class Adv_Asteroid(Asteroid):
 
         rect = pygame.Rect(self.rect.x, self.rect.y,
                            self.type*10+10, self.type*10+10)
-        FX_Track(particle, rect, 10,
-                 look_dir=(random.randint(0,350)),
-                 speed=[self.speed[0] + random.randint(-1,1),
-                        self.speed[1] + random.randint(-1,1)],
-                 color=(120,100,100,150))
 
         if type != None:
             self.speed = [self.speed[0] + speed[0]*((type+1)/(self.type+1)),
@@ -1147,7 +1145,13 @@ class Adv_Asteroid(Asteroid):
     def crash(self):
         global asteroids
 
-        f.FX_explosion(self.rect.centerx, self.rect.centery)
+        if self.type >2:
+            for x in range(6):
+                FX_Track(particle, self.rect, random.randint(20,80),
+                         look_dir=(random.randint(0,350)),
+                         speed=[self.speed[0] + random.uniform(-1,1),
+                                self.speed[1] + random.uniform(-1,1)],
+                         color=(random.randint(90,200),100,100,150))
 
         if self.type > 1:
             arr = []
@@ -1259,9 +1263,11 @@ class Missile(Projectile):
 
         r = copy.copy(self.rect)
 
-        FX_Track(particle, r, 20, look_dir=random.randint(0,358),
-                        fading=[20,3], enlarging=[20,3], color=(200,200,200,100),
-                        speed=[random.randint(-1,1), random.randint(-1,1)])
+        # create engine particles
+        FX_Track(particle, r, 40, look_dir=random.randint(0,358),
+                        fading=[20,16], enlarging=[20,16],
+                        color=(200,200,200,random.randint(40,130)),
+                        speed=[random.uniform(-0.5,0.5), random.uniform(-0.5,0.5)])
 
         FX_Glow(r, 1, 2, 10, (255, 200, 125, 20))
 

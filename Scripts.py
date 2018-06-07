@@ -35,7 +35,7 @@ def main_loop(realGuy):
                     <TESTING ZONE>
             Spawn components to test here
     """
-    # agr = Agressor(bad_thing, 100, 100)
+
     """
                     </TESTING ZONE>
     """
@@ -104,13 +104,16 @@ def main_loop(realGuy):
 
         for x in asteroids:
             bound_pass(x)
-
-        """TEST"""
+            
         for m in script_mob_group:
             bound_pass(m)
-            m.update()
+
+            try:
+                m.update()
+            except:
+                pass
+
             m.slow_down()
-        """/TEST"""
 
         for pl in player_group:
 

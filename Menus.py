@@ -92,68 +92,69 @@ def pause_menu():
 
 def main_menu():
 
+    raise "Not Implemented Error"
         #####   declare menu buttons    #####
-    temporary_BG = pygame.image.load('C:/vova/github/SpaceShooter/assets/animations/Background/BG_2_n_res.png')
-    screen.blit(temporary_BG, (0,0))
-    b_new_game = B_New_Game((180, 200, 100, 30))
-    b_stats = B_Stats((180, 250, 100, 30))
-    b_exit = B_Exit((180, 300, 100, 30))
-    menu = [b_new_game, b_stats, b_exit]
-    selection = 0
-    menu[0].select()
-
-    global menu_run
-    menu_run = False
-
-    #draw buttons
-    for x in menu:
-        screen.blit(x.image, x.rect)
-
-        screen.blit(pygame.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
-    while(menu_run):
-
-        pygame.display.flip()
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
-            keys = pygame.key.get_pressed()
-
-            if keys[pygame.K_UP]:
-
-                if selection > 0:
-
-                    menu[selection-1].select()
-                    menu[selection].deselect()
-                    selection += -1
-                    screen.blit(temporary_BG, (0,0))
-                    for x in menu:
-                        screen.blit(x.image, x.rect)
-                        screen.blit(pygame.font.Font.render(x.font, x.text,
-                                                            0, WHITE),
-                                    x.rect)
-
-            if keys[pygame.K_DOWN]:
-
-                if selection < len(menu) -1:
-
-                    menu[selection+1].select()
-                    menu[selection].deselect()
-                    selection += 1
-                    screen.blit(temporary_BG, (0,0))
-                    for x in menu:
-                        screen.blit(x.image, x.rect)
-                        screen.blit(pygame.font.Font.render(x.font, x.text,
-                                                            0, WHITE),
-                                    x.rect)
-
-            if keys[pygame.K_RETURN]:
-
-                menu[selection].action()
-                if selection == 0:
-                    global menu_ru
-                    menu_run = False
-                    print("st")
+    # temporary_BG = pygame.image.load('C:/vova/github/SpaceShooter/assets/animations/Background/BG_2_n_res.png')
+    # screen.blit(temporary_BG, (0,0))
+    # b_new_game = B_New_Game((180, 200, 100, 30))
+    # b_stats = B_Stats((180, 250, 100, 30))
+    # b_exit = B_Exit((180, 300, 100, 30))
+    # menu = [b_new_game, b_stats, b_exit]
+    # selection = 0
+    # menu[0].select()
+    #
+    # global menu_run
+    # menu_run = False
+    #
+    # #draw buttons
+    # for x in menu:
+    #     screen.blit(x.image, x.rect)
+    #
+    #     screen.blit(pygame.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
+    # while(menu_run):
+    #
+    #     pygame.display.flip()
+    #
+    #     for event in pygame.event.get():
+    #         if event.type == pygame.QUIT:
+    #             sys.exit()
+    #         keys = pygame.key.get_pressed()
+    #
+    #         if keys[pygame.K_UP]:
+    #
+    #             if selection > 0:
+    #
+    #                 menu[selection-1].select()
+    #                 menu[selection].deselect()
+    #                 selection += -1
+    #                 screen.blit(temporary_BG, (0,0))
+    #                 for x in menu:
+    #                     screen.blit(x.image, x.rect)
+    #                     screen.blit(pygame.font.Font.render(x.font, x.text,
+    #                                                         0, WHITE),
+    #                                 x.rect)
+    #
+    #         if keys[pygame.K_DOWN]:
+    #
+    #             if selection < len(menu) -1:
+    #
+    #                 menu[selection+1].select()
+    #                 menu[selection].deselect()
+    #                 selection += 1
+    #                 screen.blit(temporary_BG, (0,0))
+    #                 for x in menu:
+    #                     screen.blit(x.image, x.rect)
+    #                     screen.blit(pygame.font.Font.render(x.font, x.text,
+    #                                                         0, WHITE),
+    #                                 x.rect)
+    #
+    #         if keys[pygame.K_RETURN]:
+    #
+    #             menu[selection].action()
+    #             if selection == 0:
+    #                 global menu_ru
+    #                 menu_run = False
+    #                 print("st")
 
 
 def death_menu():
@@ -240,7 +241,7 @@ def death_menu():
 
 def player_set():
 
-    temporary_BG = pygame.image.load('C:/vova/Background/BG_13.png')
+    temporary_BG = pygame.image.load(os.path.join("assets", "BG_12.png"))
     temporary_BG = pygame.transform.scale(temporary_BG, [width, height])
     screen.blit(temporary_BG, (0,0))
     b_new_game = B_New_Game((140, 400, 100, 30))
@@ -250,23 +251,33 @@ def player_set():
     b_exit = B_Exit((250, 400, 100, 30))
     menu = [[ship_highlights_1, ship_highlights_2, ship_highlights_3], [b_new_game, b_exit]]
     selection = [0,0]
+    ship_selected = 0
     menu[0][0].select()
 
     menu_run = True
 
     #draw buttons
+
     for x in menu:
         for y in x:
             screen.blit(y.image, y.rect)
+    screen.blit(pygame.font.Font.render(menu[0][ship_selected].font, y.text, 0, WHITE),
+                pygame.Rect(300, 200, 5, 5))
 
-            screen.blit(pygame.font.Font.render(y.font, y.text, 0, WHITE), y.rect)
     while(menu_run):
 
         screen.blit(temporary_BG, (0,0))
         for y in menu:
             for x in y:
                 screen.blit(x.image, x.rect)
-                screen.blit(pygame.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
+
+        for x in menu[1]:
+            screen.blit(pygame.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
+
+        screen.blit(pygame.font.Font.render(menu[0][ship_selected].font,
+                                            menu[0][ship_selected].text,
+                                            0, WHITE),
+                    pygame.Rect(300, 200, 5, 5))
 
         pygame.display.flip()
 
@@ -317,6 +328,10 @@ def player_set():
                     menu[selection[0]][selection[1]+1].select()
                     menu[selection[0]][selection[1]].deselect()
                     selection[1] += 1
+
+                if selection[0] == 0:
+                    ship_selected = selection[1]
+
                 print(selection)
 
             if keys[pygame.K_LEFT]:
@@ -326,11 +341,16 @@ def player_set():
                     menu[selection[0]][selection[1]-1].select()
                     menu[selection[0]][selection[1]].deselect()
                     selection[1] += -1
+
+                if selection[0] == 0:
+                    ship_selected = selection[1]
+
                 print(selection)
 
             if keys[pygame.K_RETURN]:
 
                 menu[selection[0]][selection[1]].action()
+
                 if selection[0] == 1 and selection[1] == 0:
                     t[0] = False
                     print("breaking")

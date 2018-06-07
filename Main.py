@@ -11,6 +11,12 @@ Initial script
 """
 # fix frizzing on enemy spawn
 
+# removed extra go() command on spawn of Agressor
+# improved starting menu - text only on the right
+# removed explosions FX from asteroid crash
+# added Track_FX instead
+# modified ship texts
+
 pygame.init()
 
 try:
