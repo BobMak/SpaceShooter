@@ -491,10 +491,10 @@ class Player(Object, Moving, Vulnerable):
                 # graphics thread termination call
                 pygame.time.set_timer(pygame.USEREVENT+5, 10)
 
-                s = open('C:/vova/scores.txt', 'r')
+                s = open('scores.txt', 'r')
                 if int(s.read()) < sp.score:
                     s.close()
-                    s = open('C:/vova/scores.txt', 'w')
+                    s = open('scores.txt', 'w')
                     s.write(str(sp.score))
                 s.close()
 
