@@ -19,7 +19,7 @@ Shooting self-guided enemies
 
 Protecting with shields
 
-![pausemenu](https://user-images.githubusercontent.com/30277772/40284677-afb63aa4-5c47-11e8-8826-d6abc85296d9.png)
+![pausemenu](https://user-images.githubusercontent.com/30277772/41755244-1e5c3042-758b-11e8-9b96-399abf2e3aca.png)
 
 Pause menu
 
@@ -27,7 +27,7 @@ Pause menu
 
 Game Over menu
 
-![startmenu](https://user-images.githubusercontent.com/30277772/40284678-afcf9abc-5c47-11e8-85d4-cf3a5dec2679.png)
+![startmenu](https://user-images.githubusercontent.com/30277772/41755278-5348bd84-758b-11e8-889d-f890f6aa7381.png)
 
 Starting menu
 
