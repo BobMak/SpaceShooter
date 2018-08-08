@@ -32,8 +32,9 @@ Game Over menu
 Starting menu
 
 # Get Started
-You will need to install pygame library to run the project:
+You will need to install pygame and numpy modules to run the project:
 
+    pip install numpy
     pip install pygame
     
 
