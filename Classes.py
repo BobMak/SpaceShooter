@@ -7,7 +7,7 @@ import Funcs as f, Funcs
 from Assets import *
 
 
-class Vulnerable():
+class Vulnerable:
     """
     Inherited by all damagble classes.
     """
@@ -20,7 +20,7 @@ class Vulnerable():
         self.hp += -max(0, damage)
 
 
-class Moving():
+class Moving:
     """
     Inherited by all classes that can move by themselves.
     """

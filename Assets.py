@@ -134,7 +134,6 @@ asteroid_densities = [(1,2), (2,2), (1,3), (2,3)]
 # Asteroids quantitiy, asteriods level
 levels = [[4, 0], [5, 1], [6, 2], [5, 3]]
 level = 0
-global SPAWNING_WAVE
 SPAWNING_WAVE = False
 
 expl = [expl_1, expl_2, expl_3, expl_4, expl_5, expl_6, expl_7, expl_8, expl_9]

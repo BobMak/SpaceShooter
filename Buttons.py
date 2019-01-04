@@ -11,7 +11,6 @@ from Scripts import *
 class Button(pygame.sprite.Sprite):
 
     text = '---'
-    global t
     font = 0
 
     def __init__(self, rect):
@@ -22,7 +21,7 @@ class Button(pygame.sprite.Sprite):
         self.rect.top = rect[1]
         self.rect.width = rect[2]
         self.rect.height = rect[3]
-        self.font = pygame.font.Font('C:\Windows\Fonts\Georgia.ttf', 23)
+        self.font = pygame.font.Font(pygame.font.get_default_font(), 23)
 
     def select(self):
         self.image = pygame.transform.scale(menu_button_selected,
@@ -34,14 +33,14 @@ class Button(pygame.sprite.Sprite):
 
 class B_Continue(Button):
     '1'
-    ShipParams.t
 
     def __init__(self, rect):
         super().__init__(rect)
         self.text = 'Continue'
 
     def action(self):
-        ShipParams.t = False
+        ShipParams.t[0] = False
+
 
 class B_Start_Over(Button):
     '2'
@@ -51,8 +50,7 @@ class B_Start_Over(Button):
 
     def action(self):
         global realGuy
-        # global t
-        ShipParams.t = False
+        ShipParams.t[0] = False
 
         for object in player_group:
 

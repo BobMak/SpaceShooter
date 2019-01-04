@@ -15,7 +15,6 @@ fps = 40
 
 def main_loop(realGuy):
 
-    global score
     global fps
     global SPAWNING_WAVE
 
@@ -25,7 +24,7 @@ def main_loop(realGuy):
         y.number = x
 
     global graphics
-    graphics = threading.Thread(target =screen_redraw, daemon=True)
+    graphics = threading.Thread(target=screen_redraw, daemon=True)
     # input = threading.Thread(target =get_input)
     # logic = threading.Thread(target =logic_update)
 
@@ -43,12 +42,12 @@ def main_loop(realGuy):
         # <NO BLITTING HERE>
         keys = pygame.key.get_pressed()
         # Gettin in pause menue
-        if keys[pygame.K_ESCAPE] and t[0] == True:
+        if keys[pygame.K_ESCAPE] and sp.t[0]:
             # To stop graphics thread
             pygame.time.set_timer(pygame.USEREVENT+5, 10)
             # To unblock esc button
             pygame.time.set_timer(pygame.USEREVENT+1, 300)
-            t[0] = False
+            sp.t[0] = False
 
             graphics = Menus.pause_menu()
             graphics.start()
@@ -59,9 +58,8 @@ def main_loop(realGuy):
 
             # Release all key locks
             if event.type == pygame.USEREVENT+1:
-                global t
-                for x in range(len(t)):
-                    t[x] = True
+                for x in range(len(sp.t)):
+                    sp.t[x] = True
                 pygame.time.set_timer(pygame.USEREVENT+1, 0)
 
             # Spawn player if no asteroid in range
@@ -88,7 +86,6 @@ def main_loop(realGuy):
             # Spawn wave
             if event.type == pygame.USEREVENT+3:
                 spawn_wave(pl)
-                global SPAWNING_WAVE
                 SPAWNING_WAVE = False
                 pygame.time.set_timer(pygame.USEREVENT+3, 0)
 
@@ -209,8 +206,6 @@ def main_loop(realGuy):
             else:
                 i.time_count +=1
 
-        global SPAWNING_WAVE
-
         if len(asteroids) == 0 and not SPAWNING_WAVE:
             print('spawning...')
             pygame.time.set_timer(pygame.USEREVENT+3, 2000)
@@ -226,17 +221,17 @@ def screen_draw():
     """
     Draws all game scene, does not flip.
     """
-    for object in effects:
+    for object in effects, noclip_asteroids:
         object.update()
-
-    for x in noclip_asteroids:
-        x.update()
 
     screen.blit(BG, (0,0))
 
     for pl in player_group:
-        try:draw_rotating(pl)
-        except:print("player faild to be drawn")
+        try:
+            draw_rotating(pl)
+        except Exception as e:
+            print("** player faild to be drawn")
+            print("***", e)
         speed = np.sqrt(pl.speed[0]**2 + pl.speed[1]**2)
         if speed > 8:
             blur(pl, speed)
@@ -318,7 +313,7 @@ def screen_draw():
             try:
                 screen.blit(x_2.bg, x_2.bg_rect)
             except:
-                ptint('wrong')
+                print('wrong')
 
             draw_rotating(x_2)
 

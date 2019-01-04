@@ -1,14 +1,69 @@
 import pygame
 from Assets import *
 from Buttons import *
-from ShipParams import *
+import ShipParams
 
 from Scripts import *
 
-def pause_menu():
 
-    global t
-    print(t)
+class Menu:
+
+    def __init__(self, background, buttons, escape_count_down=300):
+        """
+        Abstract menu class
+        :param background: (pygame loaded bg image)
+        :param buttons: (list of lists of Buttons) [[topLeft,... topRight],...[buttomLeft,...bottomRight]]
+        """
+        self.background = background
+        self.buttons = buttons
+        self.escape_count_down = escape_count_down
+        self.selection = [0, 0]
+        self.running = True
+
+    def handle_escape(self):
+        raise NotImplementedError
+
+    def handle_up(self):
+
+        old_row_len = len(self.buttons[self.selection[0]])
+        norm_selection = self.selection[1] / old_row_len
+
+        if self.selection[0] - 1 < 0:
+            self.selection[0] = len(self.buttons) - 1
+        else:
+            self.selection[0] += -1
+
+        new_row_len = len(self.buttons[self.selection[0]])
+        self.selection[1] = int(norm_selection * new_row_len)
+
+    def handle_down(self):
+
+        old_row_len = len(self.buttons[self.selection[0]])
+        norm_selection = self.selection[1] / old_row_len
+
+        if self.selection[0] + 1 == len(self.buttons):
+            self.selection[0] = 0
+        else:
+            self.selection[0] += 1
+
+        new_row_len = len(self.buttons[self.selection[0]])
+        self.selection[1] = int(norm_selection * new_row_len)
+
+    def render_loop(self):
+
+        while self.running:
+
+            screen_draw()
+
+            for button in self.buttons:
+                screen_draw()
+                screen.blit(button.image, button.rect)
+                screen.blit(pygame.font.Font.render(button.font, button.text, 0, WHITE), button.rect)
+
+            pygame.display.flip()
+
+
+def pause_menu():
 
     temporary_BG = screen.copy()
     b_continue  =   B_Continue((200, 200, 100, 30))
@@ -39,9 +94,8 @@ def pause_menu():
             keys = pygame.key.get_pressed()
 
             if event.type == pygame.USEREVENT+1:
-                global t
-                for x in range(len(t)):
-                    t[x] = True
+                for x in range(len(ShipParams.t)):
+                    ShipParams.t[x] = True
                 pygame.time.set_timer(pygame.USEREVENT+1, 0)
 
             if keys[pygame.K_UP]:
@@ -75,24 +129,25 @@ def pause_menu():
                 menu[selection].action()
                 if selection == 0:
                     menu_run = False
-                    t[0] = False
+                    ShipParams.t[0] = False
                     pygame.time.set_timer(pygame.USEREVENT+1, 300)
 
             if keys[pygame.K_ESCAPE]:
-                if (t[0] == True):
+                if (ShipParams.t[0] == True):
                     menu_run = False
-                    t[0] = False
+                    ShipParams.t[0] = False
                     pygame.time.set_timer(pygame.USEREVENT+1, 300)
                 else:
                     pygame.time.set_timer(pygame.USEREVENT+1, 0)
                     pygame.time.set_timer(pygame.USEREVENT+1, 300)
 
 
-    return threading.Thread(target =screen_redraw)
+    return threading.Thread(target=screen_redraw)
+
 
 def main_menu():
 
-    raise "Not Implemented Error"
+    raise Exception("Not Implemented Error")
         #####   declare menu buttons    #####
     # temporary_BG = pygame.image.load('C:/vova/github/SpaceShooter/assets/animations/Background/BG_2_n_res.png')
     # screen.blit(temporary_BG, (0,0))
@@ -158,8 +213,6 @@ def main_menu():
 
 
 def death_menu():
-
-    global t
 
     temporary_BG = screen.copy()
     b_exit = B_Exit((200, 320, 100, 30))
@@ -236,7 +289,7 @@ def death_menu():
             if keys[pygame.K_RETURN]:
 
                 menu[selection].action()
-                t[0] = False
+                ShipParams.t[0] = False
     return None
 
 def player_set():
@@ -352,6 +405,6 @@ def player_set():
                 menu[selection[0]][selection[1]].action()
 
                 if selection[0] == 1 and selection[1] == 0:
-                    t[0] = False
+                    ShipParams.t[0] = False
                     print("breaking")
                     menu_run = False
