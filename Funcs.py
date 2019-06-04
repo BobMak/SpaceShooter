@@ -1,7 +1,7 @@
 import numpy as np
 import random, pygame, copy
-from ShipParams import *
 import Assets
+import State
 import Classes
 import Controls
 
@@ -25,14 +25,14 @@ def shields(source):
 
         shld_obj.rotate(source.look_dir)
         source.sh_add(shld_obj)
-        Assets.effects.add(shld_obj)
+        State.effects.add(shld_obj)
 
 def shot(shoter, direction, bolt):
 
     skipped_len = shoter.rect.height//2
     shot = 0
     shot = Classes.Projectile(bolt, shoter.rect.centerx,
-                              shoter.rect.centery, Assets.prj_distances[bolt])
+                              shoter.rect.centery, State.prj_distances[bolt])
     shot.look_dir = shoter.look_dir
     shot.rect.centerx = (shoter.rect.centerx
                         - skipped_len*np.cos(np.deg2rad(shot.look_dir
@@ -41,9 +41,9 @@ def shot(shoter, direction, bolt):
                         - skipped_len*np.sin(np.deg2rad(shot.look_dir
                                                               + 90)))
 
-    shot.speed = [Assets.prj_speeds[bolt]
+    shot.speed = [State.prj_speeds[bolt]
                    *np.cos(np.deg2rad(shoter.look_dir-90)),
-                  Assets.prj_speeds[bolt]
+                  State.prj_speeds[bolt]
                    *np.sin(np.deg2rad(shoter.look_dir-90))]
 
     shot.rotate(0)
@@ -54,19 +54,19 @@ def ship_assign(picked_ship, lives, player):
     '''Assign all properties to given ship. Usually when creating new instance
     of ship'''
     ship = Classes.Player(Assets.SHIPS_IMGS[picked_ship],
-                     width//2, height//2,
-                     complex_sh=picked_ship-1, bolt=picked_ship,
-                     lives=lives, width=None, height=None, player=player)
+                          State.HEIGHT//2, State.HEIGHT//2,
+                          complex_sh=picked_ship-1, bolt=picked_ship,
+                          lives=lives, width=None, height=None, player=player)
     ship.rotate(0)
     ship.arr_input = Controls.ABILITIES[picked_ship]
 
-    ship.ROTATION = SHIP_CONSTANTS[picked_ship][0]
-    ship.ACCELERATION = SHIP_CONSTANTS[picked_ship][1]
-    ship.DEACCELERATION = SHIP_CONSTANTS[picked_ship][2]
-    ship.ENV_DEACCELERATION = SHIP_CONSTANTS[picked_ship][3]
-    ship.HP = SHIP_CONSTANTS[picked_ship][4]
-    ship.S_HP = SHIP_CONSTANTS[picked_ship][5]
-    ship.type = SHIP_CONSTANTS[picked_ship][6]
+    ship.ROTATION = State.SHIP_CONSTANTS[picked_ship][0]
+    ship.ACCELERATION = State.SHIP_CONSTANTS[picked_ship][1]
+    ship.DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][2]
+    ship.ENV_DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][3]
+    ship.HP = State.SHIP_CONSTANTS[picked_ship][4]
+    ship.S_HP = State.SHIP_CONSTANTS[picked_ship][5]
+    ship.type = State.SHIP_CONSTANTS[picked_ship][6]
 
     return ship
 
@@ -74,7 +74,7 @@ def draw_rotating(obj):
 
     rect = obj.rotated_image.get_rect()
     rect.center = (obj.rect.center)
-    Assets.screen.blit(obj.rotated_image, rect)
+    State.screen.blit(obj.rotated_image, rect)
 
 def blur(obj, speed):
     '''blur effect along the speed direction'''
@@ -84,10 +84,10 @@ def blur(obj, speed):
     for x in range(int(speed)//3):
         rect.centerx = obj.rect.centerx + obj.speed[0]//(x+3)
         rect.centery = obj.rect.centery + obj.speed[1]//(x+3)
-        Assets.screen.blit(img, rect)
+        State.screen.blit(img, rect)
         rect.centerx = obj.rect.centerx - obj.speed[0]//(x+3)
         rect.centery = obj.rect.centery - obj.speed[1]//(x+3)
-        Assets.screen.blit(img, rect)
+        State.screen.blit(img, rect)
 
 def orbit_rotate(center, obj, d_ang, dist = 0, ang = -20):
     """orbit_rotate(center, obj, d_ang, dist = 0, ang = -20)
@@ -165,23 +165,22 @@ def draw_triangle(player, color, dist_to_edg, width):
           + dist_to_edg * np.sin(np.deg2rad(player.look_dir + 120 - 90)))
     bufy3 = (player.rect.centery
           + dist_to_edg * np.sin(np.deg2rad(player.look_dir - 120 - 90)))
-    pygame.draw.polygon(Assets.screen, color,
+    pygame.draw.polygon(State.screen, color,
                         ((bufx1, bufy1), (bufx2, bufy2), (bufx3, bufy3)), width)
+
 
 def bound_collision(obj):
     global bound_break_vert
     global bound_break_gor
-    global control_keys
 
-    if obj.rect.left < 0 or obj.rect.right > width:
+    if obj.rect.left < 0 or obj.rect.right > State.WIDTH:
 
-        #control_keys[0:4] = False, False, False, False
         #if bound_break_gor == False:
         obj.speed[0] = -obj.speed[0]
         #   bound_break_gor = True
     else:
         bound_break_gor = False
-    if obj.rect.top < 0 or obj.rect.bottom > height:
+    if obj.rect.top < 0 or obj.rect.bottom > State.HEIGHT:
        # control_keys[0:4] = False, False, False, False
         #if bound_break_vert == False:
         obj.speed[1] = -obj.speed[1]
@@ -193,39 +192,39 @@ def bound_collision(obj):
 def bound_pass(obj):
 
     if (obj.position[0] < -obj.rect.width
-     or obj.position[0] > width):
+     or obj.position[0] > State.WIDTH):
 
-        # obj.rect = obj.rect.move((-(width + obj.rect.width) * np.sign(obj.rect.centerx)), 0)
+        # obj.rect = obj.rect.move((-(State.WIDTH + obj.rect.width) * np.sign(obj.rect.centerx)), 0)
         # obj.rect.centerx += -(width + obj.rect.width) * np.sign(obj.rect.centerx)
-        obj.position[0] += -(width + obj.rect.width) * np.sign(obj.rect.x)
+        obj.position[0] += -(State.WIDTH + obj.rect.width) * np.sign(obj.rect.x)
         # except: pass
 
     if (obj.position[1] < -obj.rect.height
-     or obj.position[1] > height):
+     or obj.position[1] > State.HEIGHT):
         # obj.rect = obj.rect.move(0, (-(height + obj.rect.width) * np.sign(obj.rect.centery)))
-        obj.position[1] += -(height + obj.rect.height) * np.sign(obj.rect.y)
+        obj.position[1] += -(State.HEIGHT + obj.rect.height) * np.sign(obj.rect.y)
         # except: pass
 
 def move_movable():
-    for object in Assets.movable:
+    for object in State.movable:
         # modify position to avoid loss of <1 values when moving
         object.modify_position()
 
 def spawn_wave(realGuy):
-    level = Assets.level
-    for i in range(Assets.levels[level][0]):
+    level = State.level
+    for i in range(State.levels[level][0]):
         if random.choice([True, False]):
             proX = random.choice([random.randint(-20,0),
-                                  random.randint(width, width+20)])
-            proY = random.randint(-20, height+20)
+                                  random.randint(State.WIDTH, State.WIDTH+20)])
+            proY = random.randint(-20, State.HEIGHT+20)
         else:
-            proX = random.randint(-20, width+20)
+            proX = random.randint(-20, State.WIDTH+20)
             proY = random.choice([random.randint(-20,0),
-                                  random.randint(height, height+20)])
+                                  random.randint(State.HEIGHT, State.HEIGHT+20)])
 
-        x = Classes.Adv_Asteroid(Assets.levels[level][1]+1, proX, proY, 4, [0,0])
+        x = Classes.Adv_Asteroid(State.levels[level][1]+1, proX, proY, 4, [0,0])
 
-    Assets.level += 1
+    State.level += 1
 
 def FX_explosion(x, y, xpl=Assets.expl, radius=(30,30)):
 
@@ -233,7 +232,7 @@ def FX_explosion(x, y, xpl=Assets.expl, radius=(30,30)):
     obj.rect.centerx += - 20
     obj.rect.centery += - 20
 
-    Assets.effects.add(obj)
+    State.effects.add(obj)
 
 def FX_engine_mark(source):
     object = 0
@@ -253,4 +252,4 @@ def FX_engine_mark(source):
     speed0 = np.cos(np.deg2rad(copy.deepcopy(object.look_dir+90)))*3
     speed1 = np.sin(np.deg2rad(copy.deepcopy(object.look_dir+90)))*3
 
-    Assets.effects.add(object)
+    State.effects.add(object)

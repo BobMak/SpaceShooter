@@ -1,35 +1,7 @@
 import os
 import pygame
-from ShipParams import size
 
 pygame.init()
-
-# Game parameters
-INPUTS_PER_SECOND = 30
-FRAMES_PER_SECOND = 60
-LOGIC_PER_SECOND = 240
-
-screen = pygame.display.set_mode((size[0], size[1]))
-
-movable = pygame.sprite.Group()
-
-asteroids = pygame.sprite.Group()
-noclip_asteroids = pygame.sprite.Group()
-outside_asteroids = pygame.sprite.Group()
-projectiles = pygame.sprite.Group()
-mob_goal = pygame.sprite.Group()
-
-missiles = pygame.sprite.Group()
-hit_waves = pygame.sprite.Group()
-time_dependent = pygame.sprite.Group()
-
-player_group = pygame.sprite.Group()
-mob_group = pygame.sprite.Group()
-script_mob_group = pygame.sprite.Group()
-
-glow = pygame.sprite.Group()
-effects = pygame.sprite.Group()
-interface = pygame.sprite.Group()
 
 blanc = pygame.image.load(os.path.join("assets", "blanc.png"))
 green = pygame.image.load(os.path.join("assets", "ships", "green.png"))
@@ -96,45 +68,15 @@ shld_7 = pygame.image.load(os.path.join("assets", "animations", "Shields", "shie
 
 model_BG = pygame.image.load(os.path.join("assets", "ModelBG.bmp"))
 
-BG = pygame.transform.scale(pygame.image.load(os.path.join("assets", "BG_720.png")), (size[0], size[1]))
+SIZE = WIDTH, HEIGHT = 720, 576
+BG = pygame.transform.scale(pygame.image.load(os.path.join("assets", "BG_720.png")), (WIDTH, HEIGHT))
 
 menu_BG = pygame.image.load(os.path.join("assets", "menu_BG.png"))
 menu_button = pygame.image.load(os.path.join("assets", "menu_button.png"))
 menu_button_selected = pygame.image.load(os.path.join("assets", "menu_button_selected.png"))
 live = pygame.image.load(os.path.join("assets", "1live.png"))
 
-# prj_cooldown = [500, 300, 1000]     #   milliseconds
-prj_cooldown = [10, 20, 30, 20, 30, 80]     #   frames
-prj_speeds = [20, 10, 15, 8]
-prj_distances = [20, 150, 60]
 prj_imgs =  [bolt_1, bolt_3, bolt_2, missile_1]
-bolt_damage = [6, 40, 14, 90, 100, 300]
-n_bolts = 3
-
-msl_max_speeds = [5]
-msl_d_angs = [5, 10, 3]
-msl_d_speeds = [0.25, 0.5, 0.8]
-msl_distances = [500, 300, 100]
-msl_hit_ranges = [50, 20, 100]
-
-spec_cooldown = [30, 60, 120]
-
-complex_rects = [
-    [[20,20,20,-180], [20,20,20,0], [18,18,38,-180], [18,18,38,0]],
-    [[20,20,0,0],[10,10,25,-180],[15,15,15,-180],[15,15,15,70],[15,15,15,-70],[15,15,20,0]],
-    [[20,20,0,0]]
-]
-
-asteroid_hps = [2, 3, 4, 5]
-asteroid_noclip_timers = [45, 30, 20, 10]
-asteroid_velocity_deviations = [1, 2, 3, 4]
-asteroid_densities = [(1,2), (2,2), (1,3), (2,3)]
-
-# Level parameters:
-# Asteroids quantitiy, asteriods level
-levels = [[4, 0], [5, 1], [6, 2], [5, 3]]
-level = 0
-SPAWNING_WAVE = False
 
 expl = [expl_1, expl_2, expl_3, expl_4, expl_5, expl_6, expl_7, expl_8, expl_9]
 expN = [expN_1, expN_2, expN_3, expN_4, expN_5, expN_6, expN_7, expN_8, expN_9]
@@ -142,9 +84,4 @@ engi = [engi_5, engi_3, engi_2]
 shield = [shld_0, shld_1, shld_2, shld_3, shld_4, shld_5, shld_6, shld_7]
 asteroid_imgs = [img_asteroid_1, img_asteroid_2, img_asteroid_3, img_asteroid_4]
 
-SHIP_HP = [40, 23, 10]
 SHIPS_IMGS = [guy_img, ship_2, ship_3]
-SHIPS_TEXTS = ['space - shoot, c - shield',
-               'space - shoot, c - shield, x - missile',
-               'space - shoot, c - shield, x - missile',
-               'space - shoot, c - shield']

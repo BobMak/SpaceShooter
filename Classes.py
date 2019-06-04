@@ -1,22 +1,21 @@
-import pygame, random, copy
+import pickle
+import random, copy
 import numpy as np, numpy
 import pygame.gfxdraw as gfx
 import Menus
-import ShipParams as sp
-import Funcs as f, Funcs
+import State
+import Funcs
 from Assets import *
 
 
 class Vulnerable:
     """
-    Inherited by all damagble classes.
+    Inherited by all objects that can be damaged.
     """
     def __init__(self, hp):
-
         self.hp = hp
 
     def damage(self, damage):
-
         self.hp += -max(0, damage)
 
 
@@ -29,7 +28,7 @@ class Moving:
 
          self.position = [self.rect.x, self.rect.y]
 
-         movable.add(self)
+         State.movable.add(self)
 
     def modify_position(self):
         "modifyes position with respect to <1 values of acceleration"
@@ -93,7 +92,7 @@ class FX(pygame.sprite.Sprite, Moving):
         # Requires rect to already be there
         Moving.__init__(self)
 
-        time_dependent.add(self)
+        State.time_dependent.add(self)
 
 
 class FX_Glow(FX):
@@ -101,14 +100,13 @@ class FX_Glow(FX):
     FX_Glow(rect, duration, radius, length, color, speed=(0,0))
     """
     def __init__(self, rect, duration, radius, length, color, speed=(0,0)):
-        global glow
 
         FX.__init__(self, rect, duration)
         self.radius = radius
         self.color = color
         self.length = length
         self.speed = speed
-        glow.add(self)
+        State.glow.add(self)
 
     #draw
     def update(self):
@@ -116,7 +114,7 @@ class FX_Glow(FX):
         drawing funcition
         """
         for x in range(self.length):
-            pygame.gfxdraw.filled_circle(screen, self.rect.centerx,
+            pygame.gfxdraw.filled_circle(State.screen, self.rect.centerx,
                                          self.rect.centery, self.radius+x,
                                          self.color)
 
@@ -190,7 +188,7 @@ class FX_Track(FX):
         if speed != None:
             self.speed = speed
 
-        effects.add(self)
+        State.effects.add(self)
 
     def enlarge(self):
 
@@ -344,9 +342,9 @@ class Object(pygame.sprite.Sprite):
         for x in range(-1, 2):
             for y in range(-1, 2):
                 a = (self.rect.centerx
-                    - (obj.rect.centerx + x*(sp.width+obj.rect.width)))
+                    - (obj.rect.centerx + x*(State.WIDTH+obj.rect.width)))
                 b = (self.rect.centery
-                    - (obj.rect.centery + y*(sp.height+obj.rect.height)))
+                    - (obj.rect.centery + y*(State.HEIGHT+obj.rect.height)))
                 dist = np.sqrt(a**2 + b**2)
                 all_directions_distances.append(dist)
 
@@ -360,9 +358,9 @@ class Object(pygame.sprite.Sprite):
         for x in range(-1, 2):
             for y in range(-1, 2):
                 a = (self.rect.centerx
-                    - (aim.rect.centerx + x*(sp.width+aim.rect.width)))
+                    - (aim.rect.centerx + x*(State.WIDTH+aim.rect.width)))
                 b = (self.rect.centery
-                    - (aim.rect.centery + y*(sp.height+aim.rect.height)))
+                    - (aim.rect.centery + y*(State.HEIGHT+aim.rect.height)))
 
                 dist = np.sqrt(a**2 + b**2)
                 all_directions_distances.append(dist)
@@ -375,8 +373,8 @@ class Object(pygame.sprite.Sprite):
         if (best+1)%3 == 0: y = 1
         elif best in [1, 3, 6]: y = 0
         else: y = -1
-        a = aim.rect.centerx + x*(sp.width + aim.rect.width)
-        b = aim.rect.centery + y*(sp.height + aim.rect.height)
+        a = aim.rect.centerx + x*(State.WIDTH + aim.rect.width)
+        b = aim.rect.centery + y*(State.HEIGHT + aim.rect.height)
         aim = Object(blanc, a, b)
         return self.get_aim_dir(aim)
 
@@ -421,32 +419,32 @@ class Player(Object, Moving, Vulnerable):
         self.lives = lives
         super().__init__(image, x, y, width=width, height=height)
         Moving.__init__(self)
-        Vulnerable.__init__(self, SHIP_HP[complex_sh])
+        Vulnerable.__init__(self, State.SHIP_HP[complex_sh])
         """#################FIX HP###################"""
 
         if player == True:
 
-            self.add(player_group)
+            self.add(State.player_group)
 
             for i in range(lives):
                 r = Object(live,270 + 35*(1+i),20,30, 30)
-                r.add(interface)
-                movable.remove(r)
+                r.add(State.interface)
+                State.movable.remove(r)
 
-            for x in complex_rects[complex_sh]:
+            for x in State.complex_rects[complex_sh]:
                 b = Colliding(x[0], x[1], x[2], x[3], self)
                 self.player_hull_group.add(b)
 
         self.bolt = bolt
 
         self.time_count_fire = 0
-        self.timer_fire = prj_cooldown[bolt]
+        self.timer_fire = State.prj_cooldown[bolt]
 
         self.time_count_special = 0
-        self.timer_special = spec_cooldown[complex_sh]
+        self.timer_special = State.spec_cooldown[complex_sh]
 
         self.time_count_missile = 0
-        self.timer_missile = prj_cooldown[n_bolts + bolt]
+        self.timer_missile = State.prj_cooldown[State.n_bolts + bolt]
 
         self.time_count_shield = 0
         self.timer_shield = 50
@@ -457,7 +455,6 @@ class Player(Object, Moving, Vulnerable):
         self.timers = [self.timer_fire, self.timer_special,
                        self.timer_missile, self.timer_shield]
 
-
         self.distance = 0
         self.orbit_ang = 0
         self.player = player
@@ -467,7 +464,7 @@ class Player(Object, Moving, Vulnerable):
         self.kill()
         self.rotate(0)
         self.speed = [0,0]
-        f.FX_explosion(self.rect.centerx, self.rect.centery)
+        Funcs.FX_explosion(self.rect.centerx, self.rect.centery)
 
         for x in self.shields:
             x.down()
@@ -483,20 +480,12 @@ class Player(Object, Moving, Vulnerable):
             self.lives += -1
 
             if self.lives > -1:
-                #lol =0
-                #lol = pygame.event.Event(pygame.USEREVENT)
                 pygame.time.set_timer(pygame.USEREVENT+2, 500)
-
             else:
                 # graphics thread termination call
                 pygame.time.set_timer(pygame.USEREVENT+5, 10)
-
-                s = open('scores.txt', 'r')
-                if int(s.read()) < sp.score:
-                    s.close()
-                    s = open('scores.txt', 'w')
-                    s.write(str(sp.score))
-                s.close()
+                with open('save.pkl', 'wb') as f:
+                    pickle.dump(State.save, f, pickle.HIGHEST_PROTOCOL)
 
                 Menus.death_menu()
 
@@ -509,7 +498,7 @@ class Player(Object, Moving, Vulnerable):
                 return True
 
     def show_HP(self):
-        gfx.box(screen, (10, 10, self.HP*100/self.MAX_HP, 20), (0, 255, 0, 50))
+        gfx.box(State.screen, (10, 10, self.HP*100/self.MAX_HP, 20), (0, 255, 0, 50))
 
     def m_add(self, mounted):
         self.mounts.append(mounted)
@@ -518,10 +507,9 @@ class Player(Object, Moving, Vulnerable):
         self.shields.add(shield)
 
     def scan(self):
-        global asteroids
-        min_dist = asteroids.sprites[0]
+        min_dist = State.asteroids.sprites[0]
 
-        for i in asteroids:
+        for i in State.asteroids:
             dist = np.sqrt((self.rect.x - i.rect.x)**2
                          + (self.rect.y - i.rect.y)**2)
             if dist < min_dist:
@@ -562,16 +550,15 @@ class Mounted(Object):
     aim_dir = None
     orbit_ang = None
 
-    ## eliptic orbiting parameters ##
-    d_ang = 1   #unmounted orbiting speed
+    # elliptic orbiting parameters
+    d_ang = 1   # unmounted orbiting speed
     min_dist = 10
     max_dist = 5
-    orbit_coef = 120    #Degrees befor changing dirction of distance movement
+    orbit_coef = 120  # Degrees before changing direction of distance movement
 
     distance = 0
     d_dist = 0
     d_dist_dir = -1     # 1 or -1 -- is object getting closer or further
-
 
     def __init__(self, image, mounted_on,
                  distance = 20, look_dir = 0,
@@ -598,20 +585,15 @@ class Mounted(Object):
             self.orbit_ang = mounted_on.look_dir+look_dir
 
     def aim(self, aim):
-
         x = (self.look_dir - self.get_aim_dir(aim))
-
         if x < 5 and x > -5:
             return True
-
         elif abs(x) > 180:
              self.rotate(5*np.sign(x))
-
         else:
              self.rotate(-5*np.sign(x))
 
     def init_orbit(self, orbit_coef, d_ang, min, max, distance):
-
         self.min_dist = min
         self.max_dist = max
         self.d_ang = d_ang
@@ -627,7 +609,7 @@ class Turret(Mounted):
               width = 20, height = 20,
               restriction = None, bg = bg_ball)
     """
-    interesting = [asteroids]
+    interesting = [State.asteroids]
     in_range = []
 
     def __init__(self, image, radius, mounted_on,
@@ -648,7 +630,7 @@ class Turret(Mounted):
                 self.interesting.append(i)
 
     def set_priorities(self, group):
-        b = self.interesting.pop(interesting.index('group'))
+        b = self.interesting.pop(State.interesting.index('group'))
         self.interesting.insert(0, b)
 
     def scan(self, group):
@@ -656,7 +638,7 @@ class Turret(Mounted):
         a = Object(blanc, self.radius, self.radius,
                     self.rect.centerx, self.rect.centery)
 
-        pygame.gfxdraw.circle(screen, self.rect.centerx, self.rect.centery,
+        pygame.gfxdraw.circle(State.screen, self.rect.centerx, self.rect.centery,
                               self.radius, (0,255,0,50))
 
         for x in group:
@@ -671,12 +653,10 @@ class Turret(Mounted):
         for i in self.interesting:
             self.scan(i)
 
-        #Is there anything interesting in range?
-
+        # Is there anything interesting in range?
         try:
             if not self.locked.alive():
                 self.locked = None
-
         except:
             self.locked = None
 
@@ -684,19 +664,16 @@ class Turret(Mounted):
             return True
 
     def lock_on(self):
-
         if self.in_range:
             self.locked = self.in_range[0]
             return True
-
         else:
             return False
 
     def auto_lock_on(self):
-        #  To not switch target if it is still in range
+        #  Don't not switch target if it is still in range
         if self.locked != None:
             pass
-
         else:
             self.lock_on()
 
@@ -725,11 +702,11 @@ class T_PreAim(Turret):
 
         self.bolt_number = bolt_number
         self.bolt_img = prj_imgs[bolt_number]
-        self.prj_speed = prj_speeds[bolt_number]
+        self.prj_speed = State.prj_speeds[bolt_number]
 
         self.predict_pos = Object(ball_img, 1, 1, -50, 1)
         self.blocked = False
-        self.timer = cooldown*sp.FPS
+        self.timer = cooldown * State.FPS
         self.time_count = 0
         self.add(mounted_on.turrets)
 
@@ -865,13 +842,13 @@ class Script_Mob(Player):
     def __init__(self, image, x, y, picked_ship=0):
 
         super().__init__(image, x, y, lives=1, player=False)
-        script_mob_group.add(self)
-        self.ROTATION = sp.SHIP_CONSTANTS[picked_ship][0]
-        self.ACCELERATION = sp.SHIP_CONSTANTS[picked_ship][1]
-        self.DEACCELERATION = sp.SHIP_CONSTANTS[picked_ship][2]
-        self.ENV_DEACCELERATION = sp.SHIP_CONSTANTS[picked_ship][3]
-        self.HP = sp.SHIP_CONSTANTS[picked_ship][4]
-        self.S_HP = sp.SHIP_CONSTANTS[picked_ship][5]
+        State.script_mob_group.add(self)
+        self.ROTATION = State.SHIP_CONSTANTS[picked_ship][0]
+        self.ACCELERATION = State.SHIP_CONSTANTS[picked_ship][1]
+        self.DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][2]
+        self.ENV_DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][3]
+        self.HP = State.SHIP_CONSTANTS[picked_ship][4]
+        self.S_HP = State.SHIP_CONSTANTS[picked_ship][5]
 
     def assign_goal(self, obj=None, x=None, y=None):
         """
@@ -978,11 +955,11 @@ class Script_Mob(Player):
     def update(self):
         """Execute all functions in to_do_list if there is any goal"""
         # Excecute all todo dunctions if goal is player
-        if self.goal in player_group:
+        if self.goal in State.player_group:
             [x() for x in self.to_do_list]
         else:
             try:
-                self.goal = player_group.sprites()[0]
+                self.goal = State.player_group.sprites()[0]
             except:
                 pass
 
@@ -994,11 +971,11 @@ class Agressor(Script_Mob):
         super().__init__(image, x, y, 3)
         # Assign goal if
         try:
-            self.assign_goal(player_group.sprites()[0])
+            self.assign_goal(State.player_group.sprites()[0])
         except:
             pass
 
-        asteroids.add(self)
+        State.asteroids.add(self)
         self.look_dir = random.randint(0, 358)
         self.speed = [random.uniform(-3, 3), random.uniform(-3, 3)]
 
@@ -1067,7 +1044,7 @@ class Asteroid(Object, Moving, Vulnerable):
         Vulnerable.__init__(self, 1)
 
         self.type = type
-        asteroids.add(self)
+        State.asteroids.add(self)
         self.image = pygame.transform.scale(image, (10*type, 10*type))
         self.speed = [speed[0] + random.uniform(-self.velo_deviation,
                                                  self.velo_deviation),
@@ -1077,12 +1054,10 @@ class Asteroid(Object, Moving, Vulnerable):
         self.hp = self.type * 2
 
         # movable.add(self)
-        asteroids.add(self)
+        State.asteroids.add(self)
         self.rotate(0)
 
     def crash(self):
-        global asteroids
-
         if self.type >2:
             for x in range(6):
                 FX_Track(particle, self.rect, 50,
@@ -1112,7 +1087,7 @@ class Asteroid(Object, Moving, Vulnerable):
         self.noclip_count += 1
         if self.noclip_count > self.noclip_timer:
             self.noclip_count = 0
-            noclip_asteroids.remove(self)
+            State.noclip_asteroids.remove(self)
 
 
 class Adv_Asteroid(Asteroid):
@@ -1121,10 +1096,10 @@ class Adv_Asteroid(Asteroid):
 
         super().__init__(asteroid_imgs[level-1], x, y, type, speed)
         self.level = level
-        self.hp = asteroid_hps[level-1] * self.type
-        self.noclip_timer = asteroid_noclip_timers[level-1]
-        self.density = asteroid_densities[level-1]
-        self.velo_deviation = asteroid_velocity_deviations[level-1]
+        self.hp = State.asteroid_hps[level-1] * self.type
+        self.noclip_timer = State.asteroid_noclip_timers[level-1]
+        self.density = State.asteroid_densities[level-1]
+        self.velo_deviation = State.asteroid_velocity_deviations[level-1]
 
     def damage(self, dmg, type=None, speed=None):
 
@@ -1140,10 +1115,9 @@ class Adv_Asteroid(Asteroid):
         if self.hp < 0:
             self.crash()
             return
-        noclip_asteroids.add(self)
+            State.noclip_asteroids.add(self)
 
     def crash(self):
-        global asteroids
 
         if self.type >2:
             for x in range(6):
@@ -1168,7 +1142,7 @@ class Adv_Asteroid(Asteroid):
 
                 if random.choice((0,0,0,0,0,0,0,0,1)):
                     c = Agressor(bad_thing, self.rect.centerx, self.rect.centery)
-                    c.remove(player_group)
+                    c.remove(State.player_group)
                     c.rush()
 
         self.kill()
@@ -1192,14 +1166,14 @@ class Projectile(Object, Moving, Vulnerable):
 
         super().__init__(prj_imgs[bolt], x, y, width=width, height=height)
         Moving.__init__(self)
-        Vulnerable.__init__(self, bolt_damage[bolt])
+        Vulnerable.__init__(self, State.bolt_damage[bolt])
 
-        self.speed_max = prj_speeds[bolt]
+        self.speed_max = State.prj_speeds[bolt]
         self.timer = distance
 
         # movable.add(self)
-        projectiles.add(self)
-        time_dependent.add(self)
+        State.projectiles.add(self)
+        State.time_dependent.add(self)
 
     def remove(self):
         self.kill()
@@ -1221,18 +1195,18 @@ class Missile(Projectile):
 
     def __init__(self, bolt, x, y):
 
-        super().__init__(bolt + n_bolts, x, y, msl_distances[bolt])
+        super().__init__(bolt + State.n_bolts, x, y, State.msl_distances[bolt])
 
-        self.d_ang = msl_d_angs[bolt]
-        self.d_speed = msl_d_speeds[bolt]
-        self.max_speed = msl_max_speeds[bolt]
-        self.hit_range = msl_hit_ranges[bolt]
-        self.hp = bolt_damage[bolt + n_bolts]
+        self.d_ang = State.msl_d_angs[bolt]
+        self.d_speed = State.msl_d_speeds[bolt]
+        self.max_speed = State.msl_max_speeds[bolt]
+        self.hit_range = State.msl_hit_ranges[bolt]
+        self.hp = State.bolt_damage[bolt + State.n_bolts]
         self.mod_speed = 0
         self.dist_prev = 500
         self.dist = None
-        missiles.add(self)
-        projectiles.remove(self)
+        State.missiles.add(self)
+        State.projectiles.remove(self)
 
         self.aim = self.lock_closest()
 
@@ -1252,10 +1226,10 @@ class Missile(Projectile):
 
     def lock_closest(self):
         arr = []
-        for x in asteroids:
+        for x in State.asteroids:
             arr.append(self.get_distance(x))
         if len(arr) > 0:
-            return asteroids.sprites()[arr.index(min(arr))]
+            return State.asteroids.sprites()[arr.index(min(arr))]
         else:
             return None
 
@@ -1296,7 +1270,7 @@ class Missile(Projectile):
 
     def update(self):
 
-        if self.aim in asteroids:
+        if self.aim in State.asteroids:
             self.pursue()
         else:
             self.aim = self.lock_closest()
@@ -1309,10 +1283,10 @@ class Missile(Projectile):
     def blow_up(self):
 
         x = Zone(self.rect.x, self.rect.y, self.hit_range, self.hp, 2)
-        f.FX_explosion(self.rect.centerx, self.rect.centery,
+        Funcs.FX_explosion(self.rect.centerx, self.rect.centery,
                        xpl=expN, radius=(60,60))
-        hit_waves.add(x)
-        time_dependent.add(x)
+        State.hit_waves.add(x)
+        State.time_dependent.add(x)
         self.kill()
 
 
@@ -1445,7 +1419,7 @@ class Shield(Animation):
 
     def show_HP(self):
 
-        gfx.box(screen,
+        gfx.box(State.screen,
                 (self.rect.left, self.rect.bottom, 2*self.HP, 5),
                 (50, 50, 255, 100))
 

@@ -1,16 +1,13 @@
-import sys
-import pygame
-import ShipParams
-from Assets import *
-from Classes import *
-from Controls import *
-from Funcs import *
+import pickle
 
+import State
 from Scripts import *
+
 
 class Button(pygame.sprite.Sprite):
 
     text = '---'
+    global t
     font = 0
 
     def __init__(self, rect):
@@ -31,6 +28,7 @@ class Button(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(menu_button,
                                             [self.rect.width, self.rect.height])
 
+
 class B_Continue(Button):
     '1'
 
@@ -39,7 +37,7 @@ class B_Continue(Button):
         self.text = 'Continue'
 
     def action(self):
-        ShipParams.t[0] = False
+        State.t = False
 
 
 class B_Start_Over(Button):
@@ -50,7 +48,8 @@ class B_Start_Over(Button):
 
     def action(self):
         global realGuy
-        ShipParams.t[0] = False
+        # global t
+        State.t = False
 
         for object in player_group:
 
@@ -61,12 +60,14 @@ class B_Start_Over(Button):
         for object in interface:
             object.kill()
 
-        realGuy = ship_assign(ShipParams.picked_ship, ShipParams.start_lives,
+        realGuy = ship_assign(State.picked_ship, State.start_lives,
                               player=True)
-        Assets.level = 0
+
+        State.save['level'] = 0
 
         spawn_wave(realGuy)
         main_loop(realGuy)
+
 
 class B_New_Game(Button):
     '3'
@@ -85,21 +86,22 @@ class B_New_Game(Button):
 
         Assets.level = 0
 
-        realGuy = ship_assign(ShipParams.picked_ship, ShipParams.start_lives,
+        realGuy = ship_assign(State.picked_ship, State.start_lives,
                               player=True)
 
         main_loop(realGuy)
+
 
 class B_Stats(Button):
     '4'
     def __init__(self, rect):
         super().__init__(rect)
-        s = open('C:/vova/scores.txt', 'r+')
-        self.text = s.read()
-        s.close()
+        with open('save.pkl', 'rb') as f:
+            pickle.dump(State.save, f, pickle.HIGHEST_PROTOCOL)
 
     def action(self):
         pass
+
 
 class B_Exit(Button):
     '5'
@@ -108,7 +110,10 @@ class B_Exit(Button):
         self.text = 'Exit'
 
     def action(self):
+        State.paused = False
+        pg.event.post(pg.event.Event(pg.QUIT, {'QUIT': True}))
         sys.exit()
+
 
 class B_Ship_Highlihgts(Button):
     '6'
@@ -118,7 +123,7 @@ class B_Ship_Highlihgts(Button):
 
         super().__init__(rect)
         self.ship_number = ship_number
-        self.text = SHIPS_TEXTS[ship_number]
+        self.text = State.SHIPS_TEXTS[ship_number]
 
         self.main_image = SHIPS_IMGS[ship_number]
         ship_rect = self.main_image.get_rect()
@@ -133,7 +138,7 @@ class B_Ship_Highlihgts(Button):
 
     def action(self):
 
-        ShipParams.picked_ship = self.ship_number
+        State.picked_ship = self.ship_number
 
     def select(self):
         self.image = pygame.transform.scale(menu_button_selected,
