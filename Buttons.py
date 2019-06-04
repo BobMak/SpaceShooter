@@ -1,13 +1,16 @@
 import pickle
+import pygame as pg
+import sys
 
+from Assets import *
 import State
-from Scripts import *
+import Funcs
+import Scripts
 
 
 class Button(pygame.sprite.Sprite):
 
     text = '---'
-    global t
     font = 0
 
     def __init__(self, rect):
@@ -51,22 +54,22 @@ class B_Start_Over(Button):
         # global t
         State.t = False
 
-        for object in player_group:
+        for object in State.player_group:
 
             object.speed = [0,0]
             object.kill()
-        for object in movable:
+        for object in State.movable:
             object.kill()
-        for object in interface:
+        for object in State.interface:
             object.kill()
 
-        realGuy = ship_assign(State.picked_ship, State.start_lives,
+        realGuy = Funcs.ship_assign(State.picked_ship, State.start_lives,
                               player=True)
 
         State.save['level'] = 0
 
-        spawn_wave(realGuy)
-        main_loop(realGuy)
+        Funcs.spawn_wave(realGuy)
+        Scripts.main_loop(realGuy)
 
 
 class B_New_Game(Button):
@@ -76,20 +79,12 @@ class B_New_Game(Button):
         self.text = 'New Game'
 
     def action(self):
-        global start_lives
-        global realGuy
-        global picked_ship
-        global tur
-        global ABILITIES
-        global turret
-        global picked_ship
+        State.level = 0
 
-        Assets.level = 0
-
-        realGuy = ship_assign(State.picked_ship, State.start_lives,
+        realGuy = Funcs.ship_assign(State.picked_ship, State.start_lives,
                               player=True)
 
-        main_loop(realGuy)
+        Scripts.main_loop(realGuy)
 
 
 class B_Stats(Button):
@@ -118,8 +113,6 @@ class B_Exit(Button):
 class B_Ship_Highlihgts(Button):
     '6'
     def __init__(self, rect, ship_number):
-
-        global ships
 
         super().__init__(rect)
         self.ship_number = ship_number

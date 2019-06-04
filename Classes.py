@@ -2,9 +2,9 @@ import pickle
 import random, copy
 import numpy as np, numpy
 import pygame.gfxdraw as gfx
-import Menus
 import State
 import Funcs
+import Scripts
 from Assets import *
 
 
@@ -487,7 +487,7 @@ class Player(Object, Moving, Vulnerable):
                 with open('save.pkl', 'wb') as f:
                     pickle.dump(State.save, f, pickle.HIGHEST_PROTOCOL)
 
-                Menus.death_menu()
+                Scripts.death_menu()
 
     def damage(self, dmg):
 

@@ -3,7 +3,7 @@ Initial script
 """
 import pygame
 import pickle
-from Menus import player_set
+from Scripts import player_set
 import State
 
 # fix frizzing on enemy spawn

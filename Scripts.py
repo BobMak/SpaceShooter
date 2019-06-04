@@ -2,7 +2,6 @@ import threading
 import sys
 import time
 
-from Menus import *
 from Classes import *
 from State import *
 from Funcs import *
