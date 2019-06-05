@@ -7,7 +7,7 @@ import pygame as pg
 # CONSTANTS
 
 map_size = m_width, m_size = 3000, 3000
-SIZE = WIDTH, HEIGHT = 720, 576
+SIZE = WIDTH, HEIGHT = 1080, 720
 BLACK = 0, 0, 0
 WHITE = 255, 255, 255
 GREEN = 0, 255, 0
@@ -60,10 +60,14 @@ asteroid_densities = [(1,2), (2,2), (1,3), (2,3)]
 
 SHIP_HP = [40, 23, 10]
 
-SHIPS_TEXTS = ['space - shoot, c - shield',
-               'space - shoot, c - shield, x - missile',
-               'space - shoot, c - shield, x - missile',
-               'space - shoot, c - shield']
+SHIPS_TEXTS = ['space - shoot',
+               'space - shoot, x - missile',
+               'space - shoot, x - missile',
+               'space - shoot']
+
+
+# GAME STATE
+# Should be accessed through designated getters and setters
 
 # Standard save for a player. Should be replaced by a save if such is present in save.pkl
 save = {
@@ -77,8 +81,9 @@ save = {
     },
 }
 
-# GAME STATE
-# Should be accessed through designated getters and setters
+game_map = {
+    'sec0': None
+}
 
 # Game parameters
 

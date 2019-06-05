@@ -24,9 +24,6 @@ def listen_right(player, keys):
             Funcs.orbit_rotate(player, x, -player.ROTATION,
                                x.distance, x.orbit_ang)
 
-        for x in player.shields:
-            x.rotate(player.ROTATION)
-
         for x in player.player_hull_group:
             Funcs.orbit_rotate(player, x, -player.ROTATION,
                                x.distance, x.orbit_ang)
@@ -40,9 +37,6 @@ def listen_left(player, keys):
             x.rotate(-player.ROTATION)
             Funcs.orbit_rotate(player, x, player.ROTATION,
                                x.distance, x.orbit_ang)
-
-        for x in player.shields:
-            x.rotate(-player.ROTATION)
 
         for x in player.player_hull_group:
             Funcs.orbit_rotate(player, x, player.ROTATION,
@@ -62,21 +56,12 @@ def listen_shot_missile(player, keys):
         x.speed = copy.deepcopy(player.speed)
 
 
-def listen_shield(player, keys):
-    if keys[pygame.K_c] and player.locks[3] == False:
-        Funcs.shields(player)
-    else:
-        for x in player.shields:
-            x.down()
-            player.shields.remove(x)
-
-
-ABILITIES = [[listen_shield, listen_shot,
+ABILITIES = [[listen_shot,
             listen_left, listen_right,
             listen_acceleration, listen_reverse],
-            [listen_shield, listen_shot,
+            [listen_shot,
             listen_left, listen_right,
             listen_acceleration, listen_reverse, listen_shot_missile],
-            [listen_shield, listen_shot,
+            [listen_shot,
             listen_left, listen_right,
             listen_acceleration, listen_reverse, listen_shot_missile]]

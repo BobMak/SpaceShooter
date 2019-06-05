@@ -352,7 +352,7 @@ class Object(pygame.sprite.Sprite):
 
     def get_closest_aim_dir(self, aim):
         """
-        returns the angle of closest position of aim with respect to looped map.
+        returns the angle of closest position of aim with respect to looped nature of the map.
         """
         all_directions_distances = []
         for x in range(-1, 2):
@@ -380,15 +380,10 @@ class Object(pygame.sprite.Sprite):
 
 
 class Player(Object, Moving, Vulnerable):
-    '''Player(image, x, y, lives, bolt=0,
-              complex_sh=-1, width=None, height=None)'''
-    global score
 
     bolt = 0
     arr_input = []
     player_hull_group = pygame.sprite.Group()
-    shields_orbit_group = pygame.sprite.Group()
-    shields = pygame.sprite.Group()
     turrets = pygame.sprite.Group()
     orbiting = pygame.sprite.Group()
     mounts = []
@@ -407,14 +402,20 @@ class Player(Object, Moving, Vulnerable):
     space_lock = False
     special_lock = False
     missile_lock = False
-    shield_lock = False
-    locks = [space_lock, special_lock, missile_lock, shield_lock]
-
-    #time in frames
+    locks = [space_lock, special_lock, missile_lock]
 
     def __init__(self, image, x, y, lives, bolt=0,
                  complex_sh=-1, player=True, width=None, height=None):
-
+        '''
+        :param image
+        :param x
+        :param y
+        :param lives
+        :param bolt=0
+        :param complex_sh=-1
+        :param width=None,
+        :param height=None)
+        '''
         self.speed = [0,0]
         self.lives = lives
         super().__init__(image, x, y, width=width, height=height)
@@ -446,14 +447,11 @@ class Player(Object, Moving, Vulnerable):
         self.time_count_missile = 0
         self.timer_missile = State.prj_cooldown[State.n_bolts + bolt]
 
-        self.time_count_shield = 0
-        self.timer_shield = 50
-
         self.counts = [self.time_count_fire, self.time_count_special,
-                       self.time_count_missile, self.time_count_shield]
+                       self.time_count_missile]
 
         self.timers = [self.timer_fire, self.timer_special,
-                       self.timer_missile, self.timer_shield]
+                       self.timer_missile]
 
         self.distance = 0
         self.orbit_ang = 0
@@ -466,14 +464,9 @@ class Player(Object, Moving, Vulnerable):
         self.speed = [0,0]
         Funcs.FX_explosion(self.rect.centerx, self.rect.centery)
 
-        for x in self.shields:
-            x.down()
-
         if self.player == True:
 
             for x in self.mounts:
-                x.kill()
-            for x in self.shields:
                 x.kill()
             for x in self.player_hull_group:
                 x.kill()
@@ -502,9 +495,6 @@ class Player(Object, Moving, Vulnerable):
 
     def m_add(self, mounted):
         self.mounts.append(mounted)
-
-    def sh_add(self, shield):
-        self.shields.add(shield)
 
     def scan(self):
         min_dist = State.asteroids.sprites[0]
@@ -1382,48 +1372,27 @@ class Animation(Object, Moving):
         else:
             self.delay_count += 1
 
-class Shield(Animation):
 
-    source = 0
-    def __init__(self, images_arr, width, height, x, y, source, type = 0):
-        super().__init__(images_arr, width, height, x, y, type)
-        self.source = source
-        self.look_dir = 0
-        self.rotate(0)
-        self.speed = source.speed
-        self.type = type
-        self.HP = source.S_HP
+class Sector:
 
-        self.rect.width = width
-        self.rect.height = height
-        self.rect.centerx = source.rect.centerx
-        self.rect.centery = source.rect.centery
+    def __init__(self, type=0):
+        """
+        One map sector.
+        :param type: different types of sectors have different probability of spawn for various things
+        """
+        self.all_objects = []
 
-        source.shields.add(self)
 
-    def update(self):
-        self.rect.centerx = self.source.rect.centerx
-        self.rect.centery = self.source.rect.centery
+class Verse:
 
-    def down(self):
-        self.type = 3
-        self.source.locks[3] = True
-        self.kill()
+    def __init__(self):
+        """
+        Big map composed of many sectors. New sectors are generated based on big picture, so as big scale events.
+        Generate:
+        1. Resources  (with perlin noise)
+        2. Fraction(s), their state  (with cell automata)
+        3. Big events, like fleets, conflicts
+        4. Sectors and details
+        """
 
-    def damage(self, dmg):
-        global shield_lock
-        self.HP += -max(0, dmg)
 
-        if self.HP < 0:
-            self.down()
-
-    def show_HP(self):
-
-        gfx.box(State.screen,
-                (self.rect.left, self.rect.bottom, 2*self.HP, 5),
-                (50, 50, 255, 100))
-
-class Automata(Object):
-
-    def __init__(image, width, height, x, y):
-        super().__init__(image, x, y, width=width, height=height)

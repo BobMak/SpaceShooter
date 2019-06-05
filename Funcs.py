@@ -5,8 +5,10 @@ import State
 import Classes
 import Controls
 
+
 def get_dist(dx, dy):
     return np.sqrt(dx**2 + dy**2)
+
 
 def angle_diff(a1, a2):
     """angle_1 - angle_2 with regards to used angle system"""
@@ -16,16 +18,6 @@ def angle_diff(a1, a2):
     else:
         return a
 
-def shields(source):
-
-    if len(source.shields) == 0:
-        shld_obj = Classes.Shield(Assets.shield, source.rect.width+10,
-                                  source.rect.height+10, source.rect.left,
-                                  source.rect.top, source, 1)
-
-        shld_obj.rotate(source.look_dir)
-        source.sh_add(shld_obj)
-        State.effects.add(shld_obj)
 
 def shot(shoter, direction, bolt):
 
@@ -50,6 +42,7 @@ def shot(shoter, direction, bolt):
 #       Operates with last 'keys' list
 #       Closure functions
 
+
 def ship_assign(picked_ship, lives, player):
     '''Assign all properties to given ship. Usually when creating new instance
     of ship'''
@@ -70,11 +63,13 @@ def ship_assign(picked_ship, lives, player):
 
     return ship
 
+
 def draw_rotating(obj):
 
     rect = obj.rotated_image.get_rect()
     rect.center = (obj.rect.center)
     State.screen.blit(obj.rotated_image, rect)
+
 
 def blur(obj, speed):
     '''blur effect along the speed direction'''
@@ -88,6 +83,7 @@ def blur(obj, speed):
         rect.centerx = obj.rect.centerx - obj.speed[0]//(x+3)
         rect.centery = obj.rect.centery - obj.speed[1]//(x+3)
         State.screen.blit(img, rect)
+
 
 def orbit_rotate(center, obj, d_ang, dist = 0, ang = -20):
     """orbit_rotate(center, obj, d_ang, dist = 0, ang = -20)
@@ -126,6 +122,7 @@ def orbit_rotate(center, obj, d_ang, dist = 0, ang = -20):
 
     obj.rect.centerx = center.rect.centerx + dist*(np.sin(np.deg2rad(ang)))
     obj.rect.centery = center.rect.centery + dist*(np.cos(np.deg2rad(ang)))
+
 
 def orbit_eliptic(center, obj):
     """
@@ -189,6 +186,7 @@ def bound_collision(obj):
         bound_break_vert = False
     return bound_break_gor, bound_break_vert
 
+
 def bound_pass(obj):
 
     if (obj.position[0] < -obj.rect.width
@@ -205,10 +203,12 @@ def bound_pass(obj):
         obj.position[1] += -(State.HEIGHT + obj.rect.height) * np.sign(obj.rect.y)
         # except: pass
 
+
 def move_movable():
     for object in State.movable:
         # modify position to avoid loss of <1 values when moving
         object.modify_position()
+
 
 def spawn_wave(realGuy):
     level = State.level
@@ -226,6 +226,7 @@ def spawn_wave(realGuy):
 
     State.level += 1
 
+
 def FX_explosion(x, y, xpl=Assets.expl, radius=(30,30)):
 
     obj = Classes.Animation(xpl, radius[0], radius[1], x, y, True)
@@ -233,6 +234,7 @@ def FX_explosion(x, y, xpl=Assets.expl, radius=(30,30)):
     obj.rect.centery += - 20
 
     State.effects.add(obj)
+
 
 def FX_engine_mark(source):
     object = 0

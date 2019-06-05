@@ -115,10 +115,6 @@ def main_loop(realGuy):
             for x in pl.turrets:
                 bound_pass(x)
 
-            for x in pl.shields:
-                x.rect.centerx = x.source.rect.centerx
-                x.rect.centery = x.source.rect.centery
-
             for x in pl.orbiting:
                 bound_pass(x)
                 orbit_eliptic(pl, x)
@@ -147,9 +143,6 @@ def main_loop(realGuy):
 
             pl.update()
 
-            for i in pl.shields:
-                i.rect.move(i.speed)
-
             for z in pl.player_hull_group:
 
                 for i in pygame.sprite.spritecollide(z, asteroids, 0):
@@ -158,14 +151,6 @@ def main_loop(realGuy):
 
                         if pl.damage(2):
                             break
-
-            for i in pl.shields:
-                for i_2 in pygame.sprite.spritecollide(i, asteroids, 0):
-
-                    i_2.damage(5)
-                    if len(asteroids) == 0:
-                        pygame.time.set_timer(pygame.USEREVENT + 3, 2000)
-                    i.damage(2 * i_2.type)
 
             for x in pl.turrets:
                 x.auto_fire()
@@ -264,10 +249,6 @@ def screen_draw():
 
     for pl in player_group:
         pl.show_HP()
-
-        for x in pl.shields:
-            draw_rotating(x)
-            x.show_HP()
 
         for x in pl.turrets:
 
