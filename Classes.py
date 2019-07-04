@@ -39,14 +39,14 @@ class Moving:
                                 self.rect.width, self.rect.height)
 
     def slow_down(self):
-
-        self.speed[0] += (self.ENV_DEACCELERATION
-                          *abs(np.cos(np.deg2rad(self.look_dir-90.0)))
-                          *-np.sign(self.speed[0]))
-
-        self.speed[1] += (self.ENV_DEACCELERATION
-                          *abs(np.sin(np.deg2rad(self.look_dir-90.0)))
-                          *-np.sign(self.speed[1]))
+        pass
+        # self.speed[0] += (self.ENV_DEACCELERATION
+        #                   *abs(np.cos(np.deg2rad(self.look_dir-90.0)))
+        #                   *-np.sign(self.speed[0]))
+        #
+        # self.speed[1] += (self.ENV_DEACCELERATION
+        #                   *abs(np.sin(np.deg2rad(self.look_dir-90.0)))
+        #                   *-np.sign(self.speed[1]))
 
     def accelerate(self, temp):
 
@@ -55,228 +55,97 @@ class Moving:
 
 
 class Colliding(pygame.sprite.Sprite, Moving):
-    '''
-    Colliding(width, height, distance, angle, source)
-    Smaller collision rect container for more complex forms.
-    should be rotated with source object with "orbit_rotate"
-    '''
 
-    def __init__(self, width, height, distance, angle, source):
+    def __init__(self, rects: [(int, float, float)], source, groups):
+        """
+        Collision rect container for more complex forms.
+        should be rotated around source object with "orbit_rotate".
+        Composed of one or more squares that should represent an approximate shape of the source
+        :param rects: [(side length,
+                        distance from source center,
+                        angle between line connecting centers and vertical axis),
+                        ...]
+        :param source: source object
+        :param groups: all groups collision detection should work with
+        """
 
         pygame.sprite.Sprite.__init__(self)
-        self.rect = pygame.Rect((source.rect.x
-                               + (np.deg2rad(np.cos(angle)) * distance)),
-                                (source.rect.y
-                               + np.deg2rad(np.sin(angle)) * distance),
-                                 width, height)
+        self.rects = []
+        for rec in rects:
+            self.rects.append((pygame.Rect((source.rect.x + (np.deg2rad(np.cos(rec[2])) * rec[1])),
+                                          (source.rect.y + np.deg2rad(np.sin(rec[2])) * rec[1]),
+                                          rec[0], rec[0]), rec[1], rec[2]))
 
         self.speed = source.speed
-        self.angle = angle
         self.source = source
-        self.distance = distance
-        self.orbit_ang = angle
 
         Moving.__init__(self)
 
+    def check_against_group(self, group, ignore_group):
+        for rec in self.rects:
+            for i in pygame.sprite.spritecollide(rec, group, 0):
+                if i not in ignore_group:
+                    self.collide(i)
+                    i.collide(self)
+                    # Check against one collision at a time
+                    return
 
-class FX(pygame.sprite.Sprite, Moving):
-
-    def __init__(self, rect, duration):
-
-        pygame.sprite.Sprite.__init__(self)
-
-        self.timer = duration
-        self.time_count = 0
-        self.rect = rect
-
-        # Requires rect to already be there
-        Moving.__init__(self)
-
-        State.time_dependent.add(self)
-
-
-class FX_Glow(FX):
-    """
-    FX_Glow(rect, duration, radius, length, color, speed=(0,0))
-    """
-    def __init__(self, rect, duration, radius, length, color, speed=(0,0)):
-
-        FX.__init__(self, rect, duration)
-        self.radius = radius
-        self.color = color
-        self.length = length
-        self.speed = speed
-        State.glow.add(self)
-
-    #draw
-    def update(self):
-        """
-        drawing funcition
-        """
-        for x in range(self.length):
-            pygame.gfxdraw.filled_circle(State.screen, self.rect.centerx,
-                                         self.rect.centery, self.radius+x,
-                                         self.color)
-
-
-class FX_Track(FX):
-    '''
-    FX_Track(image, rect, duration, fading=None,
-             enlarging=None, rotating=None)
-    :duration - in logic ticks (there is LOGIC_PER_SECOND ticks per second).
-    :fading - [x, y], where x is the rate from 0 (no fade)
-    to 255 (max fade) with which effect will fade each y frames.
-    :enlarging - [x, y], x - rate of effect's size deviation
-    per y frames. 0-1 will shrink the effect, while >1 - enlarge.
-    :rotating - [x, y], x - the angle (degrees) on which
-    the effect is rotated per y frames.
-    :color - set the color for effect image.
-    :look_dir - initial angle (degrees)
-    :speed - speed (vector [dx, dy])
-
-    Tracks take significantly more computations if y is lower
-    and duration time is higher.
-    '''
-
-    def __init__(self, image, rect, duration,
-                fading=None, enlarging=None, rotating=None, color=None,
-                look_dir=None, speed=None):
-        '''density - [0-1]'''
-        FX.__init__(self, rect, duration)
-
-        self.updates = []
-        self.fading_count = 0
-        self.fading_sum = 0
-
-        self.look_dir = 0
-
-        self.enlarging_count = 0
-        self.enlarging_summ = 1
-
-        self.image = pygame.transform.scale(image, (rect.width, rect.height))
-
-        if color != None:
-            self.image.fill((color[0], color[1], color[2], color[3]),
-                            None, pygame.BLEND_RGBA_MULT)
-
-        if look_dir != None:
-            self.look_dir = look_dir
-            self.rotated_image = pygame.transform.rotate(self.image,
-                                                        -self.look_dir)
-            self.image = pygame.transform.rotate(self.image,
-                                                -self.look_dir)
-            self.rotated_image_base = pygame.transform.rotate(self.image,
-                                                             -self.look_dir)
-        else:
-            self.rotated_image = copy.copy(self.image)
-
-        if fading != None:
-            self.fading = fading[0]
-            self.fading_tempo = fading[1]
-            self.updates.append(self.fade)
-
-        if enlarging != None:
-            self.enlarging = enlarging[0]
-            self.enlarging_tempo = enlarging[1]
-            self.updates.append(self.enlarge)
-
-        if rotating != None:
-            self.rotating = rotating[0]
-            self.rotating_tempo = rotating[1]
-            self.updates.append(self.rotate)
-
-        if speed != None:
-            self.speed = speed
-
-        State.effects.add(self)
-
-    def enlarge(self):
-
-        self.enlarging_count += 1
-        if self.enlarging_count > self.enlarging_tempo:
-            self.enlarging_count = 0
-            self.enlarging_summ += self.enlarging
-            if self.enlarging_summ > 250:
-                self.kill()
-                return
-            self.rotated_image = pygame.transform.scale(self.rotated_image,
-                                                (self.rect.width+self.enlarging,
-                                                self.rect.height+self.enlarging))
-
-    def rotate(self):
-        self.rotating_count += 1
-
-        if self.rotating_count > self.rotating_tempo:
-            self.rotating_count = 0
-
-            self.look_dir += self.rotating
-            self.rotated_image = pygame.transform.rotate(self.image, -self.look_dir)
-
-    def fade(self):
-
-        self.fading_count += 1
-
-        if self.fading_count > self.fading_tempo:
-            self.fading_count = 0
-
-            self.fading_sum += self.fading
-
-            if self.fading_sum > 230:
-                self.kill()
-                return
-            self.rotated_image_base.fill((255, 255, 255, 255-self.fading_sum),
-                                         None, pygame.BLEND_RGBA_MULT)
-
-    def update(self):
-        self.rotated_image = copy.copy(self.rotated_image_base)
-        for f in self.updates:
-            f()
+    def collide(self, *args):
+        """What happens when that collides?"""
+        raise NotImplementedError('Collide behaviour not assigned!')
 
 
 class Object(pygame.sprite.Sprite):
-    '''Object(image, x, y, width=None, height=None)'''
-
-    look_dir = 0
-    rotated_image = 0
-    rotated_rect = 0
-    radius = None
-    dmg = None
-    time_count = 0
-    timer = 0
-    type = 0
 
     def __init__(self, image, x, y, width=None, height=None):
+        """
+        Sprite with an assigned image spawned at point x y.
+        :param image,
+        :param x,
+        :param y,
+        :param width=None (Defaults to that of image)
+        :param height=None (Defaults to that of image)
+        """
+        self.look_dir = 0
+        self.rotated_image = 0
+        self.rotated_rect = 0
+        self.radius = None
+        self.dmg = None
+        self.time_count = 0
+        self.timer = 0
+        self.type = 0
+        self.updates = []
 
-       pygame.sprite.Sprite.__init__(self)
+        pygame.sprite.Sprite.__init__(self)
 
-       if width != None:
-           self.image = pygame.transform.scale(image, (width, height))
-           self.image_alpha = pygame.transform.scale(copy.copy(image),
-                                                     (width, height))
-           alpha = 128
-           self.image_alpha.fill((255, 255, 255, alpha),
-                                 None, pygame.BLEND_RGBA_MULT)
+        if width:
+            self.image = pygame.transform.scale(image, (width, height))
+            self.image_alpha = pygame.transform.scale(copy.copy(image),
+                                                      (width, height))
+            alpha = 128
+            self.image_alpha.fill((255, 255, 255, alpha),
+                                  None, pygame.BLEND_RGBA_MULT)
 
-       else:
-           self.image = image
-           self.image_alpha = copy.copy(image)
-           alpha = 128
-           self.image_alpha.fill((255, 255, 255, alpha),
-                                 None, pygame.BLEND_RGBA_MULT)
+        else:
+            self.image = image
+            self.image_alpha = copy.copy(image)
+            alpha = 128
+            self.image_alpha.fill((255, 255, 255, alpha),
+                                  None, pygame.BLEND_RGBA_MULT)
 
-       self.rotated_image = image
-       self.rotated_image_alpha = image
+        self.rotated_image = image
+        self.rotated_image_alpha = image
 
-       # Fetch the rectangle object that has the dimensions of the image
-       # Update the position of this object by setting the values of rect.x and rect.y
-       self.rect = self.image.get_rect()
-       self.rotated_rect = self.rect
+        # Fetch the rectangle object that has the dimensions of the image
+        # Update the position of this object by setting the values of rect.x and rect.y
+        self.rect = self.image.get_rect()
+        self.rotated_rect = self.rect
 
-       self.rect.centerx = x
-       self.rect.centery = y
-       self.radius = self.rect.width
+        self.rect.centerx = x
+        self.rect.centery = y
+        self.radius = self.rect.width
 
-       # movable.add(self)
+        # movable.add(self)
 
     def rotate(self, dir):
 
@@ -289,9 +158,9 @@ class Object(pygame.sprite.Sprite):
             self.look_dir += dir
 
         self.rotated_image = pygame.transform.rotate(self.image,
-                                                    -self.look_dir)
+                                                     -self.look_dir)
         self.rotated_image_alpha = pygame.transform.rotate(self.image_alpha,
-                                                          -self.look_dir)
+                                                           -self.look_dir)
 
     def get_aim_dir(self, aim):
         """
@@ -330,7 +199,7 @@ class Object(pygame.sprite.Sprite):
         """returns distance to object x"""
 
         return np.sqrt((self.rect.x - obj.rect.x)**2
-                        + (self.rect.y - obj.rect.y)**2)
+                       + (self.rect.y - obj.rect.y)**2)
 
     def get_real_distance(self, obj):
         """get_real_distance(obj)
@@ -342,9 +211,9 @@ class Object(pygame.sprite.Sprite):
         for x in range(-1, 2):
             for y in range(-1, 2):
                 a = (self.rect.centerx
-                    - (obj.rect.centerx + x*(State.WIDTH+obj.rect.width)))
+                     - (obj.rect.centerx + x*(State.WIDTH+obj.rect.width)))
                 b = (self.rect.centery
-                    - (obj.rect.centery + y*(State.HEIGHT+obj.rect.height)))
+                     - (obj.rect.centery + y*(State.HEIGHT+obj.rect.height)))
                 dist = np.sqrt(a**2 + b**2)
                 all_directions_distances.append(dist)
 
@@ -358,9 +227,9 @@ class Object(pygame.sprite.Sprite):
         for x in range(-1, 2):
             for y in range(-1, 2):
                 a = (self.rect.centerx
-                    - (aim.rect.centerx + x*(State.WIDTH+aim.rect.width)))
+                     - (aim.rect.centerx + x*(State.WIDTH+aim.rect.width)))
                 b = (self.rect.centery
-                    - (aim.rect.centery + y*(State.HEIGHT+aim.rect.height)))
+                     - (aim.rect.centery + y*(State.HEIGHT+aim.rect.height)))
 
                 dist = np.sqrt(a**2 + b**2)
                 all_directions_distances.append(dist)
@@ -378,31 +247,215 @@ class Object(pygame.sprite.Sprite):
         aim = Object(blanc, a, b)
         return self.get_aim_dir(aim)
 
+    def update(self):
+        """Execute all pending callbacks for the object every logic tick!"""
+        for f in self.updates:
+            f()
+
+
+class FX(pygame.sprite.Sprite, Moving):
+
+    def __init__(self, rect, duration, fading=None, color=None, enlarging=None, speed=None):
+        """
+
+        :param rect: location
+        :param duration:
+            effect life duration in ticks
+        :param fading:
+            ((int [1,255)) num points to fade per one update (not per sec) out of 255,
+             (int) num of LOGIC ticks before update)
+        :param color:
+            (r, g, b, a)
+        :param enlarging:
+            ((int) pixels to enlarge per tick, num of ticks before enlarge update)
+        :param speed:
+        """
+
+        pygame.sprite.Sprite.__init__(self)
+
+        self.timer = duration
+        self.time_count = 0
+        self.rect = rect
+
+        # Requires rect to already be there
+        Moving.__init__(self)
+
+        State.time_dependent.add(self)
+        self.updates = []
+
+        if fading:
+            self.fading_count = 0
+            self.fading_sum = 0
+            self.fading = fading[0]
+            self.fading_tempo = fading[1]
+            self.updates.append(self.fade)
+
+        if color:
+            self.color = color
+        else:
+            self.color = (255, 255, 255, 255)
+
+        if enlarging:
+            self.enlarging_count = 0
+            self.enlarging_summ = 1
+            self.enlarging = enlarging[0]
+            self.enlarging_tempo = enlarging[1]
+            self.updates.append(self.enlarge)
+
+        if speed:
+            self.speed = speed
+
+    def fade(self):
+
+        self.fading_count += 1
+
+        if self.fading_count > self.fading_tempo:
+            self.fading_count = 0
+
+            self.fading_sum += self.fading
+            self.color = (self.color[0], self.color[1], self.color[2], self.color[3] - self.fading_sum)
+
+            if self.fading_sum > 230:
+                self.kill()
+                return
+
+    def enlarge(self):
+
+        self.enlarging_count += 1
+        if self.enlarging_count > self.enlarging_tempo:
+            self.enlarging_count = 0
+            self.enlarging_summ += self.enlarging
+            if self.enlarging_summ > 250:
+                self.kill()
+                return
+            self.rect.width += self.enlarging
+            self.rect.height += self.enlarging
+
+    def update(self, *args):
+        for f in self.updates:
+            f(*args)
+
+
+class FX_Glow(FX):
+    """
+    FX_Glow(rect, duration, radius, length, color, speed=(0,0))
+    """
+    def __init__(self, rect, duration, radius, length, color, speed=(0,0), fading=None):
+
+        FX.__init__(self, rect, duration, color=color, speed=speed, fading=fading)
+        self.radius = radius
+        self.color = color
+        self.length = length
+        self.speed = speed
+        State.glow.add(self)
+        self.updates.append(self._draw)
+
+    #draw
+    def _draw(self):
+        """
+        drawing funcition
+        """
+        for x in range(self.length):
+            pygame.gfxdraw.filled_circle(State.screen, self.rect.centerx,
+                                         self.rect.centery, self.radius+x,
+                                         self.color)
+
+
+class FX_Track(FX):
+    '''
+    FX_Track(image, rect, duration, fading=None,
+             enlarging=None, rotating=None)
+    :duration - in logic ticks (there is LOGIC_PER_SECOND ticks per second).
+    :fading - [x, y], where x is the rate from 0 (no fade)
+    to 255 (max fade) with which effect will fade each y frames.
+    :enlarging - [x, y], x - rate of effect's size deviation
+    per y frames. 0-1 will shrink the effect, while >1 - enlarge.
+    :rotating - [x, y], x - the angle (degrees) on which
+    the effect is rotated per y frames.
+    :color - set the color for effect image.
+    :look_dir - initial angle (degrees)
+    :speed - speed (vector [dx, dy])
+
+    Tracks take significantly more computations if y is lower
+    and duration time is higher.
+    '''
+
+    def __init__(self, image, rect, duration,
+                fading=None, enlarging=None, rotating=None, color=None,
+                look_dir=None, speed=None):
+        '''density - [0-1]'''
+        FX.__init__(self, rect, duration, fading=fading, color=color, enlarging=enlarging, speed=speed)
+
+        self.updates.append(self._update)
+
+        self.look_dir = 0
+
+        self.image = pygame.transform.scale(image, (rect.width, rect.height))
+
+        if look_dir:
+            self.look_dir = look_dir
+            self.rotated_image = pygame.transform.rotate(self.image,
+                                                        -self.look_dir)
+            self.image = pygame.transform.rotate(self.image,
+                                                -self.look_dir)
+            self.rotated_image_base = pygame.transform.rotate(self.image,
+                                                             -self.look_dir)
+        else:
+            self.rotated_image = copy.copy(self.image)
+            self.rotated_image_base = copy.copy(self.image)
+
+        if rotating:
+            self.rotating = rotating[0]
+            self.rotating_tempo = rotating[1]
+            self.updates.append(self.rotate)
+
+        State.effects.add(self)
+
+    def rotate(self):
+        self.rotating_count += 1
+
+        if self.rotating_count > self.rotating_tempo:
+            self.rotating_count = 0
+
+            self.look_dir += self.rotating
+            self.rotated_image = pygame.transform.rotate(self.image, -self.look_dir)
+
+    def _update(self):
+        self.rotated_image_base.fill(self.color,
+                                     None, pygame.BLEND_RGBA_MULT)
+        self.rotated_image = copy.copy(self.rotated_image_base)
+        if self.enlarging:
+            self.rotated_image = pygame.transform.scale(self.rotated_image,
+                                                        (self.rect.width,
+                                                         self.rect.height))
+
+
+class FXLaser(FX_Glow):
+
+    def __init__(self, rect1, rect2, duration, radius, length, color, speed):
+        FX_Glow.__init__(self, rect=rect1, duration=duration, radius=radius, length=length, color=color, speed=speed,
+                         fading=())
+        FX_Glow(rect=rect2, duration=duration, radius=radius, length=length, color=color, speed=speed)
+        self.rect1 = rect1
+        self.rect2 = rect2
+        self.updates.append(self._draw)
+
+        tan_ang = (rect1.y - rect2.y) / (rect1.x - rect2.x)
+        self.perp_dx = np.sin(tan_ang)
+        self.perp_dy = np.sin(tan_ang)
+
+    def _draw(self):
+        gfx.line(State.screen, self.rect1.x, self.rect1.y, self.rect2.x, self.rect1.y, color=self.color)
+        for n in range(self.radius):
+            gfx.line(State.screen,
+                     self.rect1.x+self.perp_dx, self.rect1.y+self.perp_dy,
+                     self.rect2.x+self.perp_dx, self.rect1.y+self.perp_dy, color=self.color)
+            gfx.line(State.screen,
+                     self.rect1.x - self.perp_dx, self.rect1.y - self.perp_dy,
+                     self.rect2.x - self.perp_dx, self.rect1.y - self.perp_dy, color=self.color)
+
 
 class Player(Object, Moving, Vulnerable):
-
-    bolt = 0
-    arr_input = []
-    player_hull_group = pygame.sprite.Group()
-    turrets = pygame.sprite.Group()
-    orbiting = pygame.sprite.Group()
-    mounts = []
-
-    hull_group_ang = 0
-
-    HP = 10
-    MAX_HP = 10
-    S_HP = 10
-    MAX_S_HP = 10
-    ROTATION = 10
-    ACCELERATION = 1
-    DEACCELERATION = 0.5
-    ENV_DEACCELERATION = 0.25
-
-    space_lock = False
-    special_lock = False
-    missile_lock = False
-    locks = [space_lock, special_lock, missile_lock]
 
     def __init__(self, image, x, y, lives, bolt=0,
                  complex_sh=-1, player=True, width=None, height=None):
@@ -416,6 +469,29 @@ class Player(Object, Moving, Vulnerable):
         :param width=None,
         :param height=None)
         '''
+        self.bolt = 0
+        self.arr_input = []
+        self.player_hull_group = pygame.sprite.Group()
+        self.turrets = pygame.sprite.Group()
+        self.orbiting = pygame.sprite.Group()
+        self.mounts = []
+
+        self.hull_group_ang = 0
+
+        self.HP = 10
+        self.MAX_HP = 10
+        self.S_HP = 10
+        self.MAX_S_HP = 10
+        self.ROTATION = 10
+        self.ACCELERATION = 1
+        self.DEACCELERATION = 0.5
+        self.ENV_DEACCELERATION = 0.25
+
+        space_lock = False
+        special_lock = False
+        missile_lock = False
+        self.locks = [space_lock, special_lock, missile_lock]
+
         self.speed = [0,0]
         self.lives = lives
         super().__init__(image, x, y, width=width, height=height)
@@ -456,6 +532,8 @@ class Player(Object, Moving, Vulnerable):
         self.distance = 0
         self.orbit_ang = 0
         self.player = player
+
+        self.updates.append(self._player_update)
 
     def destroy(self):
 
@@ -513,20 +591,20 @@ class Player(Object, Moving, Vulnerable):
             self.locks[0] = True
             Funcs.shot(self, self.look_dir, self.bolt)
 
-    def update(self):
-
-        # if self.space_lock:
-        #     self.time_count_fire += 1
-        #     if self.timer_fire < self.time_count_fire:
-        #         self.time_count_fire = 0
-        #         self.space_lock = False
-
+    def _player_update(self):
         for n in range(len(self.locks)):
             if self.locks[n]:
                 self.counts[n] += 1
                 if self.timers[n] < self.counts[n]:
                     self.counts[n] = 0
                     self.locks[n] = False
+
+        # TODO: Add to generic toExecute list
+        for x in self.turrets:
+            x.auto_fire()
+
+        for x in self.orbiting:
+            x.active()
 
 
 class Mounted(Object):
@@ -599,8 +677,6 @@ class Turret(Mounted):
               width = 20, height = 20,
               restriction = None, bg = bg_ball)
     """
-    interesting = [State.asteroids]
-    in_range = []
 
     def __init__(self, image, radius, mounted_on,
                 groups = None, distance = 20, look_dir = 0,
@@ -608,19 +684,20 @@ class Turret(Mounted):
 
         super().__init__(image, mounted_on, distance, look_dir,
                         width, height, restriction)
+        self.interesting = [State.asteroids]
+        self.in_range = []
+
         self.radius = radius
         self.locked = None
         self.bg = pygame.transform.scale(bg, (width-6, height-6))
         self.bg_rect = bg.get_rect()
-        # self.bg_rect = bg.get_rect()
-
 
         if groups != None:
             for i in groups:
                 self.interesting.append(i)
 
-    def set_priorities(self, group):
-        b = self.interesting.pop(State.interesting.index('group'))
+    def set_aim(self, group):
+        b = self.interesting.pop(self.interesting.index('group'))
         self.interesting.insert(0, b)
 
     def scan(self, group):
@@ -637,42 +714,8 @@ class Turret(Mounted):
                     self.in_range.append(x)
         a.kill()
 
-    def scan_all(self):
 
-        self.in_range.clear()
-        for i in self.interesting:
-            self.scan(i)
-
-        # Is there anything interesting in range?
-        try:
-            if not self.locked.alive():
-                self.locked = None
-        except:
-            self.locked = None
-
-        if self.in_range:
-            return True
-
-    def lock_on(self):
-        if self.in_range:
-            self.locked = self.in_range[0]
-            return True
-        else:
-            return False
-
-    def auto_lock_on(self):
-        #  Don't not switch target if it is still in range
-        if self.locked != None:
-            pass
-        else:
-            self.lock_on()
-
-    def aim_locked(self):
-        if self.locked != None:
-            self.aim(self.locked)
-
-
-class T_PreAim(Turret):
+class TPreAim(Turret):
 
     mode = 2
 
@@ -702,128 +745,10 @@ class T_PreAim(Turret):
 
         mounted_on.m_add(self)
 
-    def get_predict_pos(self):
-
-        self.predict_pos.rect = copy.copy(self.locked.rect)
-        length = np.sqrt((self.rect.x - self.locked.rect.x)**2
-                          + (self.rect.y - self.locked.rect.y)**2)
-
-        try:
-            if (self.prj_speed*np.cos(np.deg2rad(self.look_dir))) != -99:
-                self.predict_pos.rect.centerx += (round(self.locked.speed[0]
-                                                       *length/self.prj_speed)
-                                                        *(1/self.prj_speed + 1))
-
-        except:
-            pass
-
-        try:
-            if (self.prj_speed*np.sin(np.deg2rad(self.look_dir))) != -99:
-                self.predict_pos.rect.centery += (round(self.locked.speed[1]
-                                                       *length/self.prj_speed)
-                                                        *(1/self.prj_speed + 1))
-
-        except:
-            pass
-
-        if self.blocked:
-            self.time_count += 1
-
-            if self.time_count > self.timer:
-                self.time_count = 0
-                self.blocked = False
-
-    def aim_locked(self):
-
-        if self.locked != None:
-            if self.aim(self.predict_pos) and not self.blocked:
-
-                self.blocked = True
-                Funcs.shot(self, self.look_dir, self.bolt_number)
-
-    def auto_fire(self):
-
-        self.scan_all()
-        self.auto_lock_on()
-        try:
-            self.get_predict_pos()
-        except:
-            pass
-        self.aim_locked()
-
-    def closest(self):
-
-        if self.scan_all():
-            self.locked = self.in_range[0]
-            dist = (abs(self.in_range[0].rect.x - self.mounted_on.rect.x)
-                  + abs(self.in_range[0].rect.y - self.mounted_on.rect.y))
-
-            for x in self.in_range:
-                t = (abs(x.rect.x - self.rect.x) + abs(x.rect.y - self.rect.y))
-                if t < dist:
-                    dist = t
-                    self.locked = x
-            try:
-                self.get_predict_pos()
-            except:
-                pass
-            self.aim_locked()
-
-    def hunt(self):
-
-        try:
-            if self.locked == None or not self.locked.alive():
-                self.scan_all()
-                self.lock_on()
-            else:
-                pass
-
-        except:
-            pass
-            self.lock_on()
-
-        try:
-            #self.aim(self.locked)
-            if self.locked in self.in_range:
-
-                self.get_predict_pos()
-                self.aim_locked()
-        except:
-            pass
-
-    mods = [auto_fire, closest, hunt]
-
-    def switch_aim(self):
-
-        if len(self.in_range) > 1:
-            try:
-                self.locked = self.in_range[self.in_range.index(self.locked)+1]
-            except:
-                self.locked = self.in_range[self.in_range.index(self.locked)-1]
-
-        else:
-            pass
-
-    def active(self):
-
-        self.mods[self.mode](self)
 
 
-class D_PreAim(T_PreAim):
 
-    def __init__(self, image, radius, mounted_on, bolt_number, cooldown,
-                 orbit_coef, d_ang, min, max, distance,
-                 groups = None, look_dir = 0,
-                 width = 24, height = 24, restriction = None):
-
-        super().__init__(image, radius, mounted_on, bolt_number, cooldown,
-                        groups, distance, look_dir,
-                        width, height, restriction)
-        self.mounted_on.turrets.remove(self)
-        self.init_orbit(orbit_coef, d_ang, min, max, distance)
-
-
-class Script_Mob(Player):
+class ScriptMob(Player):
 
     close_range = 20
     goal = None
@@ -832,7 +757,6 @@ class Script_Mob(Player):
     def __init__(self, image, x, y, picked_ship=0):
 
         super().__init__(image, x, y, lives=1, player=False)
-        State.script_mob_group.add(self)
         self.ROTATION = State.SHIP_CONSTANTS[picked_ship][0]
         self.ACCELERATION = State.SHIP_CONSTANTS[picked_ship][1]
         self.DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][2]
@@ -954,7 +878,7 @@ class Script_Mob(Player):
                 pass
 
 
-class Agressor(Script_Mob):
+class Agressor(ScriptMob):
 
     def __init__(self, image, x, y):
 
@@ -1293,19 +1217,14 @@ class Animation(Object, Moving):
     next in types 0 and 1.
     "finit" - if True, animation will start over after reaching
     the end (or beginning in 1).
-    "hold_f" - noumber of frame in "images_arr" animatino will
+    "hold_f" - noumber of frame in "images_arr" animation will
     pause on in hold type animation.
     '''
-    type = 0
-    frames = 0
-    frames_count = 0
-    delay_count = 0
-    images_arr = []
 
-    def __init__(self, images_arr, width, height, x, y, rand=False, finit=True,
+    def __init__(self, images_arr, width, height, x, y, rand=False, finite=True,
                 type=0, hold_f=None, delay=0):
 
-        super().__init__(images_arr[0], x, y, width=width, height=height)
+        Object.__init__(self, images_arr[0], x, y, width=width, height=height)
         Moving.__init__(self)
 
         self.images_arr = images_arr
@@ -1318,8 +1237,10 @@ class Animation(Object, Moving):
         self.type = type
         self.delay = delay
         self.hold_frame = hold_f
-        self.finit = finit
-        # movable.add(self)
+        self.finite = finite
+
+        self.frames_count = 0
+        self.delay_count = 0
 
     def hold(self):
 
@@ -1332,7 +1253,7 @@ class Animation(Object, Moving):
     def standard(self):
 
         if self.frames - self.frames_count == 1:
-            if self.finit:
+            if self.finite:
                 self.kill()
             else:
                 self.frames_count = 0
@@ -1344,7 +1265,7 @@ class Animation(Object, Moving):
     def reverse(self):
 
         if self.frames_count == 0:
-            if self.finit:
+            if self.finite:
                 self.kill()
             else:
                 self.frames_count = len(self.images_arr)
@@ -1360,10 +1281,8 @@ class Animation(Object, Moving):
 
         if self.type == 0:
             self.standard()
-
         elif self.type == 1:
             self.reverse()
-
         else:
             self.hold()
 
@@ -1375,12 +1294,17 @@ class Animation(Object, Moving):
 
 class Sector:
 
-    def __init__(self, type=0):
+    def __init__(self, start:(int,int), type=0):
         """
         One map sector.
+        :param start: top left coordinate of a sector
         :param type: different types of sectors have different probability of spawn for various things
         """
         self.all_objects = []
+        # Generate chunks
+        for x in range(State.N):
+            for y in range(State.N):
+                State.map_chuncks['{}{}-{}{}'.format(start[0], start[1], x, y)] = []
 
 
 class Verse:

@@ -1,6 +1,7 @@
 """
 This file contains game state and all relevant variables
 """
+import pickle
 import pygame as pg
 
 
@@ -13,20 +14,25 @@ WHITE = 255, 255, 255
 GREEN = 0, 255, 0
 MAX_BALL_SPEED = 10
 
-#####################      Ships       ####################
+
+##################### Ships ####################
 
 #              rotation rate    deacceleration        hull   shields type(mass)
- #                      acceleration    env. deacceleration
-SHIP_CONSTANTS = [[1.6666, 0.4166, 0.0333,   0.0083,    5,      2,      1],
+#                      acceleration    env. deacceleration
+SHIP_CONSTANTS = [[1.6666, 0.2166, 0.0333,   0.0083,    5,      2,      1],
                   [  1.25,  0.025, 0.0125,    0.005,   15,      5,      2],
                   [   2.5, 0.0625,   0.05,   0.0125,  7.5,    2.5,      1],
                   [   1.2,   0.03,   0.01,     0.01,    2,      2,      1],
                   []]
 
-
 picked_ship = 2
 EXPL = 9
 start_lives = 2
+
+# Map
+# Length of a side of a sector in chunks
+N = 10
+CHUNCK_LEN = 500
 
 INPUTS_PER_SECOND = 30
 FRAMES_PER_SECOND = 60
@@ -47,6 +53,7 @@ msl_hit_ranges = [50, 20, 100]
 
 spec_cooldown = [30, 60, 120]
 
+# To be generated
 complex_rects = [
     [[20,20,20,-180], [20,20,20,0], [18,18,38,-180], [18,18,38,0]],
     [[20,20,0,0],[10,10,25,-180],[15,15,15,-180],[15,15,15,70],[15,15,15,-70],[15,15,20,0]],
@@ -79,11 +86,28 @@ save = {
         'control': 100,
         'evolutions': 0,
     },
+    'location': (0, 0),
 }
 
-game_map = {
+# map storing all objects
+map = {
     'sec0': None
 }
+# sectors within which objects collisions are tested
+# Contains all groups that may collide:
+# all_colliding (asteroids, stations, other objects),
+# g1, g2, ... gn (player/factions groups, encompassing projectiles and ships)
+map_chuncks = {}
+
+
+def load_save():
+    try:
+        with open('save.pkl', 'rb') as f:
+            save = pickle.load(f)
+        globals()['save'] = save
+        globals()['screen_pos'] = (save['location'][0] - WIDTH//2, save['location'][1] - HEIGHT//2)
+    except:
+        print('No save file found.')
 
 # Game parameters
 
@@ -108,21 +132,17 @@ paused = False
 # Collection of all current objects
 all_objects = []
 
+screen_pos  = (0, 0)
+
 movable = pg.sprite.Group()
 
 asteroids = pg.sprite.Group()
-noclip_asteroids = pg.sprite.Group()
-outside_asteroids = pg.sprite.Group()
 projectiles = pg.sprite.Group()
-mob_goal = pg.sprite.Group()
 
-missiles = pg.sprite.Group()
-hit_waves = pg.sprite.Group()
 time_dependent = pg.sprite.Group()
 
 player_group = pg.sprite.Group()
-mob_group = pg.sprite.Group()
-script_mob_group = pg.sprite.Group()
+mob_group = pg.sprite.Group()  # unnecessary
 
 glow = pg.sprite.Group()
 effects = pg.sprite.Group()

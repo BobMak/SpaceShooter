@@ -88,20 +88,11 @@ def main_loop(realGuy):
             #
             bound_pass(pl)
 
+        # Every movable
         move_movable()
 
         for x in asteroids:
             bound_pass(x)
-
-        for m in script_mob_group:
-            bound_pass(m)
-
-            try:
-                m.update()
-            except:
-                pass
-
-            m.slow_down()
 
         for pl in player_group:
 
@@ -131,32 +122,19 @@ def main_loop(realGuy):
             bound_pass(x)
             x.slow_down()
 
-        ##########      Logic       #########
-
+        # Collisions
+        #
         for x in hit_waves:
             for y in asteroids:
                 if pygame.sprite.collide_circle(x, y):
                     y.damage(x.hp)
                     x.damage(y.hp)
 
-        for pl in player_group:
-
-            pl.update()
-
-            for z in pl.player_hull_group:
-
-                for i in pygame.sprite.spritecollide(z, asteroids, 0):
-                    if i not in noclip_asteroids:
-                        i.damage(pl.type * 1)
-
-                        if pl.damage(2):
-                            break
-
-            for x in pl.turrets:
-                x.auto_fire()
-
-            for x in pl.orbiting:
-                x.active()
+        player_group.update()
+        # for pl in player_group:
+        #
+        #     pl.update()
+        # COLLISIONS AND EVERYTHING MOVED TO UPDATE
 
         for i in projectiles:
             for i_2 in pygame.sprite.spritecollide(i, asteroids, 0):
@@ -225,8 +203,7 @@ def screen_draw():
         object.update()
 
     """TEST"""
-    for x in script_mob_group:
-        draw_rotating(x)
+
     """/TEST"""
 
     for object in projectiles:
@@ -307,7 +284,7 @@ class Graphics:
 
 
 def spawn_mob():
-    Script_Mob(ship_3, 250, 200)
+    ScriptMob(ship_3, 250, 200)
 
 
 def pause_menu():
@@ -315,9 +292,9 @@ def pause_menu():
 
     temporary_bg = State.screen.copy()
     # Define button positions
-    b_continue = bt.B_Continue((200, 200, 100, 30))
-    b_startover = bt.B_Start_Over((200, 250, 100, 30))
-    b_exit = bt.B_Exit((200, 300, 100, 30))
+    b_continue = bt.BContinue((200, 200, 100, 30))
+    b_startover = bt.BStartOver((200, 250, 100, 30))
+    b_exit = bt.BExit((200, 300, 100, 30))
     menu = [b_continue, b_startover, b_exit]
     selection = 0
     menu[0].select()
@@ -391,8 +368,8 @@ def pause_menu():
 
 def death_menu():
     temporary_BG = State.screen.copy()
-    b_exit = bt.B_Exit((200, 320, 100, 30))
-    b_startover = bt.B_Start_Over((200, 200, 100, 30))
+    b_exit = bt.BExit((200, 320, 100, 30))
+    b_startover = bt.BStartOver((200, 200, 100, 30))
     menu = [b_startover, b_exit]
     selection = 0
     menu[0].select()
@@ -471,11 +448,11 @@ def player_set():
     temporary_BG = pg.image.load(os.path.join("assets", "BG_12.png"))
     temporary_BG = pg.transform.scale(temporary_BG, [WIDTH, HEIGHT])
     State.screen.blit(temporary_BG, (0, 0))
-    b_new_game = bt.B_New_Game((140, 400, 100, 30))
-    ship_highlights_1 = bt.B_Ship_Highlihgts((30, 20, 60, 200), 0)
-    ship_highlights_2 = bt.B_Ship_Highlihgts((100, 20, 60, 200), 1)
-    ship_highlights_3 = bt.B_Ship_Highlihgts((170, 20, 60, 200), 2)
-    b_exit = bt.B_Exit((250, 400, 100, 30))
+    b_new_game = bt.BNewGame((140, 400, 100, 30))
+    ship_highlights_1 = bt.BShipHighlihgts((30, 20, 60, 200), 0)
+    ship_highlights_2 = bt.BShipHighlihgts((100, 20, 60, 200), 1)
+    ship_highlights_3 = bt.BShipHighlihgts((170, 20, 60, 200), 2)
+    b_exit = bt.BExit((250, 400, 100, 30))
     menu = [[ship_highlights_1, ship_highlights_2, ship_highlights_3], [b_new_game, b_exit]]
     selection = [0, 0]
     ship_selected = 0

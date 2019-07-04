@@ -32,9 +32,8 @@ class Button(pygame.sprite.Sprite):
                                             [self.rect.width, self.rect.height])
 
 
-class B_Continue(Button):
+class BContinue(Button):
     '1'
-
     def __init__(self, rect):
         super().__init__(rect)
         self.text = 'Continue'
@@ -43,7 +42,7 @@ class B_Continue(Button):
         State.t = False
 
 
-class B_Start_Over(Button):
+class BStartOver(Button):
     '2'
     def __init__(self, rect):
         super().__init__(rect)
@@ -72,7 +71,7 @@ class B_Start_Over(Button):
         Scripts.main_loop(realGuy)
 
 
-class B_New_Game(Button):
+class BNewGame(Button):
     '3'
     def __init__(self, rect):
         super().__init__(rect)
@@ -87,7 +86,7 @@ class B_New_Game(Button):
         Scripts.main_loop(realGuy)
 
 
-class B_Stats(Button):
+class BStats(Button):
     '4'
     def __init__(self, rect):
         super().__init__(rect)
@@ -98,7 +97,7 @@ class B_Stats(Button):
         pass
 
 
-class B_Exit(Button):
+class BExit(Button):
     '5'
     def __init__(self, rect):
         super().__init__(rect)
@@ -110,7 +109,7 @@ class B_Exit(Button):
         sys.exit()
 
 
-class B_Ship_Highlihgts(Button):
+class BShipHighlihgts(Button):
     '6'
     def __init__(self, rect, ship_number):
 

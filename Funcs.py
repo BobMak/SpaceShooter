@@ -22,7 +22,6 @@ def angle_diff(a1, a2):
 def shot(shoter, direction, bolt):
 
     skipped_len = shoter.rect.height//2
-    shot = 0
     shot = Classes.Projectile(bolt, shoter.rect.centerx,
                               shoter.rect.centery, State.prj_distances[bolt])
     shot.look_dir = shoter.look_dir
@@ -39,8 +38,6 @@ def shot(shoter, direction, bolt):
                    *np.sin(np.deg2rad(shoter.look_dir-90))]
 
     shot.rotate(0)
-#       Operates with last 'keys' list
-#       Closure functions
 
 
 def ship_assign(picked_ship, lives, player):
@@ -143,13 +140,8 @@ def orbit_eliptic(center, obj):
 
     orbit_rotate(center, obj, obj.d_ang, obj.distance, obj.orbit_ang)
 
+
 def draw_triangle(player, color, dist_to_edg, width):
-    bufx1 = 0
-    bufx2 = 0
-    bufx3 = 0
-    bufy1 = 0
-    bufy2 = 0
-    bufy3 = 0
     bufx1 = (player.rect.centerx
           + dist_to_edg * np.cos(np.deg2rad(player.look_dir - 90)))
     bufx2 = (player.rect.centerx
@@ -213,6 +205,7 @@ def move_movable():
 def spawn_wave(realGuy):
     level = State.level
     for i in range(State.levels[level][0]):
+
         if random.choice([True, False]):
             proX = random.choice([random.randint(-20,0),
                                   random.randint(State.WIDTH, State.WIDTH+20)])
@@ -228,8 +221,7 @@ def spawn_wave(realGuy):
 
 
 def FX_explosion(x, y, xpl=Assets.expl, radius=(30,30)):
-
-    obj = Classes.Animation(xpl, radius[0], radius[1], x, y, True)
+    obj = Classes.Animation(xpl, radius[0], radius[1], x, y, True, delay=random.randint(0, 2))
     obj.rect.centerx += - 20
     obj.rect.centery += - 20
 
@@ -237,7 +229,6 @@ def FX_explosion(x, y, xpl=Assets.expl, radius=(30,30)):
 
 
 def FX_engine_mark(source):
-    object = 0
     object = Classes.Animation(Assets.engi, 10, 10,
                                source.rect.centerx, source.rect.centery)
     object.look_dir = source.look_dir
@@ -250,8 +241,5 @@ def FX_engine_mark(source):
     object.rect.centery = (source.rect.centery
                         + source.rect.height//2
                           * np.sin(np.deg2rad(object.look_dir+90)))
-
-    speed0 = np.cos(np.deg2rad(copy.deepcopy(object.look_dir+90)))*3
-    speed1 = np.sin(np.deg2rad(copy.deepcopy(object.look_dir+90)))*3
 
     State.effects.add(object)
