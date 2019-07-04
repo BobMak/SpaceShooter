@@ -202,7 +202,7 @@ class Ship:
         sk_tri = self.generate_skeleton_triangle(size, radius, radius_diff, sim)
         skeleton = random.choice([sk_tor, sk_rec, sk_tri])
 
-        generate_module()
+        # self.generate_module(type, size, tech, distribution)
 
     def generate_skeleton_torus(self, size, radius, radius_var, symmetry=True):
         points = []
@@ -242,4 +242,4 @@ class Ship:
         return points
 
     def generate_module(self, type, size, tech, distribution):
-
+        raise NotImplementedError()
