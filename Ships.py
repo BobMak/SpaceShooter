@@ -18,6 +18,7 @@ class Module(C.Object, C.Vulnerable):
         C.Object.__init__(self, image=image, x=x, y=y, width=width, height=height)
         C.Vulnerable.__init__(self, hp=hp)
 
+        self.carrier = carrier
         self.connected_modules = []
 
 
@@ -25,6 +26,9 @@ class Hull(Module):
     """
     Nothing but integrity (or storage?) and connections between other modules
     """
+    def __init__(self, carrier, inegrity, image, x, y, width, height):
+        Module.__init__(self, carrier=carrier, hp=inegrity, image=image, x=x, y=y, width=width, height=height)
+
 
 
 class Weapon(Module):
@@ -54,7 +58,7 @@ class Weapon(Module):
             ballistic type: ('bl', bolt number, bolt speed, load speed in seconds, energy to load)
             laser type: ('ls', laser number)
         :param range: weapon's range
-        :param energy_drain: how much energy is drained per shot
+        :param energy_drain: how much energy is used per shot
         """
 
         self.aim = None
@@ -110,21 +114,18 @@ class Weapon(Module):
         predict_pos = C.Object(A.blanc, 0, 0)
         predict_pos.rect = copy.copy(locked.rect)
         length = np.sqrt((self.rect.x - locked.rect.x)**2
-                         + (self.rect.y - self.target.rect.y)**2)
+               + (self.rect.y - self.target.rect.y)**2)
 
         try:
             if (self.prj_speed*np.cos(np.deg2rad(self.look_dir))) != -99:
                 predict_pos.rect.centerx += (round(self.target.speed[0] * length/self.prj_speed)
-                                             * (1/self.prj_speed + 1))
-
+                    * (1/self.prj_speed + 1))
         except:
             pass
-
         try:
             if (self.prj_speed*np.sin(np.deg2rad(self.look_dir))) != -99:
                 predict_pos.rect.centery += (round(self.target.speed[1] * length/self.prj_speed)
-                                             * (1/self.prj_speed + 1))
-
+                    * (1/self.prj_speed + 1))
         except:
             pass
 
@@ -137,10 +138,10 @@ class Weapon(Module):
 
     def shot(self):
         """Has to be overwritten with specified function"""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _shot_projectile(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def _shot_laser(self):
         if self.aim(self.target) and self.target.get_dist() < self.range:
@@ -152,14 +153,46 @@ class Weapon(Module):
 class Network(Module):
     """
     Interconnection between modules within the ship
-    Ex: Electric networks in bigger ships, physical communication networks within the ship
+    Ex: Power networks in bigger ships, physical communication networks within the ship
     """
+    def __init__(self, carrier, hp, image, x, y, width, height):
+        Module.__init__(self, carrier=carrier, hp=hp, image=image, x=x, y=y, width=width, height=height)
+        raise NotImplementedError()
 
 
 class Propulsion(Module):
     """
     Might be divided on several modules
     """
+    def __init__(self, carrier, hp, image, x, y, width, height):
+        Module.__init__(self, carrier=carrier, hp=hp, image=image, x=x, y=y, width=width, height=height)
+        raise NotImplementedError()
+
+
+class Capacitor(Module):
+    def __init__(self, carrier, hp, image, x, y, width, height, energyCapacity):
+        Module.__init__(self, carrier=carrier, hp=hp, image=image, x=x, y=y, width=width, height=height)
+        self.carrier.energy += energyCapacity
+        self.energyCap = energyCapacity
+        self.part = None
+        raise NotImplementedError()
+
+    def setPart(self):
+        self.part = self.energyCap / self.carrier.energyCap
+
+    def deactivate(self):
+        self.carrier.energyCap += -self.energyCap
+
+
+class Shield(Module):
+    """
+    :param hitBoxArr: list of all rects that shield covers
+    """
+    def __init__(self, carrier, hp, image, x, y, width, height, hitBoxList, shieldCapacity):
+        Module.__init__(self, carrier=carrier, hp=hp, image=image, x=x, y=y, width=width, height=height)
+        self.shieldCapacity = shieldCapacity
+        self.hitBoxList = hitBoxList
+        raise NotImplementedError()
 
 
 class Ship:
@@ -167,6 +200,11 @@ class Ship:
 
     def __init__(self):
         self.modules = []
+        self.energyCap = 10
+        self.energy = 0
+
+    def spendEnergy(self, energy):
+        self.energy += -energy(max(0, energy))
 
     def generate_random_l(self):
         # Ships are built based on random vectors defining their role.
@@ -195,7 +233,7 @@ class Ship:
         # generate skeleton
         sim = random.choice([True, False])  # symmetrical or asymmetrical
         size = size//2 if sim else size
-        radius = np.sqrt((size + random.uniform(-4,4)) * 100)
+        radius = int(np.sqrt((max((size + random.randint(-4,4)), 1)) * 100))
         radius_diff = random.uniform(-4,4)
         sk_tor = self.generate_skeleton_torus(   size, radius, radius_diff, sim)
         sk_rec = self.generate_skeleton_rect(    size, radius, radius_diff, sim)
