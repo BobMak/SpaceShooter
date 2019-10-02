@@ -2,10 +2,8 @@ import pickle
 import pygame as pg
 import sys
 
-from Assets import *
-import State
-import Funcs
-import Scripts
+from src.Assets import *
+from src import Funcs, Scripts, State
 
 
 class Button(pygame.sprite.Sprite):
@@ -63,7 +61,7 @@ class BStartOver(Button):
             object.kill()
 
         realGuy = Funcs.ship_assign(State.picked_ship, State.start_lives,
-                              player=True)
+                                    player=True)
 
         State.save['level'] = 0
 
@@ -81,7 +79,7 @@ class BNewGame(Button):
         State.level = 0
 
         realGuy = Funcs.ship_assign(State.picked_ship, State.start_lives,
-                              player=True)
+                                    player=True)
 
         Scripts.main_loop(realGuy)
 

@@ -1,9 +1,6 @@
 import numpy as np
-import random, pygame, copy
-import Assets
-import State
-import Classes
-import Controls
+import random, pygame
+from src import Assets, Controls, State, Classes
 
 
 def get_dist(dx, dy):
@@ -33,9 +30,9 @@ def shot(shoter, direction, bolt):
                                                               + 90)))
 
     shot.speed = [State.prj_speeds[bolt]
-                   *np.cos(np.deg2rad(shoter.look_dir-90)),
+                  * np.cos(np.deg2rad(shoter.look_dir-90)),
                   State.prj_speeds[bolt]
-                   *np.sin(np.deg2rad(shoter.look_dir-90))]
+                  * np.sin(np.deg2rad(shoter.look_dir-90))]
 
     shot.rotate(0)
 
@@ -44,7 +41,7 @@ def ship_assign(picked_ship, lives, player):
     '''Assign all properties to given ship. Usually when creating new instance
     of ship'''
     ship = Classes.Player(Assets.SHIPS_IMGS[picked_ship],
-                          State.HEIGHT//2, State.HEIGHT//2,
+                          State.HEIGHT // 2, State.HEIGHT // 2,
                           complex_sh=picked_ship-1, bolt=picked_ship,
                           lives=lives, width=None, height=None, player=player)
     ship.rotate(0)
@@ -208,19 +205,19 @@ def spawn_wave(realGuy):
 
         if random.choice([True, False]):
             proX = random.choice([random.randint(-20,0),
-                                  random.randint(State.WIDTH, State.WIDTH+20)])
-            proY = random.randint(-20, State.HEIGHT+20)
+                                  random.randint(State.WIDTH, State.WIDTH + 20)])
+            proY = random.randint(-20, State.HEIGHT + 20)
         else:
-            proX = random.randint(-20, State.WIDTH+20)
+            proX = random.randint(-20, State.WIDTH + 20)
             proY = random.choice([random.randint(-20,0),
-                                  random.randint(State.HEIGHT, State.HEIGHT+20)])
+                                  random.randint(State.HEIGHT, State.HEIGHT + 20)])
 
-        x = Classes.Adv_Asteroid(State.levels[level][1]+1, proX, proY, 4, [0,0])
+        x = Classes.Adv_Asteroid(State.levels[level][1] + 1, proX, proY, 4, [0, 0])
 
     State.level += 1
 
 
-def FX_explosion(x, y, xpl=Assets.expl, radius=(30,30)):
+def FX_explosion(x, y, xpl=Assets.expl, radius=(30, 30)):
     obj = Classes.Animation(xpl, radius[0], radius[1], x, y, True, delay=random.randint(0, 2))
     obj.rect.centerx += - 20
     obj.rect.centery += - 20

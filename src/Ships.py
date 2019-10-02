@@ -5,9 +5,7 @@ integrity vs utility?
 import random
 import numpy as np
 import copy
-import State as S
-import Assets as A
-import Classes as C
+from src import Assets as A, State as S, Classes as C
 
 
 class Module(C.Object, C.Vulnerable):
@@ -28,7 +26,6 @@ class Hull(Module):
     """
     def __init__(self, carrier, inegrity, image, x, y, width, height):
         Module.__init__(self, carrier=carrier, hp=inegrity, image=image, x=x, y=y, width=width, height=height)
-
 
 
 class Weapon(Module):

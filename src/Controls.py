@@ -1,7 +1,6 @@
 import copy
-from Assets import *
-import Classes
-import Funcs
+from src.Assets import *
+from src import Funcs, Classes
 
 
 def listen_acceleration(player, keys):

@@ -1,11 +1,9 @@
 import pickle
 import random, copy
-import numpy as np, numpy
+import numpy as np
 import pygame.gfxdraw as gfx
-import State
-import Funcs
-import Scripts
-from Assets import *
+from src import Funcs, Scripts, State
+from src.Assets import *
 
 
 class Vulnerable:
@@ -211,9 +209,9 @@ class Object(pygame.sprite.Sprite):
         for x in range(-1, 2):
             for y in range(-1, 2):
                 a = (self.rect.centerx
-                     - (obj.rect.centerx + x*(State.WIDTH+obj.rect.width)))
+                     - (obj.rect.centerx + x * (State.WIDTH + obj.rect.width)))
                 b = (self.rect.centery
-                     - (obj.rect.centery + y*(State.HEIGHT+obj.rect.height)))
+                     - (obj.rect.centery + y * (State.HEIGHT + obj.rect.height)))
                 dist = np.sqrt(a**2 + b**2)
                 all_directions_distances.append(dist)
 
@@ -227,9 +225,9 @@ class Object(pygame.sprite.Sprite):
         for x in range(-1, 2):
             for y in range(-1, 2):
                 a = (self.rect.centerx
-                     - (aim.rect.centerx + x*(State.WIDTH+aim.rect.width)))
+                     - (aim.rect.centerx + x * (State.WIDTH + aim.rect.width)))
                 b = (self.rect.centery
-                     - (aim.rect.centery + y*(State.HEIGHT+aim.rect.height)))
+                     - (aim.rect.centery + y * (State.HEIGHT + aim.rect.height)))
 
                 dist = np.sqrt(a**2 + b**2)
                 all_directions_distances.append(dist)
@@ -357,7 +355,7 @@ class FX_Glow(FX):
         """
         for x in range(self.length):
             pygame.gfxdraw.filled_circle(State.screen, self.rect.centerx,
-                                         self.rect.centery, self.radius+x,
+                                         self.rect.centery, self.radius + x,
                                          self.color)
 
 
@@ -448,8 +446,8 @@ class FXLaser(FX_Glow):
         gfx.line(State.screen, self.rect1.x, self.rect1.y, self.rect2.x, self.rect1.y, color=self.color)
         for n in range(self.radius):
             gfx.line(State.screen,
-                     self.rect1.x+self.perp_dx, self.rect1.y+self.perp_dy,
-                     self.rect2.x+self.perp_dx, self.rect1.y+self.perp_dy, color=self.color)
+                     self.rect1.x + self.perp_dx, self.rect1.y + self.perp_dy,
+                     self.rect2.x + self.perp_dx, self.rect1.y + self.perp_dy, color=self.color)
             gfx.line(State.screen,
                      self.rect1.x - self.perp_dx, self.rect1.y - self.perp_dy,
                      self.rect2.x - self.perp_dx, self.rect1.y - self.perp_dy, color=self.color)
@@ -569,7 +567,7 @@ class Player(Object, Moving, Vulnerable):
                 return True
 
     def show_HP(self):
-        gfx.box(State.screen, (10, 10, self.HP*100/self.MAX_HP, 20), (0, 255, 0, 50))
+        gfx.box(State.screen, (10, 10, self.HP * 100 / self.MAX_HP, 20), (0, 255, 0, 50))
 
     def m_add(self, mounted):
         self.mounts.append(mounted)
@@ -1010,10 +1008,10 @@ class Adv_Asteroid(Asteroid):
 
         super().__init__(asteroid_imgs[level-1], x, y, type, speed)
         self.level = level
-        self.hp = State.asteroid_hps[level-1] * self.type
-        self.noclip_timer = State.asteroid_noclip_timers[level-1]
-        self.density = State.asteroid_densities[level-1]
-        self.velo_deviation = State.asteroid_velocity_deviations[level-1]
+        self.hp = State.asteroid_hps[level - 1] * self.type
+        self.noclip_timer = State.asteroid_noclip_timers[level - 1]
+        self.density = State.asteroid_densities[level - 1]
+        self.velo_deviation = State.asteroid_velocity_deviations[level - 1]
 
     def damage(self, dmg, type=None, speed=None):
 
@@ -1198,7 +1196,7 @@ class Missile(Projectile):
 
         x = Zone(self.rect.x, self.rect.y, self.hit_range, self.hp, 2)
         Funcs.FX_explosion(self.rect.centerx, self.rect.centery,
-                       xpl=expN, radius=(60,60))
+                           xpl=expN, radius=(60,60))
         State.hit_waves.add(x)
         State.time_dependent.add(x)
         self.kill()

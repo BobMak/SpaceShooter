@@ -2,8 +2,8 @@
 Initial script
 """
 import pygame
-from Scripts import player_set
-import State
+from src.Scripts import player_set
+from src import State
 
 # TODO #1: Finish refactoring
 

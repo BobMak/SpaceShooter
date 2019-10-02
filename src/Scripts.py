@@ -2,10 +2,10 @@ import threading
 import sys
 import time
 
-from Classes import *
-from State import *
-from Funcs import *
-import Buttons as bt
+from src.Classes import *
+from src.State import *
+from src.Funcs import *
+from src import Buttons as bt
 
 clock = pygame.time.Clock()
 
@@ -445,7 +445,7 @@ def death_menu():
 
 
 def player_set():
-    temporary_BG = pg.image.load(os.path.join("assets", "BG_12.png"))
+    temporary_BG = pg.image.load(os.path.join("..", "assets", "BG_12.png"))
     temporary_BG = pg.transform.scale(temporary_BG, [WIDTH, HEIGHT])
     State.screen.blit(temporary_BG, (0, 0))
     b_new_game = bt.BNewGame((140, 400, 100, 30))
