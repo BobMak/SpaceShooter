@@ -5,13 +5,13 @@ from src import Funcs, Classes
 
 def listen_acceleration(player, keys):
     if keys[pygame.K_UP]:
-        player.accelerate(player.ACCELERATION)
+        player.accelerate(player.ACCELERATION, player.look_dir)
         Funcs.FX_engine_mark(player)
 
 
 def listen_reverse(player, keys):
     if keys[pygame.K_DOWN]:
-        player.accelerate(-player.DEACCELERATION)
+        player.accelerate(-player.DEACCELERATION, player.look_dir)
 
 
 def listen_right(player, keys):

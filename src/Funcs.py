@@ -16,27 +16,6 @@ def angle_diff(a1, a2):
         return a
 
 
-def shot(shoter, direction, bolt):
-
-    skipped_len = shoter.rect.height//2
-    shot = Classes.Projectile(bolt, shoter.rect.centerx,
-                              shoter.rect.centery, State.prj_distances[bolt])
-    shot.look_dir = shoter.look_dir
-    shot.rect.centerx = (shoter.rect.centerx
-                        - skipped_len*np.cos(np.deg2rad(shot.look_dir
-                                                              + 90)))
-    shot.rect.centery = (shoter.rect.centery
-                        - skipped_len*np.sin(np.deg2rad(shot.look_dir
-                                                              + 90)))
-
-    shot.speed = [State.prj_speeds[bolt]
-                  * np.cos(np.deg2rad(shoter.look_dir-90)),
-                  State.prj_speeds[bolt]
-                  * np.sin(np.deg2rad(shoter.look_dir-90))]
-
-    shot.rotate(0)
-
-
 def ship_assign(picked_ship, lives, player):
     '''Assign all properties to given ship. Usually when creating new instance
     of ship'''
@@ -46,7 +25,6 @@ def ship_assign(picked_ship, lives, player):
                           lives=lives, width=None, height=None, player=player)
     ship.rotate(0)
     ship.arr_input = Controls.ABILITIES[picked_ship]
-
     ship.ROTATION = State.SHIP_CONSTANTS[picked_ship][0]
     ship.ACCELERATION = State.SHIP_CONSTANTS[picked_ship][1]
     ship.DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][2]
@@ -54,12 +32,10 @@ def ship_assign(picked_ship, lives, player):
     ship.HP = State.SHIP_CONSTANTS[picked_ship][4]
     ship.S_HP = State.SHIP_CONSTANTS[picked_ship][5]
     ship.type = State.SHIP_CONSTANTS[picked_ship][6]
-
     return ship
 
 
 def draw_rotating(obj):
-
     rect = obj.rotated_image.get_rect()
     rect.center = (obj.rect.center)
     State.screen.blit(obj.rotated_image, rect)
@@ -84,10 +60,8 @@ def orbit_rotate(center, obj, d_ang, dist = 0, ang = -20):
     rotate 'obj' by the orbit of 'center' on range of 'dist'
     from center of 'center' by angle 'ang'. 'obj' has to have angle argument"""
     if ang == -20:
-
         dx = obj.rect.centerx - center.rect.centerx
         dy = obj.rect.centery - center.rect.centery
-
         if dx > 0 and dy < 0:
             ang = abs(np.rad2deg(np.arctan(dx/dy)))
         elif dx < 0 and dy < 0:
@@ -99,14 +73,11 @@ def orbit_rotate(center, obj, d_ang, dist = 0, ang = -20):
         else:
             ang = 90
     else:
-
         obj.orbit_ang += d_ang
-
         if obj.orbit_ang > 360:
             obj.orbit_ang += -360
         elif obj.orbit_ang < 0:
             obj.orbit_ang += 360
-
         ang = obj.orbit_ang
 
     if dist == 0:
@@ -126,7 +97,6 @@ def orbit_eliptic(center, obj):
     its perigee or apsis.
     'd_dist' is the differance between apsis/perigee and the median
     """
-
     obj.distance += obj.d_dist*obj.d_dist_dir
 
     if obj.distance < obj.min_dist:
@@ -197,24 +167,6 @@ def move_movable():
     for object in State.movable:
         # modify position to avoid loss of <1 values when moving
         object.modify_position()
-
-
-def spawn_wave(realGuy):
-    level = State.level
-    for i in range(State.levels[level][0]):
-
-        if random.choice([True, False]):
-            proX = random.choice([random.randint(-20,0),
-                                  random.randint(State.WIDTH, State.WIDTH + 20)])
-            proY = random.randint(-20, State.HEIGHT + 20)
-        else:
-            proX = random.randint(-20, State.WIDTH + 20)
-            proY = random.choice([random.randint(-20,0),
-                                  random.randint(State.HEIGHT, State.HEIGHT + 20)])
-
-        x = Classes.Adv_Asteroid(State.levels[level][1] + 1, proX, proY, 4, [0, 0])
-
-    State.level += 1
 
 
 def FX_explosion(x, y, xpl=Assets.expl, radius=(30, 30)):

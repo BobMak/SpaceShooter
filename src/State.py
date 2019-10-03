@@ -80,12 +80,7 @@ SHIPS_TEXTS = ['space - shoot',
 save = {
     'score': 0,
     'level': 0,
-    'ship': {
-        'picked_ship': 0,
-        'abilities': [],
-        'control': 100,
-        'evolutions': 0,
-    },
+    'ship': None,
     'location': (0, 0),
 }
 
@@ -109,10 +104,9 @@ def load_save():
     except:
         print('No save file found.')
 
-# Game parameters
 
-bound_break_vert = False
-bound_break_hor = False
+# Game parameters
+# Key block
 t = (True, True, True, True)
 score = 0
 FPS = 30
@@ -124,6 +118,7 @@ level = 0
 wave_spawning = False
 
 screen = pg.display.set_mode((SIZE[0], SIZE[1]))
+graphics = None
 graphics_thread = None
 
 # Game is paused or not
@@ -132,17 +127,15 @@ paused = False
 # Collection of all current objects
 all_objects = []
 
-screen_pos  = (0, 0)
+screen_pos = (0, 0)
 
 movable = pg.sprite.Group()
 
-asteroids = pg.sprite.Group()
 projectiles = pg.sprite.Group()
 
 time_dependent = pg.sprite.Group()
 
 player_group = pg.sprite.Group()
-mob_group = pg.sprite.Group()  # unnecessary
 
 glow = pg.sprite.Group()
 effects = pg.sprite.Group()

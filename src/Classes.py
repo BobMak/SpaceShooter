@@ -2,7 +2,8 @@ import pickle
 import random, copy
 import numpy as np
 import pygame.gfxdraw as gfx
-from src import Funcs, Scripts, State
+
+from src import Funcs, Scripts, State, Ships
 from src.Assets import *
 
 
@@ -22,38 +23,24 @@ class Moving:
     Inherited by all classes that can move by themselves.
     """
     def __init__(self):
-         self.speed = [0.0, 0.0]
-
-         self.position = [self.rect.x, self.rect.y]
-
-         State.movable.add(self)
+        self.speed = [0.0, 0.0]
+        self.position = [self.rect.x, self.rect.y]
+        State.movable.add(self)
 
     def modify_position(self):
-        "modifyes position with respect to <1 values of acceleration"
+        """modifyes position with respect to <1 values of acceleration"""
         self.position[0] += self.speed[0]
         self.position[1] += self.speed[1]
 
         self.rect = pygame.Rect(self.position[0], self.position[1],
                                 self.rect.width, self.rect.height)
 
-    def slow_down(self):
-        pass
-        # self.speed[0] += (self.ENV_DEACCELERATION
-        #                   *abs(np.cos(np.deg2rad(self.look_dir-90.0)))
-        #                   *-np.sign(self.speed[0]))
-        #
-        # self.speed[1] += (self.ENV_DEACCELERATION
-        #                   *abs(np.sin(np.deg2rad(self.look_dir-90.0)))
-        #                   *-np.sign(self.speed[1]))
-
-    def accelerate(self, temp):
-
-        self.speed[0] += temp*np.cos(np.deg2rad(self.look_dir-90.0))
-        self.speed[1] += temp*np.sin(np.deg2rad(self.look_dir-90.0))
+    def accelerate(self, temp, angle):
+        self.speed[0] += temp*np.cos(np.deg2rad(angle-90.0))
+        self.speed[1] += temp*np.sin(np.deg2rad(angle-90.0))
 
 
 class Colliding(pygame.sprite.Sprite, Moving):
-
     def __init__(self, rects: [(int, float, float)], source, groups):
         """
         Collision rect container for more complex forms.
@@ -94,7 +81,6 @@ class Colliding(pygame.sprite.Sprite, Moving):
 
 
 class Object(pygame.sprite.Sprite):
-
     def __init__(self, image, x, y, width=None, height=None):
         """
         Sprite with an assigned image spawned at point x y.
@@ -160,13 +146,13 @@ class Object(pygame.sprite.Sprite):
         self.rotated_image_alpha = pygame.transform.rotate(self.image_alpha,
                                                            -self.look_dir)
 
-    def get_aim_dir(self, aim):
+    def get_aim_dir(self, target):
         """
         Returns the angle specifying direction to 'aim' object
         """
         x = None
-        dx = self.rect.centerx - aim.rect.centerx
-        dy = self.rect.centery - aim.rect.centery
+        dx = self.rect.centerx - target.rect.centerx
+        dy = self.rect.centery - target.rect.centery
 
         if dx > 0 and dy < 0:
             aim_dir = abs(np.rad2deg(np.arctan(dx/dy)))
@@ -178,16 +164,12 @@ class Object(pygame.sprite.Sprite):
             aim_dir = abs(np.rad2deg(np.arctan(dx/dy)))
         else:
             aim_dir = 0
-
         if dx < 0 and dy > 0:
             pass
-
         elif dx < 0 and dy < 0:
             aim_dir += 90
-
         elif dx > 0 and dy < 0:
             aim_dir += 180
-
         elif dx > 0 and dy > 0:
             aim_dir += 270
 
@@ -216,34 +198,6 @@ class Object(pygame.sprite.Sprite):
                 all_directions_distances.append(dist)
 
         return min(all_directions_distances)
-
-    def get_closest_aim_dir(self, aim):
-        """
-        returns the angle of closest position of aim with respect to looped nature of the map.
-        """
-        all_directions_distances = []
-        for x in range(-1, 2):
-            for y in range(-1, 2):
-                a = (self.rect.centerx
-                     - (aim.rect.centerx + x * (State.WIDTH + aim.rect.width)))
-                b = (self.rect.centery
-                     - (aim.rect.centery + y * (State.HEIGHT + aim.rect.height)))
-
-                dist = np.sqrt(a**2 + b**2)
-                all_directions_distances.append(dist)
-
-        best = all_directions_distances.index(min(all_directions_distances))
-
-        if best < 3: x = -1
-        elif best > 5: x = 1
-        else: x = 0
-        if (best+1)%3 == 0: y = 1
-        elif best in [1, 3, 6]: y = 0
-        else: y = -1
-        a = aim.rect.centerx + x*(State.WIDTH + aim.rect.width)
-        b = aim.rect.centery + y*(State.HEIGHT + aim.rect.height)
-        aim = Object(blanc, a, b)
-        return self.get_aim_dir(aim)
 
     def update(self):
         """Execute all pending callbacks for the object every logic tick!"""
@@ -392,12 +346,9 @@ class FX_Track(FX):
 
         if look_dir:
             self.look_dir = look_dir
-            self.rotated_image = pygame.transform.rotate(self.image,
-                                                        -self.look_dir)
-            self.image = pygame.transform.rotate(self.image,
-                                                -self.look_dir)
-            self.rotated_image_base = pygame.transform.rotate(self.image,
-                                                             -self.look_dir)
+            self.rotated_image = pygame.transform.rotate(self.image, -self.look_dir)
+            self.image = pygame.transform.rotate(self.image, -self.look_dir)
+            self.rotated_image_base = pygame.transform.rotate(self.image, -self.look_dir)
         else:
             self.rotated_image = copy.copy(self.image)
             self.rotated_image_base = copy.copy(self.image)
@@ -455,8 +406,7 @@ class FXLaser(FX_Glow):
 
 class Player(Object, Moving, Vulnerable):
 
-    def __init__(self, image, x, y, lives, bolt=0,
-                 complex_sh=-1, player=True, width=None, height=None):
+    def __init__(self, ship: Ships.Ship, player=True):
         '''
         :param image
         :param x
@@ -467,65 +417,9 @@ class Player(Object, Moving, Vulnerable):
         :param width=None,
         :param height=None)
         '''
-        self.bolt = 0
-        self.arr_input = []
-        self.player_hull_group = pygame.sprite.Group()
-        self.turrets = pygame.sprite.Group()
-        self.orbiting = pygame.sprite.Group()
-        self.mounts = []
-
-        self.hull_group_ang = 0
-
-        self.HP = 10
-        self.MAX_HP = 10
-        self.S_HP = 10
-        self.MAX_S_HP = 10
-        self.ROTATION = 10
-        self.ACCELERATION = 1
-        self.DEACCELERATION = 0.5
-        self.ENV_DEACCELERATION = 0.25
-
-        space_lock = False
-        special_lock = False
-        missile_lock = False
-        self.locks = [space_lock, special_lock, missile_lock]
-
-        self.speed = [0,0]
-        self.lives = lives
-        super().__init__(image, x, y, width=width, height=height)
-        Moving.__init__(self)
-        Vulnerable.__init__(self, State.SHIP_HP[complex_sh])
-        """#################FIX HP###################"""
-
-        if player == True:
-
+        self.ship = ship
+        if player:
             self.add(State.player_group)
-
-            for i in range(lives):
-                r = Object(live,270 + 35*(1+i),20,30, 30)
-                r.add(State.interface)
-                State.movable.remove(r)
-
-            for x in State.complex_rects[complex_sh]:
-                b = Colliding(x[0], x[1], x[2], x[3], self)
-                self.player_hull_group.add(b)
-
-        self.bolt = bolt
-
-        self.time_count_fire = 0
-        self.timer_fire = State.prj_cooldown[bolt]
-
-        self.time_count_special = 0
-        self.timer_special = State.spec_cooldown[complex_sh]
-
-        self.time_count_missile = 0
-        self.timer_missile = State.prj_cooldown[State.n_bolts + bolt]
-
-        self.counts = [self.time_count_fire, self.time_count_special,
-                       self.time_count_missile]
-
-        self.timers = [self.timer_fire, self.timer_special,
-                       self.timer_missile]
 
         self.distance = 0
         self.orbit_ang = 0
@@ -534,60 +428,11 @@ class Player(Object, Moving, Vulnerable):
         self.updates.append(self._player_update)
 
     def destroy(self):
-
         self.kill()
         self.rotate(0)
         self.speed = [0,0]
-        Funcs.FX_explosion(self.rect.centerx, self.rect.centery)
-
-        if self.player == True:
-
-            for x in self.mounts:
-                x.kill()
-            for x in self.player_hull_group:
-                x.kill()
-            self.lives += -1
-
-            if self.lives > -1:
-                pygame.time.set_timer(pygame.USEREVENT+2, 500)
-            else:
-                # graphics thread termination call
-                pygame.time.set_timer(pygame.USEREVENT+5, 10)
-                with open('save.pkl', 'wb') as f:
-                    pickle.dump(State.save, f, pickle.HIGHEST_PROTOCOL)
-
-                Scripts.death_menu()
-
-    def damage(self, dmg):
-
-        self.HP += -max(0, dmg)
-        if self.HP < 0:
-            self.destroy()
-            if self.player == True:
-                return True
-
-    def show_HP(self):
-        gfx.box(State.screen, (10, 10, self.HP * 100 / self.MAX_HP, 20), (0, 255, 0, 50))
-
-    def m_add(self, mounted):
-        self.mounts.append(mounted)
-
-    def scan(self):
-        min_dist = State.asteroids.sprites[0]
-
-        for i in State.asteroids:
-            dist = np.sqrt((self.rect.x - i.rect.x)**2
-                         + (self.rect.y - i.rect.y)**2)
-            if dist < min_dist:
-                min_dist = dist
-
-        return min_dist
-
-    def fire(self):
-
-        if self.locks[0] == False:
-            self.locks[0] = True
-            Funcs.shot(self, self.look_dir, self.bolt)
+        if self.player:
+            Scripts.death_menu()
 
     def _player_update(self):
         for n in range(len(self.locks)):
@@ -821,18 +666,18 @@ class ScriptMob(Player):
             if abs(t) < 90:
                 if speed_mod < ((self.DEACCELERATION+self.ENV_DEACCELERATION)
                                  *(dist/max(speed_mod,0.001)) + self.ENV_DEACCELERATION):
-                    self.accelerate(self.ACCELERATION)
+                    self.accelerate(self.ACCELERATION, self.look_dir)
 
                 elif speed_mod>1 and abs(true_ang) < 30:
-                    self.accelerate(-self.DEACCELERATION)
+                    self.accelerate(-self.DEACCELERATION, self.look_dir)
 
             else:
                 if speed_mod < ((self.DEACCELERATION+self.ENV_DEACCELERATION)
                                  *(dist/speed_mod) + self.ENV_DEACCELERATION):
-                    self.accelerate(-self.DEACCELERATION)
+                    self.accelerate(-self.DEACCELERATION, self.look_dir)
 
                 elif speed_mod>1 and true_ang < 30:
-                    self.accelerate(self.ACCELERATION)
+                    self.accelerate(self.ACCELERATION, self.look_dir)
 
         else:
             self.to_do_list.remove(self.go)
@@ -930,10 +775,10 @@ class Agressor(ScriptMob):
                 self.rotate(-np.sign(t) * self.ROTATION)
 
             if abs(t) < 90:
-                self.accelerate(self.ACCELERATION)
+                self.accelerate(self.ACCELERATION, self.look_dir)
 
             else:
-                self.accelerate(self.ACCELERATION)
+                self.accelerate(self.ACCELERATION, self.look_dir)
 
         if self.rush not in self.to_do_list:
             self.to_do_list.append(self.rush)

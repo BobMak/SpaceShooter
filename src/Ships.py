@@ -5,6 +5,7 @@ integrity vs utility?
 import random
 import numpy as np
 import copy
+
 from src import Assets as A, State as S, Classes as C
 
 
@@ -18,6 +19,14 @@ class Module(C.Object, C.Vulnerable):
 
         self.carrier = carrier
         self.connected_modules = []
+
+    def passive(self):
+        """Passive turn. To be run every logic update"""
+        raise NotImplementedError("Module Passive Ability")
+
+    def active(self):
+        """Passive turn. To be run every logic update"""
+        raise NotImplementedError("Module Passive Ability")
 
 
 class Hull(Module):
@@ -135,10 +144,26 @@ class Weapon(Module):
 
     def shot(self):
         """Has to be overwritten with specified function"""
-        raise NotImplementedError()
+
+        if not self.blocked:
+            self.blocked = True
+            # TODO Add timer event
+            skipped_len = self.rect.height // 2
+            shot = C.Projectile(self.bolt, self.rect.centerx,
+                              self.rect.centery, self.range)
+            shot.look_dir = self.look_dir
+            shot.rect.centerx = (self.rect.centerx
+                                 - skipped_len * np.cos(np.deg2rad(shot.look_dir
+                                                                   + 90)))
+            shot.rect.centery = (self.rect.centery
+                                 - skipped_len * np.sin(np.deg2rad(shot.look_dir
+                                                                   + 90)))
+            shot.speed = [self.speed * np.cos(np.deg2rad(self.look_dir - 90)),
+                          self.speed * np.sin(np.deg2rad(self.look_dir - 90))]
+            shot.rotate(0)
 
     def _shot_projectile(self):
-        raise NotImplementedError()
+        raise NotImplementedError("Weapon Projectile")
 
     def _shot_laser(self):
         if self.aim(self.target) and self.target.get_dist() < self.range:
@@ -196,12 +221,26 @@ class Ship:
     """A controllable ship. Behaviour and abilities are defined by the modules that it consists of"""
 
     def __init__(self):
+        # All modules on the ship
         self.modules = []
-        self.energyCap = 10
-        self.energy = 0
+        # Map of keys to controlled modules
+        self.controls = {}
+        self.energyCap    = 0
+        self.energy       = 0
+        self.integrity    = 0
+        self.integrityCap = 0
 
     def spendEnergy(self, energy):
-        self.energy += -energy(max(0, energy))
+        self.energy += (max(0, energy))
+
+    def damage(self, hp):
+        self.integrity += (max(0, hp))
+
+
+class ShipGenerator:
+
+    def generate_specific(self, size, tech, shape) -> Ship:
+        raise NotImplementedError()
 
     def generate_random_l(self):
         # Ships are built based on random vectors defining their role.
@@ -217,8 +256,8 @@ class Ship:
         # what part of modules are around max tech tier. The mean of all modules' tech level bell curve is max_tech*cost
         cost = random.random()  # [0, 1)
 
-        # attack, defence, support-attack, support-defence
-        role = [random.random(), random.random(), random.random(), random.random()]
+        # attack:defence, support-attack:support-defence
+        role = [random.random(), random.random()]
 
         mu = cost * max_tech
         sigma = 2
@@ -232,10 +271,10 @@ class Ship:
         size = size//2 if sim else size
         radius = int(np.sqrt((max((size + random.randint(-4,4)), 1)) * 100))
         radius_diff = random.uniform(-4,4)
-        sk_tor = self.generate_skeleton_torus(   size, radius, radius_diff, sim)
-        sk_rec = self.generate_skeleton_rect(    size, radius, radius_diff, sim)
-        sk_tri = self.generate_skeleton_triangle(size, radius, radius_diff, sim)
-        skeleton = random.choice([sk_tor, sk_rec, sk_tri])
+        sk_tor = self.generate_skeleton_torus
+        sk_rec = self.generate_skeleton_rect
+        sk_tri = self.generate_skeleton_triangle
+        skeleton = random.choice([sk_tor, sk_rec, sk_tri])(size, radius, radius_diff, sim)
 
         # self.generate_module(type, size, tech, distribution)
 
