@@ -3,7 +3,6 @@ import Ships
 
 
 class TestShips(unittest.TestCase):
-
     def setUp(self) -> None:
         raise NotImplementedError()
 

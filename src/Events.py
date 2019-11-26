@@ -3,9 +3,10 @@ Basic events and their mapping
 """
 import pygame
 import sys
+import random as r
 
 import State
-
+# Index event - BASE to get the desired event from eve list
 BASE = pygame.USEREVENT
 
 
@@ -29,10 +30,17 @@ def _load_chunk():
     raise NotImplementedError()
 
 
+def add_event(_fun):
+    while True:
+        _r = r.randint()
+        if _r not in eve:
+            eve[_r] = _fun
+            return _r
+
+
 # Event map
 eve = {
     pygame.QUIT: _quit,
-    BASE + 1: _unpause,
-    BASE + 2: _stop_graphics,
+    BASE+1: _unpause,
+    BASE+2: _stop_graphics,
 }
-

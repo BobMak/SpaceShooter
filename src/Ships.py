@@ -1,234 +1,31 @@
 """
 Modular ships!
 integrity vs utility?
+Add whatever module you find or manufacture to your (or someone else's?) ship.
 """
 import random
 import numpy as np
 import copy
 
-from src import Assets as A, State as S, Classes as C
+from src import Assets as A, State as St, Classes as C, Modules as M
 
 
-class Module(C.Object, C.Vulnerable):
-    """
-    A basic part of the ship.
-    """
-    def __init__(self, carrier, hp, image, x, y, width, height):
-        C.Object.__init__(self, image=image, x=x, y=y, width=width, height=height)
-        C.Vulnerable.__init__(self, hp=hp)
-
-        self.carrier = carrier
-        self.connected_modules = []
-
-    def passive(self):
-        """Passive turn. To be run every logic update"""
-        raise NotImplementedError("Module Passive Ability")
-
-    def active(self):
-        """Passive turn. To be run every logic update"""
-        raise NotImplementedError("Module Passive Ability")
-
-
-class Hull(Module):
-    """
-    Nothing but integrity (or storage?) and connections between other modules
-    """
-    def __init__(self, carrier, inegrity, image, x, y, width, height):
-        Module.__init__(self, carrier=carrier, hp=inegrity, image=image, x=x, y=y, width=width, height=height)
-
-
-class Weapon(Module):
-    """
-    Anything that can generate projectiles, damage fields,
-    May rotate.
-    """
-    def __init__(self, carrier, hp, image,
-                 distance=20, look_dir=0, x=0, y=0,
-                 width=20, height=20,
-                 restriction=None,
-                 type=('bl', 1, 2, 2, ),
-                 range=50,
-                 energy_drain=1):
-        """
-
-        :param carrier: Ship
-        :param image:
-        :param distance: dist from center of the block
-        :param look_dir: direction of weapon with respect to carrier
-        :param x: x with respect to the center of carrier
-        :param y: y with respect to the center of carrier
-        :param width: rect property
-        :param height: rect property
-        :param restriction: max rotation angle of the weapon
-        :param type: 'bl' - ballistic, will use pre-aim func to shot; 'ls' - laser
-            ballistic type: ('bl', bolt number, bolt speed, load speed in seconds, energy to load)
-            laser type: ('ls', laser number)
-        :param range: weapon's range
-        :param energy_drain: how much energy is used per shot
-        """
-
-        self.aim = None
-        self.aim_dir = None
-        self.orbit_ang = None
-
-        self.distance = 0
-        self.d_dist = 0
-        self.d_dist_dir = -1  # 1 or -1 -- is object getting closer or further
-
-        Module.__init__(self, carrier=carrier, hp=hp, image=image, x=x, y=y, width=width, height=height)
-
-        self.range = range
-        self.look_dir = carrier.look_dir + look_dir
-        self.restriction = restriction
-        self.mounted_on = carrier
-        self.distance = distance
-        self.speed = carrier.speed
-
-        if look_dir == 0:
-            self.orbit_ang = carrier.look_dir - 180
-        else:
-            self.orbit_ang = carrier.look_dir + look_dir
-
-        if type[0] == 'bl':
-            self.shot = self._shot_projectile
-            self.prj_speed = type[2]
-            self.reload = type[3] / S.FPS
-            self.passive_energy_drain = type[3] * type[4] / S.FPS
-        elif type[0] == 'ls':
-            self.shot = self._shot_laser
-        self.target = None
-        self.bolt = [1]
-        self.active_energy_drain = energy_drain
-
-    def aim(self, aim, precision=5):
-        """Rotate weapon towards current target (aim)
-        :param aim: object"""
-        x = (self.look_dir - self.get_aim_dir(aim))
-        if x < precision and x > -precision:
-            return True
-        elif abs(x) > 180:
-            self.rotate(5 * np.sign(x))
-        else:
-            self.rotate(-5 * np.sign(x))
-
-    def _ballistic_get_predict_pos(self, locked):
-        """
-        Calculate a position where to aim
-        :param locked: Object
-        :return:
-        """
-        predict_pos = C.Object(A.blanc, 0, 0)
-        predict_pos.rect = copy.copy(locked.rect)
-        length = np.sqrt((self.rect.x - locked.rect.x)**2
-               + (self.rect.y - self.target.rect.y)**2)
-
-        try:
-            if (self.prj_speed*np.cos(np.deg2rad(self.look_dir))) != -99:
-                predict_pos.rect.centerx += (round(self.target.speed[0] * length/self.prj_speed)
-                    * (1/self.prj_speed + 1))
-        except:
-            pass
-        try:
-            if (self.prj_speed*np.sin(np.deg2rad(self.look_dir))) != -99:
-                predict_pos.rect.centery += (round(self.target.speed[1] * length/self.prj_speed)
-                    * (1/self.prj_speed + 1))
-        except:
-            pass
-
-        if self.blocked:
-            self.time_count += 1
-
-            if self.time_count > self.timer:
-                self.time_count = 0
-                self.blocked = False
-
-    def shot(self):
-        """Has to be overwritten with specified function"""
-
-        if not self.blocked:
-            self.blocked = True
-            # TODO Add timer event
-            skipped_len = self.rect.height // 2
-            shot = C.Projectile(self.bolt, self.rect.centerx,
-                              self.rect.centery, self.range)
-            shot.look_dir = self.look_dir
-            shot.rect.centerx = (self.rect.centerx
-                                 - skipped_len * np.cos(np.deg2rad(shot.look_dir
-                                                                   + 90)))
-            shot.rect.centery = (self.rect.centery
-                                 - skipped_len * np.sin(np.deg2rad(shot.look_dir
-                                                                   + 90)))
-            shot.speed = [self.speed * np.cos(np.deg2rad(self.look_dir - 90)),
-                          self.speed * np.sin(np.deg2rad(self.look_dir - 90))]
-            shot.rotate(0)
-
-    def _shot_projectile(self):
-        raise NotImplementedError("Weapon Projectile")
-
-    def _shot_laser(self):
-        if self.aim(self.target) and self.target.get_dist() < self.range:
-            gl = C.FX_Glow(self.rect, 1, 10, 5, (255, 0, 0))
-
-            # self.target
-
-
-class Network(Module):
-    """
-    Interconnection between modules within the ship
-    Ex: Power networks in bigger ships, physical communication networks within the ship
-    """
-    def __init__(self, carrier, hp, image, x, y, width, height):
-        Module.__init__(self, carrier=carrier, hp=hp, image=image, x=x, y=y, width=width, height=height)
-        raise NotImplementedError()
-
-
-class Propulsion(Module):
-    """
-    Might be divided on several modules
-    """
-    def __init__(self, carrier, hp, image, x, y, width, height):
-        Module.__init__(self, carrier=carrier, hp=hp, image=image, x=x, y=y, width=width, height=height)
-        raise NotImplementedError()
-
-
-class Capacitor(Module):
-    def __init__(self, carrier, hp, image, x, y, width, height, energyCapacity):
-        Module.__init__(self, carrier=carrier, hp=hp, image=image, x=x, y=y, width=width, height=height)
-        self.carrier.energy += energyCapacity
-        self.energyCap = energyCapacity
-        self.part = None
-        raise NotImplementedError()
-
-    def setPart(self):
-        self.part = self.energyCap / self.carrier.energyCap
-
-    def deactivate(self):
-        self.carrier.energyCap += -self.energyCap
-
-
-class Shield(Module):
-    """
-    :param hitBoxArr: list of all rects that shield covers
-    """
-    def __init__(self, carrier, hp, image, x, y, width, height, hitBoxList, shieldCapacity):
-        Module.__init__(self, carrier=carrier, hp=hp, image=image, x=x, y=y, width=width, height=height)
-        self.shieldCapacity = shieldCapacity
-        self.hitBoxList = hitBoxList
-        raise NotImplementedError()
-
-
-class Ship:
+class Ship(C.Object):
     """A controllable ship. Behaviour and abilities are defined by the modules that it consists of"""
-
-    def __init__(self):
+    def __init__(self, modules: [M.Module]):
+        C.Object.__init__(self, St.window.current_sector, )
         # All modules on the ship
-        self.modules = []
+        self.modules = modules
         # Map of keys to controlled modules
-        self.controls = {}
-        self.energyCap    = 0
-        self.energy       = 0
-        self.integrity    = 0
+        self.        mass = sum(x.mass for x in modules) + 0
+        self.   energyCap = 0
+        self.      energy = 0
+        self.   integrity = 0
         self.integrityCap = 0
+
+    def addModule(self, module):
+        self.modules.append(module)
+        self.mass += module.mass
 
     def spendEnergy(self, energy):
         self.energy += (max(0, energy))
@@ -236,9 +33,46 @@ class Ship:
     def damage(self, hp):
         self.integrity += (max(0, hp))
 
+    def move_to(self):
+        dist = self.get_distance(self.goal)
+        if dist > self.close_range:
+            speed_mod = np.sqrt(self.speed[0] ** 2 + self.speed[1] ** 2)
+            # If speed is small, turn in the direction of goal,
+            # otherwise, in the direction allowing greater speed vecror change
+            if speed_mod < 1:
+                t = self.look_dir - abs(self.get_aim_dir(self.goal))
+            else:
+                ang = np.arctan(self.speed[0] / self.speed[1])
+                # Direction of motion
+                spe = Object(blanc,
+                             int(self.rect.centerx + 30 * np.sin(ang)
+                                 * np.sign(self.speed[1])),
+                             int(self.rect.centery + 30 * np.cos(ang)
+                                 * np.sign(self.speed[1])))
+
+                true_ang = self.get_aim_dir(self.goal) - self.get_aim_dir(spe)
+                spe.kill()
+                if true_ang < -180 or true_ang > 180:
+                    true_ang = -360 * np.sign(true_ang) + true_ang
+
+                if true_ang < -90 or true_ang > 90:
+                    t = self.get_aim_dir(self.goal)
+                else:
+                    t = self.get_aim_dir(self.goal) + true_ang
+                # true_ang = self.get_aim_dir(self.goal) - true_ang
+                t = self.look_dir - t
+                if t > 360 or t < -360:
+                    t += -360 * np.sign(t)
+            if abs(t) > self.ROTATION:
+                if t < -180 or t > 180:
+                    t = -t
+                self.rotate(-np.sign(t) * self.ROTATION)
+            if abs(t) < 90:
+                self.accelerate(self.ACCELERATION, self.look_dir)
+            else:
+                self.accelerate(self.ACCELERATION, self.look_dir)
 
 class ShipGenerator:
-
     def generate_specific(self, size, tech, shape) -> Ship:
         raise NotImplementedError()
 
@@ -249,23 +83,18 @@ class ShipGenerator:
         # There might be modules that may be used for different roles.
 
         # Fleets may contain different roles to compensate for weaknesses and strengthen powers of individual ships.
-
         # 1 drone  2 Gunship 3 Corvette 4 frigate 5 Destroyer 6 cruiser 7 Battleship 8 flagship 9 carrier 10 giant
         size = random.randint(0, 10)
         max_tech = random.randint(0, 10)  # max module tech tier
         # what part of modules are around max tech tier. The mean of all modules' tech level bell curve is max_tech*cost
         cost = random.random()  # [0, 1)
-
         # attack:defence, support-attack:support-defence
         role = [random.random(), random.random()]
-
         mu = cost * max_tech
         sigma = 2
-
         # Centered around special ability? TODO: How to combine several abilities and AI for their operation?
         # Ship skeleton and other modules might be placed to support that ability
         centered = random.random()
-        #
         # generate skeleton
         sim = random.choice([True, False])  # symmetrical or asymmetrical
         size = size//2 if sim else size
@@ -275,7 +104,6 @@ class ShipGenerator:
         sk_rec = self.generate_skeleton_rect
         sk_tri = self.generate_skeleton_triangle
         skeleton = random.choice([sk_tor, sk_rec, sk_tri])(size, radius, radius_diff, sim)
-
         # self.generate_module(type, size, tech, distribution)
 
     def generate_skeleton_torus(self, size, radius, radius_var, symmetry=True):
