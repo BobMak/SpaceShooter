@@ -46,7 +46,6 @@ def FX_explosion(x, y, xpl=Assets.expl, radius=(30, 30)):
     obj = Classes.Animation(xpl, radius[0], radius[1], x, y, True, delay=random.randint(0, 2))
     obj.rect.centerx += - 20
     obj.rect.centery += - 20
-
     State.effects.add(obj)
 
 

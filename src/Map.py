@@ -5,12 +5,11 @@ import State as St
 
 
 class Window:
-    def __int__(self):
+    def __int__(self) -> None:
         """ A singleton map for which events are computed. Includes several
         sectors that are closest to a player.
         The class should translate respective coordinates of all objects
         from sectors to a player's screen.
-        :return:
         """
         # Displayed map x and y. This can change on zoom in/out
         self.width, self.height = 1200, 1000
@@ -21,6 +20,7 @@ class Window:
         self.current_sector = None
         self.sectors = []
         self.interface = pg.sprite.Group()  # Game interface objects
+        St.window = self
 
     def add_sector(self):
         pass

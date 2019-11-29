@@ -24,21 +24,19 @@ class Moving:
         sector.movable.add(self)
 
     def modify_position(self):
-        """modifyes position with respect to <1 values of acceleration"""
         self.position[0] += self.speed[0]
         self.position[1] += self.speed[1]
-        self.rect = pygame.Rect(self.position[0], self.position[1],
+        self.rect = pg.Rect(self.position[0], self.position[1],
                                 self.rect.width, self.rect.height)
 
-    def accelerate(self, temp, angle):
-        self.speed[0] += temp*np.cos(np.deg2rad(angle-90.0))
-        self.speed[1] += temp*np.sin(np.deg2rad(angle-90.0))
+    def accelerate(self, dl, angle):
+        self.speed[0] += dl*np.cos(np.deg2rad(angle-90.0))
+        self.speed[1] += dl*np.sin(np.deg2rad(angle-90.0))
 
 
-class Colliding(pygame.sprite.Sprite, Moving):
+class Colliding(pg.sprite.Sprite, Moving):
     def __init__(self, rects: [(int, float, float)], source, groups):
-        """
-        Collision rect container for more complex forms.
+        """ Collision rect container for more complex forms.
         should be rotated around source object with "orbit_rotate".
         Composed of one or more squares that should represent an approximate shape of the source
         :param rects: [(side length,
@@ -48,10 +46,10 @@ class Colliding(pygame.sprite.Sprite, Moving):
         :param source: source object
         :param groups: all groups collision detection should work with
         """
-        pygame.sprite.Sprite.__init__(self)
+        pg.sprite.Sprite.__init__(self)
         self.rects = []
         for rec in rects:
-            self.rects.append((pygame.Rect((source.rect.x + (np.deg2rad(np.cos(rec[2])) * rec[1])),
+            self.rects.append((pg.Rect((source.rect.x + (np.deg2rad(np.cos(rec[2])) * rec[1])),
                                           (source.rect.y + np.deg2rad(np.sin(rec[2])) * rec[1]),
                                           rec[0], rec[0]), rec[1], rec[2]))
         self.speed = source.speed
@@ -60,7 +58,7 @@ class Colliding(pygame.sprite.Sprite, Moving):
 
     def check_against_group(self, group, ignore_group):
         for rec in self.rects:
-            for i in pygame.sprite.spritecollide(rec, group, 0):
+            for i in pg.sprite.spritecollide(rec, group, 0):
                 if i not in ignore_group:
                     self.collide(i)
                     i.collide(self)
@@ -72,8 +70,8 @@ class Colliding(pygame.sprite.Sprite, Moving):
         raise NotImplementedError('Collide behaviour not assigned!')
 
 
-class Object(pygame.sprite.Sprite):
-    def __init__(self, sector=None, image=None, x=0, y=0, width=None, height=None):
+class Object(pg.sprite.Sprite):
+    def __init__(self, sector=None, image=None, x=0, y=0):
         """Sprite with an assigned image spawned at point x y.
         :param image,
         :param x,
@@ -82,7 +80,7 @@ class Object(pygame.sprite.Sprite):
         :param height=None (Defaults to that of image)
         """
         self.       sector = sector
-        self.     look_dir = 0
+        self.          ang = 0
         self.rotated_image = 0
         self. rotated_rect = 0
         self.       radius = None
@@ -91,20 +89,11 @@ class Object(pygame.sprite.Sprite):
         self.        timer = 0
         self.         type = 0
         self.      updates = []
-        pygame.sprite.Sprite.__init__(self)
-        if width:
-            self.      image = pygame.transform.scale(image, (width, height))
-            self.image_alpha = pygame.transform.scale(copy.copy(image),
-                                                      (width, height))
-            alpha = 128
-            self.image_alpha.fill((255, 255, 255, alpha),
-                                  None, pygame.BLEND_RGBA_MULT)
-        else:
-            self.      image = image
-            self.image_alpha = copy.copy(image)
-            alpha = 128
-            self.image_alpha.fill((255, 255, 255, alpha),
-                                  None, pygame.BLEND_RGBA_MULT)
+        pg.sprite.Sprite.__init__(self)
+        self.      image = image
+        self.image_alpha = copy.copy(image)
+        alpha = 128
+        self.image_alpha.fill((255,255,255,alpha), None, pg.BLEND_RGBA_MULT)
         self.      rotated_image = image
         self.rotated_image_alpha = image
         # Fetch the rectangle object that has the dimensions of the image
@@ -117,14 +106,14 @@ class Object(pygame.sprite.Sprite):
 
     def rotate(self, dir):
         # Ensure that look_dir is in range [0 - 360)
-        if self.look_dir > 359:
-            self.look_dir += dir - 360
-        elif self.look_dir < 0:
-            self.look_dir += 360 + dir
+        if self.ang > 359:
+            self.ang += dir - 360
+        elif self.ang < 0:
+            self.ang += 360 + dir
         else:
-            self.look_dir += dir
-        self.rotated_image = pygame.transform.rotate(self.image,-self.look_dir)
-        self.rotated_image_alpha = pygame.transform.rotate(self.image_alpha,-self.look_dir)
+            self.ang += dir
+        self.rotated_image = pg.transform.rotate(self.image, -self.ang)
+        self.rotated_image_alpha = pg.transform.rotate(self.image_alpha, -self.ang)
 
     def get_aim_dir(self, target):
         """
@@ -182,7 +171,7 @@ class Object(pygame.sprite.Sprite):
             f()
 
 
-class FX(pygame.sprite.Sprite, Moving):
+class FX(pg.sprite.Sprite, Moving):
     def __init__(self, rect, duration, fading=None, color=None, enlarging=None, speed=None):
         """
         :param rect: location
@@ -197,7 +186,7 @@ class FX(pygame.sprite.Sprite, Moving):
             ((int) pixels to enlarge per tick, num of ticks before enlarge update)
         :param speed:
         """
-        pygame.sprite.Sprite.__init__(self)
+        pg.sprite.Sprite.__init__(self)
         self.timer = duration
         self.time_count = 0
         self.rect = rect
@@ -273,9 +262,10 @@ class FX_Glow(FX):
         drawing funcition
         """
         for x in range(self.length):
-            pygame.gfxdraw.filled_circle(State.screen, self.rect.centerx,
-                                         self.rect.centery, self.radius + x,
-                                         self.color)
+            pg.gfxdraw.filled_circle(
+                State.screen, self.rect.centerx,
+                self.rect.centery, self.radius + x,
+                self.color)
 
 
 class FX_Track(FX):
@@ -304,12 +294,12 @@ class FX_Track(FX):
         FX.__init__(self, rect, duration, fading=fading, color=color, enlarging=enlarging, speed=speed)
         self.updates.append(self._update)
         self.look_dir = 0
-        self.image = pygame.transform.scale(image, (rect.width, rect.height))
+        self.image = pg.transform.scale(image, (rect.width, rect.height))
         if look_dir:
             self.look_dir = look_dir
-            self.rotated_image = pygame.transform.rotate(self.image, -self.look_dir)
-            self.image = pygame.transform.rotate(self.image, -self.look_dir)
-            self.rotated_image_base = pygame.transform.rotate(self.image, -self.look_dir)
+            self.rotated_image = pg.transform.rotate(self.image, -self.look_dir)
+            self.image = pg.transform.rotate(self.image, -self.look_dir)
+            self.rotated_image_base = pg.transform.rotate(self.image, -self.look_dir)
         else:
             self.rotated_image = copy.copy(self.image)
             self.rotated_image_base = copy.copy(self.image)
@@ -326,14 +316,14 @@ class FX_Track(FX):
         if self.rotating_count > self.rotating_tempo:
             self.rotating_count = 0
             self.look_dir += self.rotating
-            self.rotated_image = pygame.transform.rotate(self.image, -self.look_dir)
+            self.rotated_image = pg.transform.rotate(self.image, -self.look_dir)
 
     def _update(self):
         self.rotated_image_base.fill(self.color,
-                                     None, pygame.BLEND_RGBA_MULT)
+                                     None, pg.BLEND_RGBA_MULT)
         self.rotated_image = copy.copy(self.rotated_image_base)
         if self.enlarging:
-            self.rotated_image = pygame.transform.scale(self.rotated_image,
+            self.rotated_image = pg.transform.scale(self.rotated_image,
                                                         (self.rect.width,
                                                          self.rect.height))
 
@@ -469,7 +459,7 @@ class Turret(Mounted):
 
         self.radius = radius
         self.locked = None
-        self.bg = pygame.transform.scale(bg, (width-6, height-6))
+        self.bg = pg.transform.scale(bg, (width-6, height-6))
         self.bg_rect = bg.get_rect()
 
         if groups != None:
@@ -485,11 +475,11 @@ class Turret(Mounted):
         a = Object(blanc, self.radius, self.radius,
                     self.rect.centerx, self.rect.centery)
 
-        pygame.gfxdraw.circle(State.screen, self.rect.centerx, self.rect.centery,
+        pg.gfxdraw.circle(State.screen, self.rect.centerx, self.rect.centery,
                               self.radius, (0,255,0,50))
 
         for x in group:
-            if pygame.sprite.collide_circle(a, x):
+            if pg.sprite.collide_circle(a, x):
                 if x not in self.in_range:
                     self.in_range.append(x)
         a.kill()
@@ -528,7 +518,7 @@ class ScriptMob(Player):
             # If speed is small, turn in the direction of goal,
             # otherwise, in the direction allowing greater speed vecror change
             if speed_mod < 1:
-                t = self.look_dir - abs(self.get_aim_dir(self.goal))
+                t = self.ang - abs(self.get_aim_dir(self.goal))
             else:
                 ang = np.arctan(self.speed[0]/self.speed[1])
                 spe = Object(blanc,
@@ -548,7 +538,7 @@ class ScriptMob(Player):
                     t = self.get_aim_dir(self.goal) + true_ang
 
                 # true_ang = self.get_aim_dir(self.goal) - true_ang
-                t = self.look_dir - t
+                t = self.ang - t
                 if t > 360 or t < -360:
                     t += -360*np.sign(t)
 
@@ -560,18 +550,18 @@ class ScriptMob(Player):
             if abs(t) < 90:
                 if speed_mod < ((self.DEACCELERATION+self.ENV_DEACCELERATION)
                                  *(dist/max(speed_mod,0.001)) + self.ENV_DEACCELERATION):
-                    self.accelerate(self.ACCELERATION, self.look_dir)
+                    self.accelerate(self.ACCELERATION, self.ang)
 
                 elif speed_mod>1 and abs(true_ang) < 30:
-                    self.accelerate(-self.DEACCELERATION, self.look_dir)
+                    self.accelerate(-self.DEACCELERATION, self.ang)
 
             else:
                 if speed_mod < ((self.DEACCELERATION+self.ENV_DEACCELERATION)
                                  *(dist/speed_mod) + self.ENV_DEACCELERATION):
-                    self.accelerate(-self.DEACCELERATION, self.look_dir)
+                    self.accelerate(-self.DEACCELERATION, self.ang)
 
                 elif speed_mod>1 and true_ang < 30:
-                    self.accelerate(self.ACCELERATION, self.look_dir)
+                    self.accelerate(self.ACCELERATION, self.ang)
 
         else:
             self.to_do_list.remove(self.go)
@@ -656,7 +646,7 @@ class Missile(Projectile):
 
     def rotate_to_aim(self):
         aim_dir = self.get_aim_dir(self.aim)
-        x = (self.look_dir - aim_dir)
+        x = (self.ang - aim_dir)
         if abs(x) > 180:
             self.rotate(self.d_ang*np.sign(x))
         else:
@@ -678,16 +668,16 @@ class Missile(Projectile):
         if self.dist > self.dist_prev and self.dist < self.hit_range:
             return
         self.dist_prev = self.dist
-        a1 = self.speed[0] + self.d_speed*np.cos(np.deg2rad(self.look_dir-90))
+        a1 = self.speed[0] + self.d_speed*np.cos(np.deg2rad(self.ang - 90))
         if a1 < self.max_speed and a1 > -self.max_speed:
             self.speed[0] = a1
         else:
-            self.speed[0] = self.max_speed*np.cos(np.deg2rad(self.look_dir-90))
-        a2 = self.speed[1] + self.d_speed*np.sin(np.deg2rad(self.look_dir-90))
+            self.speed[0] = self.max_speed*np.cos(np.deg2rad(self.ang - 90))
+        a2 = self.speed[1] + self.d_speed*np.sin(np.deg2rad(self.ang - 90))
         if a2 < self.max_speed and a2 > -self.max_speed:
             self.speed[1] = a2
         else:
-            self.speed[1] = self.max_speed*np.sin(np.deg2rad(self.look_dir-90))
+            self.speed[1] = self.max_speed*np.sin(np.deg2rad(self.ang - 90))
 
 
 class Animation(Object, Moving):

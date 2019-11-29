@@ -1,6 +1,6 @@
 """
 Modular ships!
-integrity vs utility?
+integrity vs utility? Complexity, chaos and emergence vs fun?
 Add whatever module you find or manufacture to your (or someone else's?) ship.
 """
 import random
@@ -10,22 +10,39 @@ import copy
 from src import Assets as A, State as St, Classes as C, Modules as M
 
 
-class Ship(C.Object):
+class Ship(C.Object, C.Moving):
     """A controllable ship. Behaviour and abilities are defined by the modules that it consists of"""
-    def __init__(self, modules: [M.Module]):
-        C.Object.__init__(self, St.window.current_sector, )
+    def __init__(self, modules: [M.Module], coords):
+        C.Object.__init__(self, St.window.current_sector,
+                          x=coords[0], y=coords[1])
+        C.Moving.__init__(self, St.window.current_sector)
         # All modules on the ship
         self.modules = modules
         # Map of keys to controlled modules
-        self.        mass = sum(x.mass for x in modules) + 0
-        self.   energyCap = 0
+        self.        mass = 0
         self.      energy = 0
+        self.   energyCap = 0
+        self.   energyGen = 0
         self.   integrity = 0
         self.integrityCap = 0
+        self.     storage = 0
+        self.  propulsion = 0
+        for x in self.modules:
+            x.assignShip(self)
+        self.dAng = self.dAcc = self.propulsion / (self.mass**2)
 
     def addModule(self, module):
+        """ This only happens when module gets attached to a ship """
         self.modules.append(module)
-        self.mass += module.mass
+        module.assignShip(self)
+
+    def update_system(self):
+        """ When computing the action of a system composed of many modules one
+         needs to calculate how all the components influence given behaviour.
+         If we have a model that successfully predicts the state of such system,
+         we can avoid costly computation.
+         In game such systems may be ships or other arrays of modules that can
+         act in different ways"""
 
     def spendEnergy(self, energy):
         self.energy += (max(0, energy))
@@ -33,48 +50,60 @@ class Ship(C.Object):
     def damage(self, hp):
         self.integrity += (max(0, hp))
 
-    def move_to(self):
-        dist = self.get_distance(self.goal)
-        if dist > self.close_range:
+    def move_to(self, goal):
+        """ Given a location and modules, what are most optimal sets of actions
+        to reach it? Eg. most energy-efficient vs quickest"""
+        dist = self.get_distance(goal)
+        if dist > 50:
             speed_mod = np.sqrt(self.speed[0] ** 2 + self.speed[1] ** 2)
             # If speed is small, turn in the direction of goal,
             # otherwise, in the direction allowing greater speed vecror change
             if speed_mod < 1:
-                t = self.look_dir - abs(self.get_aim_dir(self.goal))
+                t = self.ang - abs(self.get_aim_dir(goal))
             else:
                 ang = np.arctan(self.speed[0] / self.speed[1])
                 # Direction of motion
-                spe = Object(blanc,
-                             int(self.rect.centerx + 30 * np.sin(ang)
-                                 * np.sign(self.speed[1])),
-                             int(self.rect.centery + 30 * np.cos(ang)
-                                 * np.sign(self.speed[1])))
-
-                true_ang = self.get_aim_dir(self.goal) - self.get_aim_dir(spe)
+                spe = C.Object(sector=St.window.current_sector,
+                    x=int(self.rect.centerx + 30*np.sin(ang)*np.sign(self.speed[1])),
+                    y=int(self.rect.centery + 30*np.cos(ang)*np.sign(self.speed[1]))
+                    )
+                true_ang = self.get_aim_dir(goal) - self.get_aim_dir(spe)
                 spe.kill()
                 if true_ang < -180 or true_ang > 180:
                     true_ang = -360 * np.sign(true_ang) + true_ang
 
                 if true_ang < -90 or true_ang > 90:
-                    t = self.get_aim_dir(self.goal)
+                    t = self.get_aim_dir(goal)
                 else:
-                    t = self.get_aim_dir(self.goal) + true_ang
+                    t = self.get_aim_dir(goal) + true_ang
                 # true_ang = self.get_aim_dir(self.goal) - true_ang
-                t = self.look_dir - t
+                t = self.ang - t
                 if t > 360 or t < -360:
                     t += -360 * np.sign(t)
-            if abs(t) > self.ROTATION:
+            if abs(t) > self.dAng:
                 if t < -180 or t > 180:
                     t = -t
-                self.rotate(-np.sign(t) * self.ROTATION)
+                self.rotate(-np.sign(t) * self.dAng)
             if abs(t) < 90:
-                self.accelerate(self.ACCELERATION, self.look_dir)
+                self.accelerate(self.dAcc, self.ang)
             else:
-                self.accelerate(self.ACCELERATION, self.look_dir)
+                self.accelerate(self.dAcc, self.ang)
+
 
 class ShipGenerator:
     def generate_specific(self, size, tech, shape) -> Ship:
         raise NotImplementedError()
+
+    @staticmethod
+    def generate_test():
+        p = M.Propulsion(1, 5, 1).place(0, 50)
+        h = M.Hull(5).place(0, 10)
+        e = M.Capacitor(1, 5).place(20, 0)
+        g = M.Generator(1, 1).place(-20, 0)
+        w = M.Weapon(1, 1).place(0, -10)
+        ship = Ship([p, h, e, g, w], (50, 50))
+        ship.update_system()
+        return ship
 
     def generate_random_l(self):
         # Ships are built based on random vectors defining their role.

@@ -10,7 +10,7 @@ class TestShips(unittest.TestCase):
         raise NotImplementedError()
 
     def testShipGeneration(self):
-        ship = Ships.Ship()
+        s= Ships.ShipGenerator.generate_test()
 
 
 if __name__ == '__main__':
