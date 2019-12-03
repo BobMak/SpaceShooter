@@ -71,6 +71,7 @@ model_BG = pg.image.load(os.path.join("..", "assets", "ModelBG.bmp"))
 
 BG = pg.transform.scale(pg.image.load(os.path.join("..", "assets", "BG_720.png")), (WIDTH, HEIGHT))
 
+menu_sound = pygame.mixer.Sound("\assets\nost\theme.wav")
 menu_BG = pg.image.load(os.path.join("..", "assets", "menu_BG.png"))
 menu_button = pg.image.load(os.path.join("..", "assets", "menu_button.png"))
 menu_button_selected = pg.image.load(os.path.join("..", "assets", "menu_button_selected.png"))

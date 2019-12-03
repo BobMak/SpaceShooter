@@ -91,6 +91,7 @@ class Graphics:
 
 
 def pause_menu():
+    pygame.mixer.Sound.play(menu_sound)
     print(St.t)
     temporary_bg = St.screen.copy()
     # Define button positions
@@ -154,7 +155,7 @@ def pause_menu():
                 else:
                     pg.time.set_timer(pg.USEREVENT + 1, 0)
                     pg.time.set_timer(pg.USEREVENT + 1, 300)
-
+    pygame.mixer.music.stop()
 
 def death_menu():
     temporary_BG = St.screen.copy()
