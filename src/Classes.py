@@ -3,8 +3,8 @@ import random, copy
 import numpy as np
 import pygame.gfxdraw as gfx
 
-from src import Funcs, Scripts, State, Ships
-from src.Assets import *
+import Funcs, Scripts, State, Ships
+from Assets import *
 
 
 class Vulnerable:

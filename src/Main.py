@@ -2,8 +2,8 @@
 Initial script
 """
 import pygame
-from src.Scripts import player_set
-from src import State
+from Scripts import player_set
+import State
 
 pygame.init()
 State.load_save()

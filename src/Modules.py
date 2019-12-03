@@ -8,7 +8,7 @@ import pygame as pg
 import numpy as np
 import copy
 
-from src import Assets as A, State as St, Classes as C, Funcs as F
+import Assets as A, State as St, Classes as C, Funcs as F
 
 
 class Module(C.Object, C.Vulnerable):

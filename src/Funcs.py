@@ -1,6 +1,6 @@
 import numpy as np
 import random, pygame
-from src import Assets, State, Classes
+import Assets, State, Classes
 
 
 def get_dist(dx, dy):

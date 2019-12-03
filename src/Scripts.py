@@ -3,12 +3,12 @@ import sys
 import time
 import pygame as pg
 
-from src.Classes import *
-import src.State as St
+from Classes import *
+import State as St
 import Assets as A
-from src.Funcs import *
+from Funcs import *
 import Events
-from src import Buttons as bt
+import Buttons as bt
 
 clock = pygame.time.Clock()
 
@@ -30,6 +30,11 @@ def main_loop(player):
             St.paused = True
             while St.paused:
                 time.sleep(0.1)
+        if keys[pygame.K_e]:  # and St.t[0]
+            # To stop graphics thread
+            pygame.time.set_timer(pygame.USEREVENT + 3, 10)
+            # To unblock esc button
+            time.sleep(0.1)
         # Player module abilities
         for key in player.ship.controls.keys():
             if keys[key]:

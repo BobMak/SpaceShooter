@@ -24,6 +24,9 @@ def _unpause():
 def _stop_graphics():
     State.graphics.alive = False
 
+def _console_alert():
+    print('aulah_akbar')
+
 
 # When approaching to a chunk bound
 def _load_chunk():
@@ -52,4 +55,5 @@ eve = {
     pygame.QUIT:     (_quit, ()),
     BASE+1:       (_unpause, ()),
     BASE+2: (_stop_graphics, ()),
+    BASE+3: (_console_alert, ()),
 }

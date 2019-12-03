@@ -7,7 +7,7 @@ import random
 import numpy as np
 import copy
 
-from src import Assets as A, State as St, Classes as C, Modules as M
+import Assets as A, State as St, Classes as C, Modules as M
 
 
 class Ship(C.Object, C.Moving):

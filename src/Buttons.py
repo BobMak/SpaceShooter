@@ -2,8 +2,8 @@ import pickle
 import pygame as pg
 import sys
 
-from src.Assets import *
-from src import Funcs, Scripts, State
+from Assets import *
+import Funcs, Scripts, State
 
 
 class Button(pygame.sprite.Sprite):
