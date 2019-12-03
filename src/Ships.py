@@ -89,6 +89,10 @@ class Ship(C.Object, C.Moving):
             else:
                 self.accelerate(self.dAcc, self.ang)
 
+    def draw(self):
+        for m in self.modules:
+            m.draw(self.rect)
+
 
 class ShipGenerator:
     def generate_specific(self, size, tech, shape) -> Ship:

@@ -30,17 +30,26 @@ def _load_chunk():
     raise NotImplementedError()
 
 
-def add_event(_fun):
-    while True:
-        _r = r.randint()
-        if _r not in eve:
-            eve[_r] = _fun
-            return _r
+def post_event(_fun, args, timer, id=None):
+    # Event with custom id. In case you need to know id in advance
+    if id and id not in eve:
+        eve[id] = (_fun, args)
+        pygame.time.set_timer(id, timer)
+        return id
+    elif id:
+        return 0
+    elif not id:
+        while True:  # Generate unique event id
+            rand_id = r.randint()
+            if rand_id not in eve:
+                eve[rand_id] = (_fun, args)
+                pygame.time.set_timer(rand_id, timer)
+                return rand_id
 
 
-# Event map
+# Event map. Callbacks with their args. eve[123][0](*eve[123][1])
 eve = {
-    pygame.QUIT: _quit,
-    BASE+1: _unpause,
-    BASE+2: _stop_graphics,
+    pygame.QUIT:     (_quit, ()),
+    BASE+1:       (_unpause, ()),
+    BASE+2: (_stop_graphics, ()),
 }

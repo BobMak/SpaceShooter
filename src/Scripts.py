@@ -13,10 +13,7 @@ from src import Buttons as bt
 clock = pygame.time.Clock()
 
 
-def main_loop(realGuy):
-    pl = realGuy
-    for x, y in enumerate(pl.turrets):
-        y.number = x
+def main_loop(player):
     St.graphics = Graphics()
     St.graphics_thread = threading.Thread(target=St.graphics.screen_redraw)
     St.graphics_thread.start()
@@ -34,13 +31,14 @@ def main_loop(realGuy):
             while St.paused:
                 time.sleep(0.1)
         # Player module abilities
-        for key in realGuy.ship.controls.keys():
+        for key in player.ship.controls.keys():
             if keys[key]:
-                realGuy.ship.controls[key]()
+                player.ship.controls[key]()
         # Handle events
         for event in pygame.event.get():
             try:
-                Events.eve[event]
+                e=Events.eve[event]
+                e[0](*e[1])
             except Exception as e:
                 print('unhandled event', e)
         # Updates to object groups
