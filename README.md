@@ -35,5 +35,5 @@ Starting menu
 You will need to install pygame library to run the project:
 
     pip install pygame
-    
+	python main.py
 
