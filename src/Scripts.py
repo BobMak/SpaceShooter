@@ -2,14 +2,13 @@ import threading
 import sys
 import time
 import pygame as pg
-from Classes import *
-import State as St
-import Assets as A
-from Funcs import *
+import State as St, Assets as A, Funcs as F
 import Events
 import Buttons as bt
 
-clock = pygame.time.Clock()
+import Classes
+
+clock = pg.time.Clock()
 
 
 def main_loop(player):
@@ -87,24 +86,8 @@ class Graphics:
                 if speed > 8:
                     blur(pl, speed)
 
-            for object in sector.glow:
-                object.update()
-
-            for object in sector.projectiles:
-                try:
-                    draw_rotating(object)
-                    blur(object, object.speed_max)
-                except:
-                    print("projectile fails to be drawn")
-
-            for object in sector.effects:
-                draw_rotating(object)
-
             for object in St.window.interface:
                 St.screen.blit(object.image, object.rect)
-
-            for pl in sector.player_group:
-                pl.show_HP()
 
 
 def pause_menu():

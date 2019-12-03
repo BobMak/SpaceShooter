@@ -6,8 +6,7 @@ from Assets import *
 import Funcs, Scripts, State
 
 
-class Button(pygame.sprite.Sprite):
-
+class Button(pg.sprite.Sprite):
     text = '---'
     font = 0
 
