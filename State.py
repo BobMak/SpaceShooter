@@ -16,7 +16,7 @@ MAX_BALL_SPEED = 10
 #####################      Ships       ####################
 
 #              rotation rate    deacceleration        hull   shields type(mass)
- #                      acceleration    env. deacceleration
+#                      acceleration    env. deacceleration
 SHIP_CONSTANTS = [[1.6666, 0.4166, 0.0333,   0.0083,    5,      2,      1],
                   [  1.25,  0.025, 0.0125,    0.005,   15,      5,      2],
                   [   2.5, 0.0625,   0.05,   0.0125,  7.5,    2.5,      1],
