@@ -2,7 +2,6 @@ import threading
 import sys
 import time
 import pygame as pg
-
 from Classes import *
 import State as St
 import Assets as A
