@@ -3,19 +3,21 @@ Modular ships!
 integrity vs utility? Complexity, chaos and emergence vs fun?
 Add whatever module you find or manufacture to your (or someone else's?) ship.
 """
+import sys
 import random
 import numpy as np
 import copy
+if 'Classes' not in sys.modules:
+    import Classes
+import Assets as A, State as St, Modules as M
 
-from src import Assets as A, State as St, Classes as C, Modules as M
 
-
-class Ship(C.Object, C.Moving):
+class Ship(Classes.Object, Classes.Moving):
     """A controllable ship. Behaviour and abilities are defined by the modules that it consists of"""
     def __init__(self, modules: [M.Module], coords):
-        C.Object.__init__(self, St.window.current_sector,
+        Classes.Object.__init__(self, St.window.current_sector,
                           x=coords[0], y=coords[1])
-        C.Moving.__init__(self, St.window.current_sector)
+        Classes.Moving.__init__(self, St.window.current_sector)
         # All modules on the ship
         self.modules = modules
         # Map of keys to controlled modules
@@ -63,7 +65,7 @@ class Ship(C.Object, C.Moving):
             else:
                 ang = np.arctan(self.speed[0] / self.speed[1])
                 # Direction of motion
-                spe = C.Object(sector=St.window.current_sector,
+                spe = Classes.Object(sector=St.window.current_sector,
                     x=int(self.rect.centerx + 30*np.sin(ang)*np.sign(self.speed[1])),
                     y=int(self.rect.centery + 30*np.cos(ang)*np.sign(self.speed[1]))
                     )

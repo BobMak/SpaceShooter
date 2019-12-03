@@ -1,9 +1,13 @@
 import pygame as pg
 import random as r
+import sys
 import pickle
 import os
 
-import State as St, Classes as C
+import State as St
+
+if 'Classes' not in sys.modules:
+    import Classes
 
 
 class Window:
@@ -71,7 +75,7 @@ class Verse:
                 St.player = pickle.load(f)
         else:
             print('No player file found. Making new one')
-            St.player = C.Player()
+            St.player = Classes.Player()
         self.N = 5  # verse sector dimensions
         self.sectors = [ [ Sector((x,y)) for y in range(self.N) ] for x in range(self.N)]
         # Generate sectors

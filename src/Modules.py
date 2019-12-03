@@ -4,18 +4,21 @@ integrity vs utility?
 Add whatever module you find or manufacture to your (or someone else's?) ship.
 """
 import random as r
+import sys
 import pygame as pg
 import numpy as np
 import copy
 
-from src import Assets as A, State as St, Classes as C, Funcs as F
+import Assets as A, State as St, Funcs as F
+if 'Classes' not in sys.modules:
+    import Classes
 
 
-class Module(C.Object, C.Vulnerable):
+class Module(Classes.Object, Classes.Vulnerable):
     """ A basic part of the ship."""
     def __init__(self, hp, mass, image):
-        C.Object.__init__(self, image=image)
-        C.Vulnerable.__init__(self, hp=hp)
+        Classes.Object.__init__(self, image=image)
+        Classes.Vulnerable.__init__(self, hp=hp)
         self.               hp = hp
         self.             mass = mass
         self.connected_modules = []
@@ -130,7 +133,7 @@ class Weapon(Module):
         :param locked: Object
         :return:
         """
-        predict_pos = C.Object(A.blanc, 0, 0)
+        predict_pos = Classes.Object(A.blanc, 0, 0)
         predict_pos.rect = copy.copy(locked.rect)
         length = np.sqrt((self.rect.x - locked.rect.x)**2
                + (self.rect.y - self.target.rect.y)**2)
@@ -159,7 +162,7 @@ class Weapon(Module):
             self.blocked = True
             # TODO Add timer event
             skipped_len = self.rect.height // 2
-            shot = C.Projectile(self.bolt, self.rect.centerx,
+            shot = Classes.Projectile(self.bolt, self.rect.centerx,
                               self.rect.centery, self.range)
             shot.ang = self.ang
             shot.rect.centerx = (self.rect.centerx
@@ -177,7 +180,7 @@ class Weapon(Module):
 
     def _shot_laser(self):
         if self.aim(self.target) and self.target.get_dist() < self.range:
-            gl = C.FX_Glow(self.rect, 1, 10, 5, (255, 0, 0))
+            gl = Classes.FX_Glow(self.rect, 1, 10, 5, (255, 0, 0))
             # self.target
 
 

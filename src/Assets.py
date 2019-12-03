@@ -1,6 +1,6 @@
 import os
 import pygame as pg
-from src.State import WIDTH, HEIGHT
+from State import WIDTH, HEIGHT
 
 pg.init()
 

@@ -1,6 +1,9 @@
 import numpy as np
+import sys
 import random, pygame
-from src import Assets, State, Classes
+import Assets, State
+if 'Classes' not in sys.modules:
+    import Classes
 
 
 def get_dist(dx, dy):
