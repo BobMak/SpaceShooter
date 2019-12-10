@@ -316,14 +316,11 @@ class FXLaser(FX_Glow):
 
 
 class Player(Object, Moving, Vulnerable):
-    def __init__(self, ):
+    def __init__(self):
         ''' Player's available action space, current focus object '''
         self.focus = None
         self.available = []  # can control these
-        self.schemas = []    # can build these with proper equipment
-
-    def destroy(self):
-        Scripts.death_menu()
+        self.schemas = []  # can build these with proper equipment
 
 
 class Projectile(Object, Moving, Vulnerable):

@@ -1,10 +1,12 @@
 """
 This file contains game state and all relevant variables
 """
+import os
 import pickle
 import pygame as pg
+import Classes as C
+import Map as M
 
-SIZE = WIDTH, HEIGHT = (1200, 900)
 WHITE= (255, 255, 255)
 
 INPUTS_PER_SECOND = 30
@@ -15,7 +17,6 @@ LOGIC_PER_SECOND = 240
 # Key locks
 t = (True, True, True, True)
 FPS = 30
-screen = pg.display.set_mode((SIZE[0], SIZE[1]))
 graphics = None
 graphics_thread = None
 # Game is paused or not
@@ -29,3 +30,23 @@ verse = None
 window = None
 
 
+def init():
+    for obj, cls in zip(["player", "verse", "window"], [C.Player, M.Verse, M.Window]):
+        try:
+            with open('../data/{}.pkl'.format(obj), 'rb') as f:
+                globals()[obj] = pickle.load(f)
+        except:
+            globals()[obj] = cls()
+
+
+def save():
+    for obj, cls in zip(["player", "verse", "window"], [C.Player, M.Verse, M.Window]):
+        try:
+            if 'data' in os.listdir('../data'):
+                with open('../data/{}.pkl'.format(obj), 'rb') as f:
+                    globals()[obj] = pickle.load(f)
+            else:
+                os.mkdir("../data", 777)
+                raise Exception()
+        except:
+            globals()[obj] = cls()
