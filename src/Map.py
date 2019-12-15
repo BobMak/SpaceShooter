@@ -24,8 +24,9 @@ class Window:
         self.sectors = []
         self.sectors_on_screen = []
         self.interface = pg.sprite.Group()  # Game interface objects
-        St.window = self
+        St.screen = pg.display.set_mode((self.width, self.height))
 
+        St.window = self
     def add_sector(self):
         pass
     def rm_sector(self):
@@ -69,16 +70,9 @@ class Verse:
         3. Big events, fleets, conflicts
         4. Sectors and details
         """
-        if 'player.pkl' in os.listdir('../data'):
-            with open('player.pkl', 'rb') as f:
-                St.player = pickle.load(f)
-        else:
-            print('No player file found. Making new one')
-            St.player = Classes.Player()
         self.N = 5  # verse sector dimensions
         self.sectors = [ [ Sector((x,y)) for y in range(self.N) ] for x in range(self.N)]
         # Generate sectors
-
         St.verse = self
 
     def loadSector(self, id):

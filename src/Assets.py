@@ -1,6 +1,5 @@
 import os
 import pygame as pg
-from State import WIDTH, HEIGHT
 
 pg.init()
 
@@ -69,7 +68,7 @@ shld_7 = pg.image.load(os.path.join("..", "assets", "animations", "Shields", "sh
 
 model_BG = pg.image.load(os.path.join("..", "assets", "ModelBG.bmp"))
 
-BG = pg.transform.scale(pg.image.load(os.path.join("..", "assets", "BG_720.png")), (WIDTH, HEIGHT))
+BG = pg.transform.scale(pg.image.load(os.path.join("..", "assets", "BG_720.png")), (1200, 1000))
 
 menu_BG = pg.image.load(os.path.join("..", "assets", "menu_BG.png"))
 menu_button = pg.image.load(os.path.join("..", "assets", "menu_button.png"))
