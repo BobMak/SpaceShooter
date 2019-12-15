@@ -83,7 +83,6 @@ class Object(pg.sprite.Sprite):
         """
         Returns the angle specifying direction to 'aim' object
         """
-        x = None
         dx = self.rect.centerx - target.rect.centerx
         dy = self.rect.centery - target.rect.centery
         if dx > 0 and dy < 0:
@@ -326,16 +325,13 @@ class Player(Object, Moving, Vulnerable):
         Scripts.death_menu()
 
 
-class Projectile(Object, Moving, Vulnerable):
-    def __init__(self, bolt, x, y, distance):
-        Object.__init__(prj_imgs[bolt], x, y)
-        Moving.__init__(self, )
-        Vulnerable.__init__(self, State.bolt_damage[bolt])
-        self.speed_max = State.prj_speeds[bolt]
-        self.timer = distance
-        # movable.add(self)
-        State.projectiles.add(self)
-        State.time_dependent.add(self)
+class Projectile(Object, Moving):
+    def __init__(self, thisSector, speedMax, dmg, image, x, y, distance):
+        Object.__init__(image, x, y)
+        Moving.__init__(self, thisSector)
+        self.speed_max = speedMax
+        self.    timer = distance
+        self.      dmg = dmg
 
     def remove(self):
         self.kill()

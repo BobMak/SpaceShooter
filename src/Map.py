@@ -10,14 +10,11 @@ if 'Classes' not in sys.modules:
     import Classes
 
 
+# A part of map for which events are computed on a more granular level.
+# Includes several sectors that are closest to a player.
 class Window:
     def __int__(self) -> None:
-        """ A singleton map for which events are computed. Includes several
-        sectors that are closest to a player.
-        The class should translate respective coordinates of all objects
-        from sectors to a player's screen.
-        """
-        # Displayed map x and y. This can change on zoom in/out
+        # Displayed map x and y
         self.width, self.height = 1200, 1000
         # coordinates of the highest left point of the screen
         # with respect to the leftmost sector. These are changed when player
@@ -25,6 +22,7 @@ class Window:
         self.base_x, self.base_y = 0, 0
         self.current_sector = None
         self.sectors = []
+        self.sectors_on_screen = []
         self.interface = pg.sprite.Group()  # Game interface objects
         St.window = self
 
@@ -33,15 +31,16 @@ class Window:
     def rm_sector(self):
         pass
 
-    def reposition(self, x, y):
+    def move(self, x, y):
         self.base_x, self.base_y = x, y
 
 
+# Contains all event groups that objects can subscribe to.
+# Some of most important ones are collision groups. I hope to gain speed by
+# computing collisions only for objects in the same sector.
 class Sector:
     def __init__(self, start:(int,int), type=0):
-        """One map sector. Contains all event groups that objects can subscribe to.
-        Some of most important ones are collision groups. I hope to gain speed by
-        computing collisions only for objects in the same sector.
+        """
         :param start: top left Verse coordinate of a sector (coordinates / LENGTH)
             e.g. (3000, 3000) -> (1,1)
         :param type: different types of sectors have different probability of spawn for various things
@@ -66,8 +65,8 @@ class Verse:
         """Big map composed of many sectors. New sectors are generated based on big picture, so as big scale events.
         Generate:
         1. Resources
-        2. Fraction(s), their state
-        3. Big events, like fleets, conflicts
+        2. Faction(s), their state
+        3. Big events, fleets, conflicts
         4. Sectors and details
         """
         if 'player.pkl' in os.listdir('../data'):
