@@ -6,18 +6,16 @@ Add whatever module you find or manufacture to your (or someone else's?) ship.
 import sys
 import random
 import numpy as np
+import pygame as pg
 import copy
-if 'Classes' not in sys.modules:
-    import Classes
-import Assets as A, State as St, Modules as M
+import Classes
+import Modules as M
 
 
-class Ship(Classes.Object, Classes.Moving):
+class Ship(Classes.Object):
     """A controllable ship. Behaviour and abilities are defined by the modules that it consists of"""
     def __init__(self, modules: [M.Module], coords):
-        Classes.Object.__init__(self, St.window.current_sector,
-                          x=coords[0], y=coords[1])
-        Classes.Moving.__init__(self, St.window.current_sector)
+        Classes.Object.__init__(self, x=coords[0], y=coords[1])
         # All modules on the ship
         self.modules = modules
         # Map of keys to controlled modules
@@ -29,6 +27,11 @@ class Ship(Classes.Object, Classes.Moving):
         self.integrityCap = 0
         self.     storage = 0
         self.  propulsion = 0
+        self.       tasks = {}  # eg. go to x, shoot at y, do z
+        # dict of keys and functions associated with them. Every module should
+        # add their action callback to this dict. E.g propulsion adds
+        # pygame right click code with its move_to function
+        self.controls     = {}
         for x in self.modules:
             x.assignShip(self)
         self.dAng = self.dAcc = self.propulsion / (self.mass**2)
@@ -38,13 +41,16 @@ class Ship(Classes.Object, Classes.Moving):
         self.modules.append(module)
         module.assignShip(self)
 
-    def update_system(self):
+    def updateSystem(self):
         """ When computing the action of a system composed of many modules one
          needs to calculate how all the components influence given behaviour.
          If we have a model that successfully predicts the state of such system,
          we can avoid costly computation.
          In game such systems may be ships or other arrays of modules that can
          act in different ways"""
+        for m in self.modules:
+            m.rect.centerx = self.rect.centerx + m.placement[0]
+            m.rect.centery = self.rect.centery + m.placement[1]
 
     def spendEnergy(self, energy):
         self.energy += (max(0, energy))
@@ -52,10 +58,15 @@ class Ship(Classes.Object, Classes.Moving):
     def damage(self, hp):
         self.integrity += (max(0, hp))
 
-    def move_to(self, goal):
-        """ Given a location and modules, what are most optimal sets of actions
-        to reach it? Eg. most energy-efficient vs quickest"""
+    def handleRightCilck(self, x, y):
+        goal = pg.Rect(x, y, 10, 10)
+        self.tasks['moveTo'] = (self.moveTo, goal)
+
+    # Use propulsion modules to move to the target.
+    def moveTo(self, goal):
+        print('goingTo')
         dist = self.get_distance(goal)
+        # Not there. Got to move
         if dist > 50:
             speed_mod = np.sqrt(self.speed[0] ** 2 + self.speed[1] ** 2)
             # If speed is small, turn in the direction of goal,
@@ -65,7 +76,7 @@ class Ship(Classes.Object, Classes.Moving):
             else:
                 ang = np.arctan(self.speed[0] / self.speed[1])
                 # Direction of motion
-                spe = Classes.Object(sector=St.window.current_sector,
+                spe = Classes.Object(
                     x=int(self.rect.centerx + 30*np.sin(ang)*np.sign(self.speed[1])),
                     y=int(self.rect.centery + 30*np.cos(ang)*np.sign(self.speed[1]))
                     )
@@ -90,10 +101,21 @@ class Ship(Classes.Object, Classes.Moving):
                 self.accelerate(self.dAcc, self.ang)
             else:
                 self.accelerate(self.dAcc, self.ang)
+            return False
+        # Success
+        else:
+            return True
 
     def draw(self):
         for m in self.modules:
             m.draw(self.rect)
+
+    def update(self):
+        Classes.Object.update(self)
+        for _type, _func in self.tasks.items():
+            # Finish the task if it reports success
+            if _func[0](_func[1]):
+                self.tasks.pop(_type)
 
 
 class ShipGenerator:
@@ -108,7 +130,7 @@ class ShipGenerator:
         g = M.Generator(1, 1).place(-20, 0)
         w = M.Weapon(1, 1).place(0, -10)
         ship = Ship([p, h, e, g, w], (50, 50))
-        ship.update_system()
+        ship.updateSystem()
         return ship
 
     def generate_random_l(self):

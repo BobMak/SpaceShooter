@@ -3,9 +3,6 @@ This file contains game state and all relevant variables
 """
 import os
 import pickle
-import pygame as pg
-import Classes as C
-import Map as M
 
 WHITE= (255, 255, 255)
 
@@ -21,26 +18,34 @@ graphics = None
 graphics_thread = None
 # Game is paused or not
 paused = False
-# Player object. Does it belong here?
-player = None
 # Collection of all current objects
 all_objects = []
 verse = None
 # Window instance
 window = None
+# Game state
+gamestate = "game"
+Gamestates = ("new_player", "game", "pause", "dead", "main_menu")
+
+
+def getCurrentSector():
+    return window.current_sector
 
 
 def init():
-    for obj, cls in zip(["player", "verse", "window"], [C.Player, M.Verse, M.Window]):
+    for obj in ["window", "verse"]:
         try:
             with open('../data/{}.pkl'.format(obj), 'rb') as f:
                 globals()[obj] = pickle.load(f)
+                print('loaded', obj)
         except:
-            globals()[obj] = cls()
+            if obj=="window":
+                globals()["gamestate"] = "new_player"
+            print('no {} to load'.format(obj))
 
 
 def save():
-    for obj, cls in zip(["player", "verse", "window"], [C.Player, M.Verse, M.Window]):
+    for obj in ["window", "verse"]:
         try:
             if 'data' in os.listdir('../data'):
                 with open('../data/{}.pkl'.format(obj), 'rb') as f:
@@ -49,4 +54,4 @@ def save():
                 os.mkdir("../data", 777)
                 raise Exception()
         except:
-            globals()[obj] = cls()
+            print('Failed to save', obj)

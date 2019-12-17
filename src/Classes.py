@@ -1,9 +1,10 @@
 import pickle
+import sys
 import random, copy
 import numpy as np
 import pygame.gfxdraw as gfx
 
-import Scripts, State
+import State as St
 from Assets import *
 
 
@@ -16,34 +17,19 @@ class Vulnerable:
         self.hp += -max(0, damage)
 
 
-class Moving:
-    """Inherited by all classes that can move"""
-    def __init__(self, sector):
-        self.speed = [0.0, 0.0]
-        self.position = [self.rect.x, self.rect.y]
-        sector.movable.add(self)
-
-    def modify_position(self):
-        self.position[0] += self.speed[0]
-        self.position[1] += self.speed[1]
-        self.rect = pg.Rect(self.position[0], self.position[1],
-                                self.rect.width, self.rect.height)
-
-    def accelerate(self, dl, angle):
-        self.speed[0] += dl*np.cos(np.deg2rad(angle-90.0))
-        self.speed[1] += dl*np.sin(np.deg2rad(angle-90.0))
-
-
 class Object(pg.sprite.Sprite):
-    def __init__(self, sector=None, image=None, x=0, y=0):
+    def __init__(self, sector=None, image=None, x=None, y=None, rect=None):
         """Sprite with an assigned image spawned at point x y.
-        :param image,
-        :param x,
-        :param y,
-        :param width=None (Defaults to that of image)
-        :param height=None (Defaults to that of image)
+        :type sector: Sector,
+        :type image: image,
+        :type x: int
+        :type y: int
+        :type rect: pg.Rect,
         """
-        self.       sector = sector
+        if sector:
+            self.   sector = sector
+        else:
+            self.   sector = St.getCurrentSector()
         self.          ang = 0
         self.rotated_image = 0
         self. rotated_rect = 0
@@ -54,19 +40,44 @@ class Object(pg.sprite.Sprite):
         self.         type = 0
         self.      updates = []
         pg.sprite.Sprite.__init__(self)
-        self.      image = image
-        self.image_alpha = copy.copy(image)
-        alpha = 128
-        self.image_alpha.fill((255,255,255,alpha), None, pg.BLEND_RGBA_MULT)
-        self.      rotated_image = image
-        self.rotated_image_alpha = image
-        # Fetch the rectangle object that has the dimensions of the image
-        # Update the position of this object by setting the values of rect.x and rect.y
-        self.        rect = self.image.get_rect()
-        self.rotated_rect = self.rect
-        self.rect.centerx = x
-        self.rect.centery = y
+        if image:
+            self.      image = image
+            self.image_alpha = copy.copy(image)
+            alpha = 128
+            self.image_alpha.fill((255,255,255,alpha), None, pg.BLEND_RGBA_MULT)
+            self.      rotated_image = image
+            self.rotated_image_alpha = image
+            # Fetch the rectangle object that has the dimensions of the image
+            # Update the position of this object by setting the values of rect.x and rect.y
+            self.        rect = self.image.get_rect()
+            self.rotated_rect = self.rect
+            self.rect.centerx = x
+            self.rect.centery = y
+        elif rect:
+            self.        rect = rect
+            self.rotated_rect = rect
+        elif x and y:
+            self.        rect = pg.Rect(x, y, 10, 10)
+            self.rotated_rect = pg.Rect(x, y, 10, 10)
+        else:
+            raise Exception('Neither Rect nor Position are not provided')
         self.      radius = self.rect.width
+        # Moving properties
+        self.   speed = [0.0, 0.0]
+        self.position = [self.rect.x, self.rect.y]
+        self.sector.movable.add(self)
+        print('new', type(self))
+
+    def modify_position(self):
+        if self.speed:
+            self.position[0] += self.speed[0]
+            self.position[1] += self.speed[1]
+            self.rect = pg.Rect(self.position[0], self.position[1],
+                                self.rect.width, self.rect.height)
+
+    def accelerate(self, dl, angle):
+        self.speed[0] += dl * np.cos(np.deg2rad(angle - 90.0))
+        self.speed[1] += dl * np.sin(np.deg2rad(angle - 90.0))
 
     def rotate(self, dir):
         # Ensure that look_dir is in range [0 - 360)
@@ -80,9 +91,7 @@ class Object(pg.sprite.Sprite):
         self.rotated_image_alpha = pg.transform.rotate(self.image_alpha, -self.ang)
 
     def get_aim_dir(self, target):
-        """
-        Returns the angle specifying direction to 'aim' object
-        """
+        """Returns the angle specifying direction to 'aim' object"""
         dx = self.rect.centerx - target.rect.centerx
         dy = self.rect.centery - target.rect.centery
         if dx > 0 and dy < 0:
@@ -111,31 +120,14 @@ class Object(pg.sprite.Sprite):
         return np.sqrt((self.rect.x - obj.rect.x)**2
                        + (self.rect.y - obj.rect.y)**2)
 
-    def get_real_distance(self, obj):
-        """get_real_distance(obj)
-        the shortest distance to object 'obj' with regards
-        to linked bounds of the map, comparing distance
-        on screen to distances to 8 projections of aim on sides
-        and corners of map"""
-        all_directions_distances = []
-        for x in range(-1, 2):
-            for y in range(-1, 2):
-                a = (self.rect.centerx
-                     - (obj.rect.centerx + x * (State.WIDTH + obj.rect.width)))
-                b = (self.rect.centery
-                     - (obj.rect.centery + y * (State.HEIGHT + obj.rect.height)))
-                dist = np.sqrt(a**2 + b**2)
-                all_directions_distances.append(dist)
-        return min(all_directions_distances)
-
     def update(self):
         """Execute all pending callbacks for the object every logic tick!"""
         for f in self.updates:
             f()
 
 
-class FX(pg.sprite.Sprite, Moving):
-    def __init__(self, rect, duration, fading=None, color=None, enlarging=None, speed=None):
+class FX(Object):
+    def __init__(self, rect, duration, fading=None, color=None, enlarging=None, speed=None, sector=None,):
         """
         :param rect: location
         :param duration:
@@ -149,27 +141,20 @@ class FX(pg.sprite.Sprite, Moving):
             ((int) pixels to enlarge per tick, num of ticks before enlarge update)
         :param speed:
         """
-        pg.sprite.Sprite.__init__(self)
-        self.timer = duration
-        self.time_count = 0
-        self.rect = rect
         # Requires rect to already be there
-        Moving.__init__(self)
-        State.time_dependent.add(self)
+        Object.__init__(self, sector, rect=rect)
+        sector.time_dependent.add(self)
         self.updates = []
-
         if fading:
             self.fading_count = 0
             self.fading_sum = 0
             self.fading = fading[0]
             self.fading_tempo = fading[1]
             self.updates.append(self.fade)
-
         if color:
             self.color = color
         else:
             self.color = (255, 255, 255, 255)
-
         if enlarging:
             self.enlarging_count = 0
             self.enlarging_summ = 1
@@ -207,26 +192,21 @@ class FX(pg.sprite.Sprite, Moving):
 
 
 class FX_Glow(FX):
-    """
-    FX_Glow(rect, duration, radius, length, color, speed=(0,0))
-    """
-    def __init__(self, rect, duration, radius, length, color, speed=(0,0), fading=None):
-
-        FX.__init__(self, rect, duration, color=color, speed=speed, fading=fading)
+    """FX_Glow(rect, duration, radius, length, color, speed=(0,0))"""
+    def __init__(self, rect, duration, radius, length, color, speed=(0,0), fading=None, sector=None):
+        FX.__init__(self, rect, duration, color=color, speed=speed, fading=fading, sector=sector)
         self.radius = radius
         self.color = color
         self.length = length
         self.speed = speed
-        State.glow.add(self)
+        # State.glow.add(self)
         self.updates.append(self._draw)
 
     def _draw(self):
-        """
-        drawing funcition
-        """
+        """drawing funcition"""
         for x in range(self.length):
             pg.gfxdraw.filled_circle(
-                State.screen, self.rect.centerx,
+                St.screen, self.rect.centerx,
                 self.rect.centery, self.radius + x,
                 self.color)
 
@@ -246,7 +226,7 @@ class FX_Track(FX):
     :look_dir - initial angle (degrees)
     :speed - speed (vector [dx, dy])
 
-    Tracks take significantly more computations if y is lower
+    Many tracks take significantly more computations if y is lower
     and duration time is higher.
     '''
 
@@ -271,8 +251,6 @@ class FX_Track(FX):
             self.rotating = rotating[0]
             self.rotating_tempo = rotating[1]
             self.updates.append(self.rotate)
-
-        State.effects.add(self)
 
     def rotate(self):
         self.rotating_count += 1
@@ -304,28 +282,19 @@ class FXLaser(FX_Glow):
         self.perp_dy = np.sin(tan_ang)
 
     def _draw(self):
-        gfx.line(State.screen, self.rect1.x, self.rect1.y, self.rect2.x, self.rect1.y, color=self.color)
+        gfx.line(St.screen, self.rect1.x, self.rect1.y, self.rect2.x, self.rect1.y, color=self.color)
         for n in range(self.radius):
-            gfx.line(State.screen,
+            gfx.line(St.screen,
                      self.rect1.x + self.perp_dx, self.rect1.y + self.perp_dy,
                      self.rect2.x + self.perp_dx, self.rect1.y + self.perp_dy, color=self.color)
-            gfx.line(State.screen,
+            gfx.line(St.screen,
                      self.rect1.x - self.perp_dx, self.rect1.y - self.perp_dy,
                      self.rect2.x - self.perp_dx, self.rect1.y - self.perp_dy, color=self.color)
 
 
-class Player(Object, Moving, Vulnerable):
-    def __init__(self):
-        ''' Player's available action space, current focus object '''
-        self.focus = None
-        self.available = []  # can control these
-        self.schemas = []  # can build these with proper equipment
-
-
-class Projectile(Object, Moving):
+class Projectile(Object):
     def __init__(self, thisSector, speedMax, dmg, image, x, y, distance):
         Object.__init__(image, x, y)
-        Moving.__init__(self, thisSector)
         self.speed_max = speedMax
         self.    timer = distance
         self.      dmg = dmg
@@ -344,12 +313,12 @@ class Projectile(Object, Moving):
 
 class Missile(Projectile):
     def __init__(self, bolt, x, y):
-        super().__init__(bolt + State.n_bolts, x, y, State.msl_distances[bolt])
-        self.d_ang = State.msl_d_angs[bolt]
-        self.d_speed = State.msl_d_speeds[bolt]
-        self.max_speed = State.msl_max_speeds[bolt]
-        self.hit_range = State.msl_hit_ranges[bolt]
-        self.hp = State.bolt_damage[bolt + State.n_bolts]
+        super().__init__(bolt + St.n_bolts, x, y, St.msl_distances[bolt])
+        self.d_ang = St.msl_d_angs[bolt]
+        self.d_speed = St.msl_d_speeds[bolt]
+        self.max_speed = St.msl_max_speeds[bolt]
+        self.hit_range = St.msl_hit_ranges[bolt]
+        self.hp = St.bolt_damage[bolt + St.n_bolts]
         self.mod_speed = 0
         self.dist_prev = 500
         self.dist = None
@@ -394,7 +363,7 @@ class Missile(Projectile):
             self.speed[1] = self.max_speed*np.sin(np.deg2rad(self.ang - 90))
 
 
-class Animation(Object, Moving):
+class Animation(Object):
     '''
     Animation(images_arr, width, height, x, y,
               rand = False, finit = True, type = 0,
@@ -414,8 +383,7 @@ class Animation(Object, Moving):
     def __init__(self, images_arr, width, height, x, y, rand=False, finite=True,
                 type=0, hold_f=None, delay=0):
 
-        Object.__init__(self, images_arr[0], x, y, width=width, height=height)
-        Moving.__init__(self)
+        Object.__init__(self, images_arr[0], x=x, y=y)
 
         self.images_arr = images_arr
         if rand:

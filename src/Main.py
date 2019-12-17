@@ -2,9 +2,9 @@
 Initial script
 """
 import pygame
-from Scripts import main_loop
 import State
-
 pygame.init()
 # Load start menu
+State.init()
+from Scripts import main_loop
 main_loop()

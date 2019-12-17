@@ -10,14 +10,16 @@ import numpy as np
 import copy
 
 import Assets as A, State as St, Funcs as F
-if 'Classes' not in sys.modules:
-    import Classes
+import Classes
 
 
 class Module(Classes.Object, Classes.Vulnerable):
     """ A basic part of the ship."""
-    def __init__(self, hp, mass, image):
-        Classes.Object.__init__(self, image=image)
+    def __init__(self, image=None, hp=1, mass=1):
+        if not image:
+            image = pg.Surface((30, 30))
+            pg.gfxdraw.box(image, (0, 0, 30, 30), (60, 60, 60, 200))
+        Classes.Object.__init__(self, image=image, x=0, y=0)
         Classes.Vulnerable.__init__(self, hp=hp)
         self.               hp = hp
         self.             mass = mass
@@ -37,30 +39,29 @@ class Module(Classes.Object, Classes.Vulnerable):
 
     def place(self, x, y):
         self.placement = (x, y)
+        return self
 
     def assignShip(self, ship):
         ship.mass += self.mass
-        ship.  hp += self.hp
 
     def draw(self):
-        F.draw_rotating(self)
+        print("--fakeDrawing")
 
 
 class Hull(Module):
     """ Nothing but integrity and connections between other modules"""
     def __init__(self, hp):
-        mass  = 1
         image = pg.Surface((50, 50))
-        pg.gfxdraw.filled_rect(image, 0, 0, 50, (90, 100, 90, 200))
-        Module.__init__(self, hp=hp, mass=mass, image=image)
+        pg.gfxdraw.box(image, (0, 0, 50, 50), (90, 100, 90, 200))
+        Module.__init__(self, hp=hp, image=image)
 
 
 class Storage(Module):
     """ Can connect other modules"""
     def __init__(self, capacity: int, integrity: int):
         image = pg.Surface((40, 40))
-        pg.gfxdraw.filled_rect(image, 0, 0, 40, (160, 110, 110, 200))
-        Module.__init__(hp=integrity, image=image)
+        pg.gfxdraw.box(image, (0, 0, 40, 40), (160, 110, 110, 200))
+        Module.__init__(self, hp=integrity, image=image)
         self.capacity = capacity
 
     def assignShip(self, ship):
@@ -73,7 +74,7 @@ class Weapon(Module):
     def __init__(self, hp, mass,
             distance=20,
             restriction=None,
-            type=('bl', 1, 2, 2, ),
+            type=('bl', 1, 2, 2, 3),
             range=50,
             energy_drain=1):
         """
@@ -99,7 +100,7 @@ class Weapon(Module):
         self.    d_dist = 0
         self.d_dist_dir = -1  # 1 or -1 -- is object getting closer or further
         image = pg.Surface((50, 50))
-        pg.gfxdraw.filled_rect(image, 0, 0, 50, (90, 30, 30, 200))
+        pg.gfxdraw.box(image, (0, 0, 50, 50), (90, 30, 30, 200))
         Module.__init__(self, hp=hp, mass=mass, image=image)
 
         self.      range = range
@@ -190,7 +191,7 @@ class Network(Module):
     """
     def __init__(self, hp):
         image = image = pg.Surface((15, 15))
-        pg.gfxdraw.filled_rect(image, 0, 0, 15, (120, 160, 200, 200))
+        pg.gfxdraw.box(image, (0, 0, 15, 15), (120, 160, 200, 200))
         mass = 1
         Module.__init__(self, hp=hp, mass=mass, image=image)
 
@@ -199,7 +200,7 @@ class Propulsion(Module):
     """ Might be divided on several modules """
     def __init__(self, hp, propulsion, consump):
         image = pg.Surface((30, 30))
-        pg.gfxdraw.filled_rect(image, 0, 0, 30, (50, 50, 220, 200))
+        pg.gfxdraw.box(image, (0, 0, 30, 30), (50, 50, 220, 200))
         mass=1
         Module.__init__(self, hp=hp, mass=mass, image=image)
         self.consump = consump
@@ -208,13 +209,14 @@ class Propulsion(Module):
     def assignShip(self, ship):
         Module.assignShip(self, ship)
         ship.propulsion += self.propulsion
+        ship.controls['mouse_right'] = ship.handleRightCilck
 
 
 class Generator(Module):
     """ Might be divided on several modules """
     def __init__(self, hp, energyGen):
         image = pg.Surface((40, 40))
-        pg.gfxdraw.filled_rect(image, 0, 0, 40, (150, 10, 10, 200))
+        pg.gfxdraw.box(image, (0, 0, 40, 40), (150, 10, 10, 200))
         mass  = 1
         Module.__init__(self, hp=hp, mass=mass, image=image)
         self.energyGen = energyGen
@@ -227,7 +229,7 @@ class Generator(Module):
 class Capacitor(Module):
     def __init__(self,hp, energyCapacity):
         image = pg.Surface((50, 50))
-        pg.gfxdraw.filled_rect(image, 0, 0, 50, (10, 10, 50, 200))
+        pg.gfxdraw.box(image, (0, 0, 50, 50), (10, 10, 50, 200))
         mass = 1
         Module.__init__(self, hp=hp, mass=mass, image=image)
         self.energyCap = energyCapacity
@@ -240,7 +242,7 @@ class Shield(Module):
     """
     def __init__(self, hp, shieldCapacity):
         image = pg.Surface((30, 30))
-        pg.gfxdraw.filled_rect(image, 0, 0, 30, (10, 50, 10, 200))
+        pg.gfxdraw.box(image, (0, 0, 30, 30), (10, 50, 10, 200))
         mass = 1
         Module.__init__(self, hp=hp, image=image, mass=mass)
         self.shieldCapacity = shieldCapacity

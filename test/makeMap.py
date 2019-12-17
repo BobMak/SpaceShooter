@@ -1,6 +1,6 @@
 import random as r
 
-import Map
+import Maps
 import State
 # import Ships
 
@@ -10,7 +10,7 @@ def spawnPlayer(n):
 
 
 if __name__ == "__main__":
-    v = Map.Verse()
+    v = Maps.Verse()
     for x in range(v.N):
         for y in range(v.N):
             print(v.sectors[y][x], end=' ')

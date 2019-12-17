@@ -1,32 +1,30 @@
 import pygame as pg
 import random as r
-import sys
 import pickle
 import os
-
-import State as St
-
-if 'Classes' not in sys.modules:
-    import Classes
 
 
 # A part of map for which events are computed on a more granular level.
 # Includes several sectors that are closest to a player.
 class Window:
-    def __int__(self) -> None:
+    def __init__(self, sectors):
         # Displayed map x and y
         self.width, self.height = 1200, 1000
         # coordinates of the highest left point of the screen
         # with respect to the leftmost sector. These are changed when player
         # moves in direction outside of displayed region
         self.base_x, self.base_y = 0, 0
-        self.current_sector = None
-        self.sectors = []
-        self.sectors_on_screen = []
+        self.current_sector = sectors[r.randint(0, 4)][r.randint(0, 4)]
+        self.sectors_on_screen = [self.current_sector]
         self.interface = pg.sprite.Group()  # Game interface objects
-        St.screen = pg.display.set_mode((self.width, self.height))
+        # Player function
+        self.focus = None  # Object that the player is looking at
+        self._available = []  # can control these
+        self._schemas = []  # can build these with proper equipment
 
-        St.window = self
+    def addAvailable(self, object):
+        self._available.append(object)
+
     def add_sector(self):
         pass
     def rm_sector(self):
@@ -34,6 +32,12 @@ class Window:
 
     def move(self, x, y):
         self.base_x, self.base_y = x, y
+
+    def move_movable(self):
+        for sector in self.sectors_on_screen:
+            for object in sector.movable:
+                # modify position to avoid loss of <1 values when moving
+                object.modify_position()
 
 
 # Contains all event groups that objects can subscribe to.
@@ -58,7 +62,7 @@ class Sector:
         self.       effects = pg.sprite.Group()
 
     def __str__(self):
-        return str(self.type)
+        return "Sector "+str(self.type)
 
 
 class Verse:
@@ -73,7 +77,6 @@ class Verse:
         self.N = 5  # verse sector dimensions
         self.sectors = [ [ Sector((x,y)) for y in range(self.N) ] for x in range(self.N)]
         # Generate sectors
-        St.verse = self
 
     def loadSector(self, id):
         if str(id).replace(' ', '')[1:-1]+'.pkl' in os.listdir('../map'):
@@ -82,4 +85,5 @@ class Verse:
         else:
             r = Sector(id)
         return r
+
 
