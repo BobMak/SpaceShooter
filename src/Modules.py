@@ -9,7 +9,7 @@ import pygame as pg
 import numpy as np
 import copy
 
-import Assets as A, State as St, Funcs as F
+import Assets as A, State as St
 import Classes
 
 
@@ -21,6 +21,7 @@ class Module(Classes.Object, Classes.Vulnerable):
             pg.gfxdraw.box(image, (0, 0, 30, 30), (60, 60, 60, 200))
         Classes.Object.__init__(self, image=image, x=0, y=0)
         Classes.Vulnerable.__init__(self, hp=hp)
+        self.             ship = None
         self.               hp = hp
         self.             mass = mass
         self.connected_modules = []
@@ -37,12 +38,19 @@ class Module(Classes.Object, Classes.Vulnerable):
     def connect_module(self, module):
         self.connected_modules.append(module)
 
+    # Only after the ship was assigned
     def place(self, x, y):
+        assert self.ship, "No ship"
         self.placement = (x, y)
+        self.rect.centerx = self.ship.rect.centerx + x
+        self.rect.centery = self.ship.rect.centery + y
         return self
 
     def assignShip(self, ship):
+        self.ship = ship
         ship.mass += self.mass
+        ship.modules.append(self)
+        return self
 
     def draw(self):
         print("--fakeDrawing")
@@ -190,7 +198,7 @@ class Network(Module):
     Ex: Power networks in bigger ships, physical communication networks within the ship
     """
     def __init__(self, hp):
-        image = image = pg.Surface((15, 15))
+        image = pg.Surface((15, 15))
         pg.gfxdraw.box(image, (0, 0, 15, 15), (120, 160, 200, 200))
         mass = 1
         Module.__init__(self, hp=hp, mass=mass, image=image)
@@ -210,6 +218,7 @@ class Propulsion(Module):
         Module.assignShip(self, ship)
         ship.propulsion += self.propulsion
         ship.controls['mouse_right'] = ship.handleRightCilck
+        return self
 
 
 class Generator(Module):
@@ -224,6 +233,7 @@ class Generator(Module):
     def assignShip(self, ship):
         Module.assignShip(self, ship)
         ship.energyGen += self.energyGen
+        return self
 
 
 class Capacitor(Module):

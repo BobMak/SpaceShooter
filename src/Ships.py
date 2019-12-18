@@ -17,7 +17,7 @@ class Ship(Classes.Object):
     def __init__(self, modules: [M.Module], coords):
         Classes.Object.__init__(self, x=coords[0], y=coords[1])
         # All modules on the ship
-        self.modules = modules
+        self.modules = []
         # Map of keys to controlled modules
         self.        mass = 0
         self.      energy = 0
@@ -31,15 +31,13 @@ class Ship(Classes.Object):
         # dict of keys and functions associated with them. Every module should
         # add their action callback to this dict. E.g propulsion adds
         # pygame right click code with its move_to function
-        self.controls     = {}
-        for x in self.modules:
-            x.assignShip(self)
-        self.dAng = self.dAcc = self.propulsion / (self.mass**2)
-
-    def addModule(self, module):
-        """ This only happens when module gets attached to a ship """
-        self.modules.append(module)
-        module.assignShip(self)
+        self.controls = {}
+        self.dAng = 0
+        if modules:
+            for x in modules:
+                x.assignShip(self)
+            self.dAng = 1
+            self.dAcc = self.propulsion
 
     def updateSystem(self):
         """ When computing the action of a system composed of many modules one
@@ -51,6 +49,11 @@ class Ship(Classes.Object):
         for m in self.modules:
             m.rect.centerx = self.rect.centerx + m.placement[0]
             m.rect.centery = self.rect.centery + m.placement[1]
+            m.speed = self.speed
+            m.  ang = self.ang
+        assert self.mass > 0, "Ship mass == 0"
+        self.dAng = 1
+        self.dAcc = self.propulsion
 
     def spendEnergy(self, energy):
         self.energy += (max(0, energy))
@@ -64,8 +67,8 @@ class Ship(Classes.Object):
 
     # Use propulsion modules to move to the target.
     def moveTo(self, goal):
-        print('goingTo')
         dist = self.get_distance(goal)
+        print('goingTo ->', dist)
         # Not there. Got to move
         if dist > 50:
             speed_mod = np.sqrt(self.speed[0] ** 2 + self.speed[1] ** 2)
@@ -76,12 +79,11 @@ class Ship(Classes.Object):
             else:
                 ang = np.arctan(self.speed[0] / self.speed[1])
                 # Direction of motion
-                spe = Classes.Object(
-                    x=int(self.rect.centerx + 30*np.sin(ang)*np.sign(self.speed[1])),
-                    y=int(self.rect.centery + 30*np.cos(ang)*np.sign(self.speed[1]))
-                    )
+                spe = pg.Rect(
+                    int(self.rect.centerx + 30*np.sin(ang)*np.sign(self.speed[1])),
+                    int(self.rect.centery + 30*np.cos(ang)*np.sign(self.speed[1])),
+                    5, 5)
                 true_ang = self.get_aim_dir(goal) - self.get_aim_dir(spe)
-                spe.kill()
                 if true_ang < -180 or true_ang > 180:
                     true_ang = -360 * np.sign(true_ang) + true_ang
 
@@ -106,16 +108,24 @@ class Ship(Classes.Object):
         else:
             return True
 
+    # def modify_position(self):
+    #     super().modify_position()
+    #     for m in self.modules:
+    #         m.
+
     def draw(self):
         for m in self.modules:
             m.draw(self.rect)
 
     def update(self):
         Classes.Object.update(self)
+        _finished = []
         for _type, _func in self.tasks.items():
             # Finish the task if it reports success
             if _func[0](_func[1]):
-                self.tasks.pop(_type)
+                _finished.append(_type)
+        for _type in _finished:
+            self.tasks.pop(_type)
 
 
 class ShipGenerator:
@@ -124,12 +134,12 @@ class ShipGenerator:
 
     @staticmethod
     def generate_test():
-        p = M.Propulsion(1, 5, 1).place(0, 50)
-        h = M.Hull(5).place(0, 10)
-        e = M.Capacitor(1, 5).place(20, 0)
-        g = M.Generator(1, 1).place(-20, 0)
-        w = M.Weapon(1, 1).place(0, -10)
-        ship = Ship([p, h, e, g, w], (50, 50))
+        ship = Ship([], (50, 50))
+        M.Propulsion(1, 0.01, 1).assignShip(ship).place(0, 50)
+        M.Hull(5).assignShip(ship).place(0, 10)
+        M.Capacitor(1, 5).assignShip(ship).place(20, 0)
+        M.Generator(1, 1).assignShip(ship).place(-20, 0)
+        M.Weapon(1, 1).assignShip(ship).place(0, -10)
         ship.updateSystem()
         return ship
 

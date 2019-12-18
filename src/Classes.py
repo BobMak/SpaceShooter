@@ -43,16 +43,14 @@ class Object(pg.sprite.Sprite):
         if image:
             self.      image = image
             self.image_alpha = copy.copy(image)
-            alpha = 128
-            self.image_alpha.fill((255,255,255,alpha), None, pg.BLEND_RGBA_MULT)
+            self.image_alpha.fill((255,255,255,128), None, pg.BLEND_RGBA_MULT)
             self.      rotated_image = image
             self.rotated_image_alpha = image
-            # Fetch the rectangle object that has the dimensions of the image
-            # Update the position of this object by setting the values of rect.x and rect.y
             self.        rect = self.image.get_rect()
-            self.rotated_rect = self.rect
+            self.rotated_rect = self.rect  # Use it to draw rotated objects
             self.rect.centerx = x
             self.rect.centery = y
+            self.sector.visible.add()
         elif rect:
             self.        rect = rect
             self.rotated_rect = rect
@@ -66,6 +64,7 @@ class Object(pg.sprite.Sprite):
         self.   speed = [0.0, 0.0]
         self.position = [self.rect.x, self.rect.y]
         self.sector.movable.add(self)
+        self.sector.updateable.append(self)
         print('new', type(self))
 
     def modify_position(self):
@@ -87,13 +86,14 @@ class Object(pg.sprite.Sprite):
             self.ang += 360 + dir
         else:
             self.ang += dir
-        self.rotated_image = pg.transform.rotate(self.image, -self.ang)
-        self.rotated_image_alpha = pg.transform.rotate(self.image_alpha, -self.ang)
+        if self.rotated_image:
+            self.rotated_image = pg.transform.rotate(self.image, -self.ang)
+            self.rotated_image_alpha = pg.transform.rotate(self.image_alpha, -self.ang)
 
-    def get_aim_dir(self, target):
+    def get_aim_dir(self, rect):
         """Returns the angle specifying direction to 'aim' object"""
-        dx = self.rect.centerx - target.rect.centerx
-        dy = self.rect.centery - target.rect.centery
+        dx = self.rect.centerx - rect.centerx
+        dy = self.rect.centery - rect.centery
         if dx > 0 and dy < 0:
             aim_dir = abs(np.rad2deg(np.arctan(dx/dy)))
         elif dx < 0 and dy < 0:
@@ -115,10 +115,10 @@ class Object(pg.sprite.Sprite):
 
         return aim_dir
 
-    def get_distance(self, obj):
+    def get_distance(self, rect):
         """returns distance to object x"""
-        return np.sqrt((self.rect.x - obj.rect.x)**2
-                       + (self.rect.y - obj.rect.y)**2)
+        return np.sqrt((self.rect.x - rect.x)**2
+                       + (self.rect.y - rect.y)**2)
 
     def update(self):
         """Execute all pending callbacks for the object every logic tick!"""

@@ -35,10 +35,13 @@ def main_loop():
                 pg.time.set_timer(pg.USEREVENT + 2, 10)
                 # To unblock esc button
                 pg.time.set_timer(pg.USEREVENT + 1, 300)
-                St.t = (False, False, False, False)
                 St.paused = True
                 while St.paused:
                     time.sleep(0.1)
+            # camera control
+            if keys[pg.K_c]:
+                if St.window.focus:
+                    St.window.move(St.window.focus.rect.centerx, St.window.focus.rect.centery)
             # Player module abilities
             if St.window.focus:
                 for key in St.window.focus.controls.keys():
@@ -60,6 +63,10 @@ def main_loop():
             # Execute events that all objects are subscribed to
             for event in St.all_objects:
                 event.run()
+            # Sector updates
+            for sector in St.window.sectors_on_screen:
+                for obj in sector.updateable:
+                    obj.update()
             # Every movable
             St.window.move_movable()
             # logic tick
@@ -74,7 +81,8 @@ class Graphics:
 
     def draw_rotating(self, obj):
         rect = obj.rotated_image.get_rect()
-        rect.center = (obj.rect.center)
+        rect.centerx = obj.rect.centerx - St.window.base_x
+        rect.centery = obj.rect.centery - St.window.base_y
         self.screen.blit(obj.rotated_image, rect)
 
     def screen_redraw(self):
@@ -93,7 +101,7 @@ class Graphics:
             except Exception as e:
                 print("err: {}".format(e))
 
-            for group in (sector.player_group, sector.projectiles, sector.effects, St.window.interface):
+            for group in (sector.player_group, sector.visible, sector.effects, St.window.interface):
                 for obj in group:
                     try:
                         self.draw_rotating(obj)

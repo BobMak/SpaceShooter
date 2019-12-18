@@ -54,12 +54,14 @@ class Sector:
         self.          type = r.randint(0, 5)
         self.        LENGTH = 3000  # square 3000x3000
         self.   all_objects = []
+        self.    updateable = []
         self.       movable = pg.sprite.Group()
         self.   projectiles = pg.sprite.Group()
         self.time_dependent = pg.sprite.Group()
         self.  player_group = pg.sprite.Group()
         self.          glow = pg.sprite.Group()
         self.       effects = pg.sprite.Group()
+        self.       visible = pg.sprite.Group()
 
     def __str__(self):
         return "Sector "+str(self.type)
