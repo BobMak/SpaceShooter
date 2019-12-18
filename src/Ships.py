@@ -108,10 +108,10 @@ class Ship(Classes.Object):
         else:
             return True
 
-    # def modify_position(self):
-    #     super().modify_position()
-    #     for m in self.modules:
-    #         m.
+    def rotate(self, deg):
+        super().rotate(deg)
+        for m in self.modules:
+            m.rotate(deg)
 
     def draw(self):
         for m in self.modules:

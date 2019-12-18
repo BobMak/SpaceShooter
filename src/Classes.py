@@ -206,7 +206,7 @@ class FX_Glow(FX):
         """drawing funcition"""
         for x in range(self.length):
             pg.gfxdraw.filled_circle(
-                St.screen, self.rect.centerx,
+                St.graphics.screen, self.rect.centerx,
                 self.rect.centery, self.radius + x,
                 self.color)
 
