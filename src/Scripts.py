@@ -41,7 +41,8 @@ def main_loop():
             # camera control
             if keys[pg.K_c]:
                 if St.window.focus:
-                    St.window.move(St.window.focus.rect.centerx, St.window.focus.rect.centery)
+                    St.window.move(St.window.focus.rect.centerx-St.window.width//2,
+                                   St.window.focus.rect.centery-St.window.height//2)
             # Player module abilities
             if St.window.focus:
                 for key in St.window.focus.controls.keys():
@@ -94,23 +95,19 @@ class Graphics:
     def screen_draw(self):
         """Draws all game scene, does not flip."""
         for sector in St.window.sectors_on_screen:
-            for object in sector.effects:
-                object.update()
             try:
                 self.screen.blit(A.BG, (0, 0))
             except Exception as e:
                 print("err: {}".format(e))
-
-            for group in (sector.player_group, sector.visible, sector.effects, St.window.interface):
+            for group in (sector.player_group, sector.visible, sector.effects):
                 for obj in group:
                     try:
                         self.draw_rotating(obj)
                     except Exception as e:
                         print("** failed to draw {}:".format(obj), e)
-
+            print()
             for object in sector.glow:
                 object.update()
-
             for pl in sector.player_group:
                 pl.show_HP()
 

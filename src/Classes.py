@@ -50,7 +50,7 @@ class Object(pg.sprite.Sprite):
             self.rotated_rect = self.rect  # Use it to draw rotated objects
             self.rect.centerx = x
             self.rect.centery = y
-            self.sector.visible.add()
+            self.sector.visible.add(self)
         elif rect:
             self.        rect = rect
             self.rotated_rect = rect

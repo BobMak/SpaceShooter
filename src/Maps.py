@@ -32,6 +32,7 @@ class Window:
 
     def move(self, x, y):
         self.base_x, self.base_y = x, y
+        print('moved to', x, y)
 
     def move_movable(self):
         for sector in self.sectors_on_screen:
