@@ -43,6 +43,14 @@ def main_loop():
                 if St.window.focus:
                     St.window.move(St.window.focus.rect.centerx-St.window.width//2,
                                    St.window.focus.rect.centery-St.window.height//2)
+            if keys[pg.K_w] or keys[pg.K_UP]:
+                St.window.base_y += -1
+            if keys[pg.K_s] or keys[pg.K_DOWN]:
+                St.window.base_y += 1
+            if keys[pg.K_a] or keys[pg.K_LEFT]:
+                St.window.base_x += -1
+            if keys[pg.K_d] or keys[pg.K_RIGHT]:
+                St.window.base_x += 1
             # Player module abilities
             if St.window.focus:
                 for key in St.window.focus.controls.keys():
