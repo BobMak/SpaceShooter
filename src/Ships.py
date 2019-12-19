@@ -68,7 +68,6 @@ class Ship(Classes.Object):
     # Use propulsion modules to move to the target.
     def moveTo(self, goal):
         dist = self.get_distance(goal)
-        print('goingTo ->', dist)
         # Not there. Got to move
         if dist > 50:
             speed_mod = np.sqrt(self.speed[0] ** 2 + self.speed[1] ** 2)

@@ -26,6 +26,8 @@ class Module(Classes.Object, Classes.Vulnerable):
         self.             mass = mass
         self.connected_modules = []
         self.        placement = (0, 0)  # x, y with respect to ships center
+        self.           radius = 0  # distance from ship center to module
+        self.        place_ang = 0  # angle at which the module is placed
 
     def passive(self):
         """ Passive turn. To be run every logic update"""
@@ -45,6 +47,8 @@ class Module(Classes.Object, Classes.Vulnerable):
         _x = self.ship.position[0] + x
         _y = self.ship.position[1] + y
         self.position = (_x, _y)
+        self.radius = np.sqrt(self.placement[0]**2 + self.placement[1]**2)
+        self.place_ang = np.arcsin(y / self.radius)
         return self
 
     def assignShip(self, ship):
@@ -52,6 +56,17 @@ class Module(Classes.Object, Classes.Vulnerable):
         ship.mass += self.mass
         ship.modules.append(self)
         return self
+
+    def rotate(self, deg):
+        self.place_ang += deg*np.pi/180
+        rot_x = np.cos(self.place_ang) * self.radius
+        rot_y = np.sin(self.place_ang) * self.radius
+        self.placement = (rot_x, rot_y)
+        _x = self.ship.position[0] + rot_x
+        _y = self.ship.position[1] + rot_y
+        self.position = (_x, _y)
+        print(self.placement)
+        super().rotate(deg)
 
     def draw(self):
         print("--fakeDrawing")
