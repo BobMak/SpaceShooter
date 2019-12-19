@@ -84,7 +84,7 @@ class Graphics:
         rect = obj.rotated_image.get_rect()
         rect.centerx = obj.rect.centerx - St.window.base_x
         rect.centery = obj.rect.centery - St.window.base_y
-        self.screen.blit(obj.rotated_image, rect)
+        self.screen.blit(obj.rotated_image_alpha, rect)
 
     def screen_redraw(self):
         while self.alive:
@@ -105,7 +105,6 @@ class Graphics:
                         self.draw_rotating(obj)
                     except Exception as e:
                         print("** failed to draw {}:".format(obj), e)
-            print()
             for object in sector.glow:
                 object.update()
             for pl in sector.player_group:

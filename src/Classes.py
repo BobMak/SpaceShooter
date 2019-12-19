@@ -62,21 +62,20 @@ class Object(pg.sprite.Sprite):
         self.      radius = self.rect.width
         # Moving properties
         self.   speed = [0.0, 0.0]
-        self.position = [self.rect.x, self.rect.y]
+        self.position = (self.rect.x, self.rect.y)  # can be float to respect <0 speed
         self.sector.movable.add(self)
         self.sector.updateable.append(self)
         print('new', type(self))
 
     def modify_position(self):
         if self.speed:
-            self.position[0] += self.speed[0]
-            self.position[1] += self.speed[1]
-            self.rect = pg.Rect(self.position[0], self.position[1],
-                                self.rect.width, self.rect.height)
+            self.position = (self.position[0]+self.speed[0], self.position[1]+self.speed[1])
+            self.rect = pg.Rect(self.position[0], self.position[1], self.rect.width, self.rect.height)
 
     def accelerate(self, dl, angle):
         self.speed[0] += dl * np.cos(np.deg2rad(angle - 90.0))
         self.speed[1] += dl * np.sin(np.deg2rad(angle - 90.0))
+        # self.speed = (dx, dy)
 
     def rotate(self, dir):
         # Ensure that look_dir is in range [0 - 360)

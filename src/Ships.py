@@ -113,10 +113,6 @@ class Ship(Classes.Object):
         for m in self.modules:
             m.rotate(deg)
 
-    def draw(self):
-        for m in self.modules:
-            m.draw(self.rect)
-
     def update(self):
         Classes.Object.update(self)
         _finished = []
@@ -134,12 +130,12 @@ class ShipGenerator:
 
     @staticmethod
     def generate_test():
-        ship = Ship([], (50, 50))
+        ship = Ship([], (1, 1))  # Start in the middle of the screen
         M.Propulsion(1, 0.01, 1).assignShip(ship).place(0, 50)
         M.Hull(5).assignShip(ship).place(0, 10)
-        M.Capacitor(1, 5).assignShip(ship).place(20, 0)
-        M.Generator(1, 1).assignShip(ship).place(-20, 0)
-        M.Weapon(1, 1).assignShip(ship).place(0, -10)
+        M.Capacitor(1, 5).assignShip(ship).place(40, 0)
+        M.Generator(1, 1).assignShip(ship).place(-40, 0)
+        M.Weapon(1, 1).assignShip(ship).place(0, -40)
         ship.updateSystem()
         return ship
 
