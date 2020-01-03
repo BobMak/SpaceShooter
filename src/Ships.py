@@ -83,24 +83,17 @@ class Ship(Classes.Object):
             # Face the goal and accelerate if have time to rotate and slow down
             if dist*1.7 / speed_mod > (180 / self.dAng) + speed_mod / (self.dSpeed+speed_mod*0.001):
                 t = self.ang - ang_goal
-                g = pg.Rect(self.rect.x + 100 * np.sin((ang_goal) / 180 * np.pi),
-                            self.rect.y + 100 * np.cos((ang_goal) / 180 * np.pi),
-                            10, 10)
-                Classes.FXLaser(self.rect, g, 5, 5, 5, (255, 50, 50), (0, 0), self.sector)
-                if abs(t) > self.dAng:
-                    if t < -180 or t > 180:
-                        t = -t
-                    self.rotate(-np.sign(t) * self.dAng)
-                if abs(t) < self.dAng:
-                    self.accelerate(self.dSpeed, self.ang)
             else:
                 t = self.ang - ang_goal -180
+            if abs(t) > 1:
+                if t < -180 or t > 180:
+                    t = -t
                 if abs(t) > self.dAng:
-                    if t < -180 or t > 180:
-                        t = -t
                     self.rotate(-np.sign(t) * self.dAng)
-                if abs(t) < self.dAng:
-                    self.accelerate(self.dSpeed, self.ang)
+                else:
+                    self.rotate(-t)
+            else:
+                self.accelerate(self.dSpeed, self.ang)
                 # g= pg.Rect(self.rect.x+100*np.sin((ang_goal-180)/180*np.pi),
                 #         self.rect.y+100*np.cos((ang_goal-180)/180*np.pi),
                 #         10, 10)
