@@ -37,7 +37,6 @@ class Window:
     def move_movable(self):
         for sector in self.sectors_on_screen:
             for object in sector.movable:
-                # modify position to avoid loss of <1 values when moving
                 object.modify_position()
 
 

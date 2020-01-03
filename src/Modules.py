@@ -26,7 +26,7 @@ class Module(Classes.Object, Classes.Vulnerable):
         self.             mass = mass
         self.connected_modules = []
         self.        placement = (0, 0)  # x, y with respect to ships center
-        self.           radius = 0  # distance from ship center to module
+        self.           radius = 0  # distance from ship's center to module
         self.        place_ang = 0  # angle at which the module is placed
 
     def passive(self):
@@ -42,7 +42,7 @@ class Module(Classes.Object, Classes.Vulnerable):
 
     # Only after the ship was assigned
     def place(self, x, y):
-        assert self.ship, "No ship"
+        assert self.ship, "Can't place a module without ship"
         self.placement = (x, y)
         _x = self.ship.position[0] + x
         _y = self.ship.position[1] + y
@@ -65,7 +65,6 @@ class Module(Classes.Object, Classes.Vulnerable):
         _x = self.ship.position[0] + rot_x
         _y = self.ship.position[1] + rot_y
         self.position = (_x, _y)
-        print(self.placement)
         super().rotate(deg)
 
     def draw(self):
@@ -81,7 +80,7 @@ class Hull(Module):
 
 
 class Storage(Module):
-    """ Can connect other modules"""
+    """ Can contain other modules """
     def __init__(self, capacity: int, integrity: int):
         image = pg.Surface((40*1.5, 40*1.5), flags=pg.SRCALPHA)
         pg.gfxdraw.box(image, (0, 0, 40, 40), (110, 110, 110, 200))
@@ -102,14 +101,7 @@ class Weapon(Module):
             range=50,
             energy_drain=1):
         """
-        :param carrier: Ship
-        :param image:
         :param distance: dist from center of the block
-        :param look_dir: direction of weapon with respect to carrier
-        :param x: x with respect to the center of carrier
-        :param y: y with respect to the center of carrier
-        :param width: rect property
-        :param height: rect property
         :param restriction: max rotation angle of the weapon
         :param type: 'bl' - ballistic, will use pre-aim func to shot; 'ls' - laser
             ballistic type: ('bl', bolt number, bolt speed, load speed in seconds, energy to load)
@@ -199,6 +191,7 @@ class Weapon(Module):
             shot.speed = [self.speed * np.cos(np.deg2rad(self.ang - 90)),
                           self.speed * np.sin(np.deg2rad(self.ang - 90))]
             shot.rotate(0)
+            return shot
 
     def _shot_projectile(self):
         raise NotImplementedError("Weapon Projectile")
@@ -223,11 +216,11 @@ class Network(Module):
 
 class Propulsion(Module):
     """ Might be divided on several modules """
-    def __init__(self, hp, propulsion, consump):
+    def __init__(self, hp, propulsion, consump=0.1, mass=1, max_speed=1):
         image = pg.Surface((30*1.5, 30*1.5), flags=pg.SRCALPHA)
         pg.gfxdraw.box(image, (0, 0, 30, 30), (50, 50, 220, 200))
-        mass=1
         Module.__init__(self, hp=hp, mass=mass, image=image)
+        self.max_speed = max_speed
         self.consump = consump
         self.propulsion = propulsion
 

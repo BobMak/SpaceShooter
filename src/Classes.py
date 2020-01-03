@@ -30,7 +30,7 @@ class Object(pg.sprite.Sprite):
             self.   sector = sector
         else:
             self.   sector = St.getCurrentSector()
-        self.          ang = 0
+        self.          ang = 0  # float [0,360)
         self.rotated_image = 0
         self. rotated_rect = 0
         self.       radius = None
@@ -68,9 +68,18 @@ class Object(pg.sprite.Sprite):
         print('new', type(self))
 
     def modify_position(self):
-        if self.speed:
+        if self.speed[0] or self.speed[1]:
             self.position = (self.position[0]+self.speed[0], self.position[1]+self.speed[1])
             self.rect = pg.Rect(self.position[0]-self.rect.width//2, self.position[1]-self.rect.height//2, self.rect.width, self.rect.height)
+            # speedVectorAng = np.sqrt( self.speed[0]**2 + self.speed[1]**2 )
+            # if abs(self.speed[0]) < 0.3:
+            #     self.speed[0] += -self.speed[0] * 0.01
+            # else:
+            #     self.speed[0] += -self.speed[0] * 0.01
+            self.speed[0] += -self.speed[0] * 0.001
+            self.speed[1] += -self.speed[1] * 0.001
+            # if abs(self.speed[1]) < 0.3:
+            #     self.speed[1] += -self.speed[1] * 0.01
 
     def accelerate(self, dl, angle):
         self.speed[0] += dl * np.cos(np.deg2rad(angle - 90.0))
@@ -79,7 +88,7 @@ class Object(pg.sprite.Sprite):
 
     def rotate(self, dir):
         # Ensure that look_dir is in range [0 - 360)
-        if self.ang > 359:
+        if self.ang >= 360:
             self.ang += dir - 360
         elif self.ang < 0:
             self.ang += 360 + dir
@@ -126,7 +135,7 @@ class Object(pg.sprite.Sprite):
 
 
 class FX(Object):
-    def __init__(self, rect, duration, fading=None, color=None, enlarging=None, speed=None, sector=None,):
+    def __init__(self, rect, duration, fading=None, color=None, enlarging=None, speed=None, sector=None):
         """
         :param rect: location
         :param duration:
@@ -142,8 +151,10 @@ class FX(Object):
         """
         # Requires rect to already be there
         Object.__init__(self, sector, rect=rect)
-        sector.time_dependent.add(self)
+        sector.updateable.append(self)
         self.updates = []
+        self.duration = duration
+        self.duration_count = 0
         if fading:
             self.fading_count = 0
             self.fading_sum = 0
@@ -160,7 +171,6 @@ class FX(Object):
             self.enlarging = enlarging[0]
             self.enlarging_tempo = enlarging[1]
             self.updates.append(self.enlarge)
-
         if speed:
             self.speed = speed
 
@@ -188,6 +198,10 @@ class FX(Object):
     def update(self, *args):
         for f in self.updates:
             f(*args)
+        self.duration_count += 1
+        if self.duration_count > self.duration:
+            self.kill()
+            self.sector.updateable.remove(self)
 
 
 class FX_Glow(FX):
@@ -269,26 +283,27 @@ class FX_Track(FX):
 
 
 class FXLaser(FX_Glow):
-    def __init__(self, rect1, rect2, duration, radius, length, color, speed):
-        FX_Glow.__init__(self, rect=rect1, duration=duration, radius=radius, length=length, color=color, speed=speed,
-                         fading=())
-        FX_Glow(rect=rect2, duration=duration, radius=radius, length=length, color=color, speed=speed)
+    def __init__(self, rect1, rect2, duration, radius, length, color, speed, sector):
+        FX_Glow.__init__(self, rect=rect1, duration=duration, radius=radius,
+                         length=length, color=color, speed=speed,fading=(), sector=sector)
+        # FX_Glow(rect=rect2, duration=duration, radius=radius, length=length,
+        #         color=color, speed=speed, sector=sector)
         self.rect1 = rect1
         self.rect2 = rect2
         self.updates.append(self._draw)
-        tan_ang = (rect1.y - rect2.y) / (rect1.x - rect2.x)
-        self.perp_dx = np.sin(tan_ang)
-        self.perp_dy = np.sin(tan_ang)
+        if (rect1.x - rect2.x)!=0:
+            tan_ang = np.arctan((rect1.y - rect2.y)/(rect1.x - rect2.x))
+        else:
+            tan_ang = 1
+        # self.perp_dx = np.sin(tan_ang)
+        # self.perp_dy = np.cos(tan_ang)
 
     def _draw(self):
-        gfx.line(St.screen, self.rect1.x, self.rect1.y, self.rect2.x, self.rect1.y, color=self.color)
-        for n in range(self.radius):
-            gfx.line(St.screen,
-                     self.rect1.x + self.perp_dx, self.rect1.y + self.perp_dy,
-                     self.rect2.x + self.perp_dx, self.rect1.y + self.perp_dy, color=self.color)
-            gfx.line(St.screen,
-                     self.rect1.x - self.perp_dx, self.rect1.y - self.perp_dy,
-                     self.rect2.x - self.perp_dx, self.rect1.y - self.perp_dy, color=self.color)
+        gfx.line(St.graphics.screen, self.rect1.x, self.rect1.y, self.rect2.x, self.rect2.y, self.color)
+        # for n in range(self.radius):
+        #     gfx.line(St.graphics.screen,
+        #              int(self.rect1.x + self.perp_dx), int(self.rect1.y + self.perp_dy),
+        #              int(self.rect2.x + self.perp_dx), int(self.rect1.y + self.perp_dy), self.color)
 
 
 class Projectile(Object):

@@ -3,21 +3,25 @@ Modular ships!
 integrity vs utility? Complexity, chaos and emergence vs fun?
 Add whatever module you find or manufacture to your (or someone else's?) ship.
 """
-import sys
 import random
 import numpy as np
 import pygame as pg
-import copy
 import Classes
 import Modules as M
 
-
+# Ships can be controlled by a player. Ships are composed of modules
+# that are placed on a skeleton. Skeletons are bases of sh ip.
+# Skeleton is generated around base modules: thrusters and energy generator.
+# All other modules are put on top. Skeletons may be extended to accommodate
+# new modules.
 class Ship(Classes.Object):
     """A controllable ship. Behaviour and abilities are defined by the modules that it consists of"""
     def __init__(self, modules: [M.Module], coords):
         Classes.Object.__init__(self, x=coords[0], y=coords[1])
         # All modules on the ship
-        self.modules = []
+        self. modules = []
+        self.skeleton_a = []  # Primary mount points: [(x, y), ...]
+        self.skeleton_b = []  # Secondary mount points
         # Map of keys to controlled modules
         self.        mass = 0
         self.      energy = 0
@@ -27,6 +31,7 @@ class Ship(Classes.Object):
         self.integrityCap = 0
         self.     storage = 0
         self.  propulsion = 0
+        self.    maxSpeed = 0
         self.       tasks = {}  # eg. go to x, shoot at y, do z
         # dict of keys and functions associated with them. Every module should
         # add their action callback to this dict. E.g propulsion adds
@@ -37,7 +42,7 @@ class Ship(Classes.Object):
             for x in modules:
                 x.assignShip(self)
             self.dAng = 1
-            self.dAcc = self.propulsion
+            self.dSpeed = self.propulsion
 
     def updateSystem(self):
         """ When computing the action of a system composed of many modules one
@@ -51,9 +56,10 @@ class Ship(Classes.Object):
             m.rect.centery = self.rect.centery + m.placement[1]
             m.speed = self.speed
             m.  ang = self.ang
-        assert self.mass > 0, "Ship mass == 0"
+        assert self.mass > 0, "Ship's mass can't be zero"
         self.dAng = 1
-        self.dAcc = self.propulsion
+        self.dSpeed = self.propulsion
+        self.maxSpeed = max([m.max_speed for m in self.modules if isinstance(m, M.Propulsion)])
 
     def spendEnergy(self, energy):
         self.energy += (max(0, energy))
@@ -63,45 +69,43 @@ class Ship(Classes.Object):
 
     def handleRightCilck(self, x, y):
         goal = pg.Rect(x, y, 10, 10)
+        self.arrived = 0
         self.tasks['moveTo'] = (self.moveTo, goal)
 
     # Use propulsion modules to move to the target.
+    # Working with one source of propulsion
     def moveTo(self, goal):
         dist = self.get_distance(goal)
         # Not there. Got to move
-        if dist > 50:
-            speed_mod = np.sqrt(self.speed[0] ** 2 + self.speed[1] ** 2)
-            # If speed is small, turn in the direction of goal,
-            # otherwise, in the direction allowing greater speed vecror change
-            if speed_mod < 1:
-                t = self.ang - abs(self.get_aim_dir(goal))
+        if dist > 20:
+            speed_mod = max(np.sqrt(self.speed[0] ** 2 + self.speed[1] ** 2), 0.01)
+            ang_goal = self.get_aim_dir(goal)
+            # Face the goal and accelerate if have time to rotate and slow down
+            if dist*1.7 / speed_mod > (180 / self.dAng) + speed_mod / (self.dSpeed+speed_mod*0.001):
+                t = self.ang - ang_goal
+                g = pg.Rect(self.rect.x + 100 * np.sin((ang_goal) / 180 * np.pi),
+                            self.rect.y + 100 * np.cos((ang_goal) / 180 * np.pi),
+                            10, 10)
+                Classes.FXLaser(self.rect, g, 5, 5, 5, (255, 50, 50), (0, 0), self.sector)
+                if abs(t) > self.dAng:
+                    if t < -180 or t > 180:
+                        t = -t
+                    self.rotate(-np.sign(t) * self.dAng)
+                if abs(t) < self.dAng:
+                    self.accelerate(self.dSpeed, self.ang)
             else:
-                ang = np.arctan(self.speed[0] / self.speed[1])
-                # Direction of motion
-                spe = pg.Rect(
-                    int(self.rect.centerx + 30*np.sin(ang)*np.sign(self.speed[1])),
-                    int(self.rect.centery + 30*np.cos(ang)*np.sign(self.speed[1])),
-                    5, 5)
-                true_ang = self.get_aim_dir(goal) - self.get_aim_dir(spe)
-                if true_ang < -180 or true_ang > 180:
-                    true_ang = -360 * np.sign(true_ang) + true_ang
+                t = self.ang - ang_goal -180
+                if abs(t) > self.dAng:
+                    if t < -180 or t > 180:
+                        t = -t
+                    self.rotate(-np.sign(t) * self.dAng)
+                if abs(t) < self.dAng:
+                    self.accelerate(self.dSpeed, self.ang)
+                # g= pg.Rect(self.rect.x+100*np.sin((ang_goal-180)/180*np.pi),
+                #         self.rect.y+100*np.cos((ang_goal-180)/180*np.pi),
+                #         10, 10)
+                # Classes.FXLaser(self.rect, g, 5, 5, 5, (255,50,50), (0,0), self.sector)
 
-                if true_ang < -90 or true_ang > 90:
-                    t = self.get_aim_dir(goal)
-                else:
-                    t = self.get_aim_dir(goal) + true_ang
-                # true_ang = self.get_aim_dir(self.goal) - true_ang
-                t = self.ang - t
-                if t > 360 or t < -360:
-                    t += -360 * np.sign(t)
-            if abs(t) > self.dAng:
-                if t < -180 or t > 180:
-                    t = -t
-                self.rotate(-np.sign(t) * self.dAng)
-            if abs(t) < 90:
-                self.accelerate(self.dAcc, self.ang)
-            else:
-                self.accelerate(self.dAcc, self.ang)
             return False
         # Success
         else:
@@ -130,7 +134,7 @@ class ShipGenerator:
     @staticmethod
     def generate_test():
         ship = Ship([], (1, 1))  # Start in the middle of the screen
-        M.Propulsion(1, 0.01, 1).assignShip(ship).place(0, 50)
+        M.Propulsion(1, 0.1, 1, max_speed=3).assignShip(ship).place(0, 50)
         M.Hull(5).assignShip(ship).place(0, 10)
         M.Capacitor(1, 5).assignShip(ship).place(40, 0)
         M.Generator(1, 1).assignShip(ship).place(-40, 0)
