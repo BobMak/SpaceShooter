@@ -3,7 +3,7 @@ import pygame as pg
 import sys
 
 import Assets as A
-import Funcs, Scripts, State
+import Utils, Scripts, State
 
 
 class Button(pg.sprite.Sprite):

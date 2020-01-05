@@ -8,6 +8,7 @@ import numpy as np
 import pygame as pg
 import Classes
 import Modules as M
+import Utils
 
 # Ships can be controlled by a player. Ships are composed of modules
 # that are placed on a skeleton. Skeletons are bases of sh ip.
@@ -43,6 +44,8 @@ class Ship(Classes.Object):
                 x.assignShip(self)
             self.dAng = 1
             self.dSpeed = self.propulsion
+        # movement buffer
+        self._prev_dist = None
 
     def updateSystem(self):
         """ When computing the action of a system composed of many modules one
@@ -68,40 +71,59 @@ class Ship(Classes.Object):
         self.integrity += (max(0, hp))
 
     def handleRightCilck(self, x, y):
-        goal = pg.Rect(x, y, 10, 10)
+        goal = pg.Rect(x, y, 1, 1)
         self.arrived = 0
         self.tasks['moveTo'] = (self.moveTo, goal)
 
-    # Use propulsion modules to move to the target.
-    # Working with one source of propulsion
+    # Use propulsion modules to move to the target. Working with one source of
+    # propulsion. Accelerate towards goal while there is enough time to stop by
+    # with friction or turn and burn.
     def moveTo(self, goal):
         dist = self.get_distance(goal)
-        # Not there. Got to move
-        if dist > 20:
-            speed_mod = max(np.sqrt(self.speed[0] ** 2 + self.speed[1] ** 2), 0.01)
-            ang_goal = self.get_aim_dir(goal)
+        speed = max(np.sqrt(self.speed[0] ** 2 + self.speed[1] ** 2), 0.01)
+        # Do not stop until close and slowed down
+        if dist > 20 or speed>0.01:
             # Face the goal and accelerate if have time to rotate and slow down
-            if dist*1.7 / speed_mod > (180 / self.dAng) + speed_mod / (self.dSpeed+speed_mod*0.001):
-                t = self.ang - ang_goal
+            ang_goal = self.get_aim_dir(goal)
+            # If can stop with friction and speed is not maxed out
+            fric_stop = speed**2 / (0.004)
+            # How much time it will take to rotate from the target
+            rot_time = (180)/self.dAng
+            stop_speed = (0.001+self.dSpeed)
+            # Distance to pass with rotation thruster slow down until speed=0
+            rot_stop_dist = -(-(self.dSpeed*rot_time)**2/stop_speed
+                              + (self.dSpeed*rot_time/stop_speed)*(2*self.dSpeed*rot_time - speed)
+                              - self.dSpeed*rot_time**2)
+            # if can stop with friction
+            if dist > fric_stop:
+                ang = Utils.angle_diff(self.ang, ang_goal)
+            # if can stop with rotation and burn
+            elif dist > rot_stop_dist:
+                ang = Utils.angle_diff(self.ang, ang_goal)
+            # Slow down by rotation and burn
             else:
-                t = self.ang - ang_goal -180
-            if abs(t) > 1:
-                if t < -180 or t > 180:
-                    t = -t
-                if abs(t) > self.dAng:
-                    self.rotate(-np.sign(t) * self.dAng)
+                ang_goal = ang_goal - 180
+                ang = Utils.angle_diff(self.ang, ang_goal)
+            # Rotate toward a goal
+            if abs(ang) > 0:
+                if abs(ang) > self.dAng:
+                    self.rotate(np.sign(ang) * self.dAng)
+                    ang += -np.sign(ang) * self.dAng
                 else:
-                    self.rotate(-t)
-            else:
+                    self.rotate(ang)
+                    ang = 0
+            # Accelerate if inline with a goal
+            if abs(ang) <= 1:
                 self.accelerate(self.dSpeed, self.ang)
-                # g= pg.Rect(self.rect.x+100*np.sin((ang_goal-180)/180*np.pi),
-                #         self.rect.y+100*np.cos((ang_goal-180)/180*np.pi),
-                #         10, 10)
-                # Classes.FXLaser(self.rect, g, 5, 5, 5, (255,50,50), (0,0), self.sector)
-
+                g= pg.Rect(self.rect.x+100*np.sin((ang_goal-180)/180*np.pi),
+                           self.rect.y+100*np.cos((ang_goal-180)/180*np.pi),
+                           10, 10)
+                Classes.FXLaser(self.rect, g, 5, 5, 5, (255,50,50), (0,0), self.sector)
+            self._prev_dist = dist
             return False
         # Success
         else:
+            self._prev_dist = None
             return True
 
     def rotate(self, deg):

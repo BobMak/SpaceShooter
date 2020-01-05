@@ -65,7 +65,6 @@ class Object(pg.sprite.Sprite):
         self.position = (self.rect.centerx, self.rect.centery)  # can be float to respect <0 speed
         self.sector.movable.add(self)
         self.sector.updateable.append(self)
-        print('new', type(self))
 
     def modify_position(self):
         if self.speed[0] or self.speed[1]:
@@ -76,8 +75,9 @@ class Object(pg.sprite.Sprite):
             #     self.speed[0] += -self.speed[0] * 0.01
             # else:
             #     self.speed[0] += -self.speed[0] * 0.01
-            self.speed[0] += -self.speed[0] * 0.001
-            self.speed[1] += -self.speed[1] * 0.001
+            ang = np.arctan(self.speed[1]/self.speed[0])
+            self.speed[0] += -np.sign(self.speed[0]) * 0.001 * abs(np.cos(ang))
+            self.speed[1] += -np.sign(self.speed[1]) * 0.001 * abs(np.sin(ang))
             # if abs(self.speed[1]) < 0.3:
             #     self.speed[1] += -self.speed[1] * 0.01
 
