@@ -15,11 +15,11 @@ class TestShips(unittest.TestCase):
         St.graphics_thread.start()
 
     def tearDown(self) -> None:
-        raise NotImplementedError()
+        St.graphics_thread.stop()
+        exit()
 
     def testShipGeneration(self):
         s = Ships.ShipGenerator.generate_test()
-
 
 
 if __name__ == '__main__':

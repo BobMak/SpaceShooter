@@ -3,8 +3,6 @@ Modular ships!
 integrity vs utility?
 Add whatever module you find or manufacture to your (or someone else's?) ship.
 """
-import random as r
-import sys
 import pygame as pg
 import numpy as np
 import copy
@@ -28,14 +26,6 @@ class Module(Classes.Object, Classes.Vulnerable):
         self.        placement = (0, 0)  # x, y with respect to ships center
         self.           radius = 0  # distance from ship's center to module
         self.        place_ang = 0  # angle at which the module is placed
-
-    def passive(self):
-        """ Passive turn. To be run every logic update"""
-        raise NotImplementedError("Module Passive Ability")
-
-    def active(self):
-        """ Passive turn. To be run every logic update"""
-        raise NotImplementedError("Module Active Ability")
 
     def connect_module(self, module):
         self.connected_modules.append(module)
@@ -72,7 +62,7 @@ class Module(Classes.Object, Classes.Vulnerable):
 
 
 class Hull(Module):
-    """ Nothing but integrity and connections between other modules"""
+    """ Nothing but integrity and cns between other modules"""
     def __init__(self, hp):
         image = pg.Surface((50*1.5, 50*1.5), flags=pg.SRCALPHA)
         pg.gfxdraw.box(image, (0, 0, 50, 50), (90, 190, 90, 200))
@@ -236,7 +226,7 @@ class Generator(Module):
     def __init__(self, hp, energyGen):
         image = pg.Surface((40*1.5, 40*1.5), flags=pg.SRCALPHA)
         pg.gfxdraw.box(image, (0, 0, 40, 40), (150, 10, 10, 200))
-        mass  = 1
+        mass = 1
         Module.__init__(self, hp=hp, mass=mass, image=image)
         self.energyGen = energyGen
 
@@ -257,9 +247,7 @@ class Capacitor(Module):
 
 
 class Shield(Module):
-    """
-    :param hitBoxArr: list of all rects that shield covers
-    """
+    """ :param hitBoxArr: list of all rects that shield covers """
     def __init__(self, hp, shieldCapacity):
         image = pg.Surface((20*1.5, 20*1.5), flags=pg.SRCALPHA)
         pg.gfxdraw.box(image, (0, 0, 20, 20), (90, 90, 250, 200))
@@ -267,3 +255,4 @@ class Shield(Module):
         Module.__init__(self, hp=hp, image=image, mass=mass)
         self.shieldCapacity = shieldCapacity
         self.hitBoxList = []
+

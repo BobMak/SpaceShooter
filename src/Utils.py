@@ -18,3 +18,12 @@ def angle_diff(a1, a2):
         a= a - np.sign(a)*360
     assert -180<=a<=180, "angle outs of bounds: {}".format(a)
     return a
+
+
+def orientation(a, b, c):
+    """Jarviss algorithm for convex graph wrapping"""
+    val = (a.y - c.y) * (b.x - a.x) - (a.x - c.x) * (b.y - a.y)
+    if val == 0:
+        return 0
+    else:
+        return 1 if val > 0 else 2

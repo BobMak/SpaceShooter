@@ -1,5 +1,3 @@
-import pickle
-import sys
 import random, copy
 import numpy as np
 import pygame.gfxdraw as gfx
@@ -27,9 +25,9 @@ class Object(pg.sprite.Sprite):
         :type rect: pg.Rect,
         """
         if sector:
-            self.   sector = sector
+            self.sector = sector
         else:
-            self.   sector = St.getCurrentSector()
+            self.sector = St.getCurrentSector()
         self.          ang = 0  # float [0,360)
         self.rotated_image = 0
         self. rotated_rect = 0
@@ -58,7 +56,7 @@ class Object(pg.sprite.Sprite):
             self.        rect = pg.Rect(x, y, 10, 10)
             self.rotated_rect = pg.Rect(x, y, 10, 10)
         else:
-            raise Exception('Neither Rect nor Position are not provided')
+            raise Exception('Neither Rect nor Position are provided')
         self.      radius = self.rect.width
         # Moving properties
         self.   speed = [0.0, 0.0]
@@ -70,21 +68,13 @@ class Object(pg.sprite.Sprite):
         if self.speed[0] or self.speed[1]:
             self.position = (self.position[0]+self.speed[0], self.position[1]+self.speed[1])
             self.rect = pg.Rect(self.position[0]-self.rect.width//2, self.position[1]-self.rect.height//2, self.rect.width, self.rect.height)
-            # speedVectorAng = np.sqrt( self.speed[0]**2 + self.speed[1]**2 )
-            # if abs(self.speed[0]) < 0.3:
-            #     self.speed[0] += -self.speed[0] * 0.01
-            # else:
-            #     self.speed[0] += -self.speed[0] * 0.01
             ang = np.arctan(self.speed[1]/self.speed[0])
             self.speed[0] += -np.sign(self.speed[0]) * 0.001 * abs(np.cos(ang))
             self.speed[1] += -np.sign(self.speed[1]) * 0.001 * abs(np.sin(ang))
-            # if abs(self.speed[1]) < 0.3:
-            #     self.speed[1] += -self.speed[1] * 0.01
 
     def accelerate(self, dl, angle):
         self.speed[0] += dl * np.cos(np.deg2rad(angle - 90.0))
         self.speed[1] += dl * np.sin(np.deg2rad(angle - 90.0))
-        # self.speed = (dx, dy)
 
     def rotate(self, dir):
         # Ensure that look_dir is in range [0 - 360)
@@ -286,8 +276,6 @@ class FXLaser(FX_Glow):
     def __init__(self, rect1, rect2, duration, radius, length, color, speed, sector):
         FX_Glow.__init__(self, rect=rect1, duration=duration, radius=radius,
                          length=length, color=color, speed=speed,fading=(), sector=sector)
-        # FX_Glow(rect=rect2, duration=duration, radius=radius, length=length,
-        #         color=color, speed=speed, sector=sector)
         self.rect1 = rect1
         self.rect2 = rect2
         self.updates.append(self._draw)
@@ -295,8 +283,6 @@ class FXLaser(FX_Glow):
             tan_ang = np.arctan((rect1.y - rect2.y)/(rect1.x - rect2.x))
         else:
             tan_ang = 1
-        # self.perp_dx = np.sin(tan_ang)
-        # self.perp_dy = np.cos(tan_ang)
 
     def _draw(self):
         gfx.line(St.graphics.screen, self.rect1.x, self.rect1.y, self.rect2.x, self.rect2.y, self.color)
@@ -327,12 +313,7 @@ class Projectile(Object):
 
 class Missile(Projectile):
     def __init__(self, bolt, x, y):
-        super().__init__(bolt + St.n_bolts, x, y, St.msl_distances[bolt])
-        self.d_ang = St.msl_d_angs[bolt]
-        self.d_speed = St.msl_d_speeds[bolt]
-        self.max_speed = St.msl_max_speeds[bolt]
-        self.hit_range = St.msl_hit_ranges[bolt]
-        self.hp = St.bolt_damage[bolt + St.n_bolts]
+        super().__init__(bolt, x, y,)
         self.mod_speed = 0
         self.dist_prev = 500
         self.dist = None

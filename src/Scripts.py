@@ -61,7 +61,6 @@ def main_loop():
                         posx += St.window.base_x
                         posy += St.window.base_y
                         St.window.focus.controls["mouse_right"](posx, posy)
-                        print('mouse right')
             # Handle events
             for event in pg.event.get():
                 if event.type in Events.eve:

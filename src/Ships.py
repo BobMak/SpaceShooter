@@ -3,12 +3,13 @@ Modular ships!
 integrity vs utility? Complexity, chaos and emergence vs fun?
 Add whatever module you find or manufacture to your (or someone else's?) ship.
 """
-import random
+import random as r
 import numpy as np
 import pygame as pg
 import Classes
 import Modules as M
 import Utils
+
 
 # Ships can be controlled by a player. Ships are composed of modules
 # that are placed on a skeleton. Skeletons are bases of sh ip.
@@ -17,12 +18,15 @@ import Utils
 # new modules.
 class Ship(Classes.Object):
     """A controllable ship. Behaviour and abilities are defined by the modules that it consists of"""
-    def __init__(self, modules: [M.Module], coords):
+    def __init__(self, coords, size=1, seed=None):
         Classes.Object.__init__(self, x=coords[0], y=coords[1])
         # All modules on the ship
-        self. modules = []
+        self.modules = []
         self.skeleton_a = []  # Primary mount points: [(x, y), ...]
         self.skeleton_b = []  # Secondary mount points
+        for n in range(size):
+            pass
+            # TODO 5 skeleton_b for every skeleton_a
         # Map of keys to controlled modules
         self.        mass = 0
         self.      energy = 0
@@ -39,13 +43,6 @@ class Ship(Classes.Object):
         # pygame right click code with its move_to function
         self.controls = {}
         self.dAng = 0
-        if modules:
-            for x in modules:
-                x.assignShip(self)
-            self.dAng = 1
-            self.dSpeed = self.propulsion
-        # movement buffer
-        self._prev_dist = None
 
     def updateSystem(self):
         """ When computing the action of a system composed of many modules one
@@ -77,7 +74,7 @@ class Ship(Classes.Object):
 
     # Use propulsion modules to move to the target. Working with one source of
     # propulsion. Accelerate towards goal while there is enough time to stop by
-    # with friction or turn and burn.
+    # with friction or rotate and burn.
     def moveTo(self, goal):
         dist = self.get_distance(goal)
         speed = max(np.sqrt(self.speed[0] ** 2 + self.speed[1] ** 2), 0.01)
@@ -91,9 +88,9 @@ class Ship(Classes.Object):
             rot_time = (180)/self.dAng
             stop_speed = (0.001+self.dSpeed)
             # Distance to pass with rotation thruster slow down until speed=0
-            rot_stop_dist = -(-(self.dSpeed*rot_time)**2/stop_speed
-                              + (self.dSpeed*rot_time/stop_speed)*(2*self.dSpeed*rot_time - speed)
-                              - self.dSpeed*rot_time**2)
+            rot_stop_dist = (self.dSpeed*rot_time)**2/stop_speed \
+                            -(self.dSpeed*rot_time/stop_speed)*(2*self.dSpeed*rot_time - speed) \
+                            + self.dSpeed*rot_time**2
             # if can stop with friction
             if dist > fric_stop:
                 ang = Utils.angle_diff(self.ang, ang_goal)
@@ -115,15 +112,9 @@ class Ship(Classes.Object):
             # Accelerate if inline with a goal
             if abs(ang) <= 1:
                 self.accelerate(self.dSpeed, self.ang)
-                g= pg.Rect(self.rect.x+100*np.sin((ang_goal-180)/180*np.pi),
-                           self.rect.y+100*np.cos((ang_goal-180)/180*np.pi),
-                           10, 10)
-                Classes.FXLaser(self.rect, g, 5, 5, 5, (255,50,50), (0,0), self.sector)
-            self._prev_dist = dist
             return False
         # Success
         else:
-            self._prev_dist = None
             return True
 
     def rotate(self, deg):
@@ -148,7 +139,7 @@ class ShipGenerator:
 
     @staticmethod
     def generate_test():
-        ship = Ship([], (1, 1))  # Start in the middle of the screen
+        ship = Ship((1, 1))  # Start in the middle of the screen
         M.Propulsion(1, 0.1, 1, max_speed=3).assignShip(ship).place(0, 50)
         M.Hull(5).assignShip(ship).place(0, 10)
         M.Capacitor(1, 5).assignShip(ship).place(40, 0)
@@ -157,42 +148,42 @@ class ShipGenerator:
         ship.updateSystem()
         return ship
 
-    def generate_random_l(self):
-        # Ships are built based on random vectors defining their role.
+    def generate_r_l(self):
+        # Ships are built based on r vectors defining their role.
         # These roles, along with constrains such as max tech level and cost, should be used to generate a ship.
         # Role is a vector consisting of following dimensions: attack, defence, support-attack, support-defence
         # There might be modules that may be used for different roles.
 
         # Fleets may contain different roles to compensate for weaknesses and strengthen powers of individual ships.
         # 1 drone  2 Gunship 3 Corvette 4 frigate 5 Destroyer 6 cruiser 7 Battleship 8 flagship 9 carrier 10 giant
-        size = random.randint(0, 10)
-        max_tech = random.randint(0, 10)  # max module tech tier
+        size = r.randint(0, 10)
+        max_tech = r.randint(0, 10)  # max module tech tier
         # what part of modules are around max tech tier. The mean of all modules' tech level bell curve is max_tech*cost
-        cost = random.random()  # [0, 1)
+        cost = r.random()  # [0, 1)
         # attack:defence, support-attack:support-defence
-        role = [random.random(), random.random()]
+        role = [r.random(), r.random()]
         mu = cost * max_tech
         sigma = 2
         # Centered around special ability? TODO: How to combine several abilities and AI for their operation?
         # Ship skeleton and other modules might be placed to support that ability
-        centered = random.random()
+        centered = r.random()
         # generate skeleton
-        sim = random.choice([True, False])  # symmetrical or asymmetrical
+        sim = r.choice([True, False])  # symmetrical or asymmetrical
         size = size//2 if sim else size
-        radius = int(np.sqrt((max((size + random.randint(-4,4)), 1)) * 100))
-        radius_diff = random.uniform(-4,4)
+        radius = int(np.sqrt((max((size + r.randint(-4,4)), 1)) * 100))
+        radius_diff = r.uniform(-4,4)
         sk_tor = self.generate_skeleton_torus
         sk_rec = self.generate_skeleton_rect
         sk_tri = self.generate_skeleton_triangle
-        skeleton = random.choice([sk_tor, sk_rec, sk_tri])(size, radius, radius_diff, sim)
+        skeleton = r.choice([sk_tor, sk_rec, sk_tri])(size, radius, radius_diff, sim)
         # self.generate_module(type, size, tech, distribution)
 
     def generate_skeleton_torus(self, size, radius, radius_var, symmetry=True):
         points = []
         for point in range(size):
-            angle = random.random() * 2 * np.pi
-            x = np.cos(angle) * radius + random.uniform(-radius_var, radius_var)
-            y = np.sin(angle) * radius + random.uniform(-radius_var, radius_var)
+            angle = r.random() * 2 * np.pi
+            x = np.cos(angle) * radius + r.uniform(-radius_var, radius_var)
+            y = np.sin(angle) * radius + r.uniform(-radius_var, radius_var)
             points.append((x,y))
             if symmetry:
                 points.append((-x, y))
@@ -204,8 +195,8 @@ class ShipGenerator:
         points.append((-radius, radius))
         points.append((radius, radius))
         for point in range(size-3):
-            x = random.uniform(-radius, radius) + random.uniform(-radius_var, radius_var)
-            y = radius - (2*np.absolute(x))     + random.uniform(-radius_var, radius_var)
+            x = r.uniform(-radius, radius) + r.uniform(-radius_var, radius_var)
+            y = radius - (2*np.absolute(x))     + r.uniform(-radius_var, radius_var)
             points.append((x, y))
             if symmetry:
                 points.append((-x, y))
@@ -217,12 +208,10 @@ class ShipGenerator:
         points.append((-radius, radius))
         points.append((radius, radius))
         for point in range(size-3):
-            x = random.uniform(-radius, radius) + random.uniform(-radius_var, radius_var)
-            y = radius - (2*np.absolute(x))     + random.uniform(-radius_var, radius_var)
+            x = r.uniform(-radius, radius) + r.uniform(-radius_var, radius_var)
+            y = radius - (2*np.absolute(x))     + r.uniform(-radius_var, radius_var)
             points.append((x, y))
             if symmetry:
                 points.append((-x, y))
         return points
 
-    def generate_module(self, type, size, tech, distribution):
-        raise NotImplementedError()
