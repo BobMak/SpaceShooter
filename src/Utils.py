@@ -21,7 +21,8 @@ def angle_diff(a1, a2):
 
 
 def orientation(a, b, c):
-    """Jarviss algorithm for convex graph wrapping"""
+    """Jarviss algorithm for convex graph wrapping.
+    :return 1 if c is on the left from ab and 2 if on the right; 0 if 0/360"""
     val = (a.y - c.y) * (b.x - a.x) - (a.x - c.x) * (b.y - a.y)
     if val == 0:
         return 0
