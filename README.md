@@ -1,13 +1,4 @@
 # SpaceRogue
 
-An rpg
+An attempt in PCG space ship generation
 
-# Get Started
-
-Install modules
-
-    pip install pygame numpy 
-    
-# Known Bugs
-
-It does not work

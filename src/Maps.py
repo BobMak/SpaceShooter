@@ -72,9 +72,8 @@ class Verse:
         """Big map composed of many sectors. New sectors are generated based on big picture, so as big scale events.
         Generate:
         1. Resources
-        2. Faction(s), their state
-        3. Big events, fleets, conflicts
-        4. Sectors and details
+        2. Ships, obejcts
+        3. Sectors and details
         """
         self.N = 5  # verse sector dimensions
         self.sectors = [ [ Sector((x,y)) for y in range(self.N) ] for x in range(self.N)]

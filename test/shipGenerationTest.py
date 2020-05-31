@@ -179,6 +179,8 @@ def shrink(hull: [[(Point, Point)]], a):
         inv_p1 = Point(-p1.x, p1.y).getClosest(_outer_points)[0]  # [x for line in outer for x in line]
         inv_p2 = Point(-p2.x, p2.y).getClosest(_outer_points)[0]  # get the inverse side of that
         # find closest line from the inner edge
+        # TODO: don't cut the line if it leaves a hanging point.
+        # TODO: cut shorter lines first.
         new_p1 = p1.getClosest(_inner_points)[0]
         new_p2 = p2.getClosest(_inner_points)[0]
         if (inv_p2, inv_p1) in outer:
@@ -218,7 +220,7 @@ if __name__ == "__main__":
         #         pg.draw.line(screen, (0,255,0), ((p.x+ screen_size//4)*2,(p.y+ screen_size//4)*2), ((dp.x+ screen_size//4)*2, (dp.y+ screen_size//4)*2), 1)
         blocks, cds, hull = generate_tree(20)
         screen.fill((0, 0, 0))
-        hull = shrink(hull, 2)
+        hull = shrink(hull, 1)
         # hull = shrink(hull, len(hull[0])-_idx)
         for b in blocks:
             pg.draw.rect(screen, b.color, (b.getX()-5, b.getY()-5, 10, 10))
