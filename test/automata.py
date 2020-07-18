@@ -51,44 +51,22 @@ def update(x):
             toAdd.append((a[0], a[1]+BLK))  # right
     for na in toRemove:
         del attention_areas[na]
-        # print('removed', na)
     for ta in toAdd:
-        # print('added', ta)
         attention_areas[ta]=ta
-    # naive approach
-    # for y in range(len(conwey)//4):
-    #     for x in range(len(conwey[0])//4):
-    #         ssm = np.sum(conwey[y - 1:y + 2,x - 1:x + 2])
-    #         if (ssm > 3 or ssm < 2) and conwey[y][x]:
-    #             newconwey[y][x] = 0
-    #         elif not conwey[y][x] and ssm == 3:
-    #             newconwey[y][x] = 1
     conwey = newconwey
 
-pg.clock.schedule_interval(update, 1/30.0)
-    
 
-@screen.event
-def on_draw():
-    # screen.clear()
-    global conwey
-    # for a in attention_areas.values():
-    #     for _y in range(BLK):
-    #         y = _y + a[1]
-    #         for _x in range(BLK):
-    #             x = _x + a[0]
-    #             if conwey[y][x]:
-    #                 # print('dd')
-    #                 pg.graphics.draw(4, pg.graphics.GL_QUADS,
-    #                                  ('v2f', [x*2, y*2, x*2, y*2+2, x*2, y*2, x*2+2, y*2]),
-    #                                  ('c4B', (0,255,0,200)*4))
-                # else:
-                #     pg.graphics.draw(4, pg.graphics.GL_QUADS,
-                #                      ('v2f', [x * 2, y * 2, x * 2, y * 2 + 2, x * 2, y * 2, x * 2 + 2, y * 2]),
-                #                      ('c4B', (0,0,0,200)*4))
-    # screen.flip()
-    # pg.gl.glFlush()
-    # screen.draw()
+def update_naive():
+    global conwey, attention_areas
+    newconwey = np.copy(conwey)
+    for y in range(len(conwey)//4):
+        for x in range(len(conwey[0])//4):
+            ssm = np.sum(conwey[y - 1:y + 2,x - 1:x + 2])
+            if (ssm > 3 or ssm < 2) and conwey[y][x]:
+                newconwey[y][x] = 0
+            elif not conwey[y][x] and ssm == 3:
+                newconwey[y][x] = 1
+    conwey = newconwey
 
 
 @screen.event
@@ -116,4 +94,5 @@ def on_mouse_press(x, y, mouse, status):
 
 
 if __name__ == "__main__":
+    pg.clock.schedule_interval(update, 1 / 30.0)
     pg.app.run()

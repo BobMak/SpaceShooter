@@ -17,8 +17,10 @@ class TestShips(unittest.TestCase):
         St.graphics_thread.stop()
         exit()
 
-    def testShipGeneration(self):
-        s = Ships.ShipGenerator.generate_test()
+    def shipsHaveBasics(self):
+        for x in range(100):
+            s = Ships.ShipGenerator.generate_test()
+            self.assertIsNot(s.maxSpeed, 0)
 
 
 if __name__ == '__main__':

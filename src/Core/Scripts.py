@@ -14,7 +14,6 @@ def main_loop():
         if St.gamestate == "new_player":
             St.verse = Maps.Verse()
             St.window = Maps.Window(St.verse.sectors)
-            print(St.window.current_sector)
             basic_ship = Sp.ShipGenerator.generate_test()
             St.window.addAvailable(basic_ship)
             St.window.focus = basic_ship
