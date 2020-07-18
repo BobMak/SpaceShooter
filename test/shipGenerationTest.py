@@ -5,7 +5,7 @@ from pygame import gfxdraw as gfx
 import time
 import copy
 
-import Utils
+from Core import Utils
 
 screen_size=500
 
@@ -107,32 +107,7 @@ def generate_tree(size, dist=18, ddist=6, dang=60, branching=0.5, clusterRad=25,
             points.append(Point(-x, y))
     # do k-means to create centers and connect all module centers
     cds = {}
-    # pointsTo = copy.deepcopy(points)
-    # # Add new centroids while all haven't been covered
-    # n_cluster = 0
-    # n_iter = 0
-    # while len(pointsTo)>0:
-    #     n_cluster += 1
-    #     centr = Point(random.randint(-50,50), random.randint(-50,50))
-    #     prev = np.array([100, 100])
-    #     curr = np.array([0, 0])
-    #     while np.linalg.norm(prev - curr)>2:
-    #         n_iter+=1
-    #         print('cluster {} iter {}'.format(n_cluster, n_iter), np.linalg.norm(prev - curr))
-    #         ps =  centr.getClosest(pointsTo)
-    #         avg_x = sum([p.x for p in ps]) // len(ps)
-    #         avg_y = sum([p.y for p in ps]) // len(ps)
-    #         centr.x = avg_x
-    #         centr.y = avg_y
-    #         prev = curr
-    #         curr = np.array([avg_x, avg_y])
-    #         if centr in cds:
-    #             cds[centr].extend(centr.getClosest(pointsTo)[:5])
-    #         else:
-    #             cds[centr] = centr.getClosest(pointsTo)[:5]
-    #     for p in centr.getClosest(pointsTo):
-    #         if p.getDist(centr) <= centr.getClosest(pointsTo)[min(len(pointsTo)-1, 3)].getDist(centr):
-    #             pointsTo.remove(p)
+
     _hull_points = copy.deepcopy(points)
     # Add hull
     hull = []  # Layers of hulls [ [ (p1, p2), ... ], ... ]
@@ -214,10 +189,7 @@ if __name__ == "__main__":
         radius = size*4
         radius_diff = 5
         ang = 0.5
-        # for p in generate_skeleton_triangle(size, radius, radius_diff, True, ang=ang):
-        #     pg.draw.rect(screen, (255, 0, 0), ((p.x + screen_size//4) * 2, (p.y + screen_size//4) * 2, 2, 2), 2)
-        #     for dp in p.cns:
-        #         pg.draw.line(screen, (0,255,0), ((p.x+ screen_size//4)*2,(p.y+ screen_size//4)*2), ((dp.x+ screen_size//4)*2, (dp.y+ screen_size//4)*2), 1)
+
         blocks, cds, hull = generate_tree(20)
         screen.fill((0, 0, 0))
         hull = shrink(hull, 1)

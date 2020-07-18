@@ -2,8 +2,8 @@ import random, copy
 import numpy as np
 import pygame.gfxdraw as gfx
 
-import State as St
-from Assets import *
+from Core import State as St
+from Core.Assets import *
 
 
 class Vulnerable:

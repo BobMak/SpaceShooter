@@ -1,7 +1,8 @@
 import random as r
 
-import Maps
-import State
+from Map import Maps
+
+
 # import Ships
 
 

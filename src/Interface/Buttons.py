@@ -1,9 +1,6 @@
-import pickle
 import pygame as pg
-import sys
 
-import Assets as A
-import Utils, Scripts, State
+from Core import Assets as A
 
 
 class Button(pg.sprite.Sprite):

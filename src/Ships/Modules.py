@@ -7,8 +7,7 @@ import pygame as pg
 import numpy as np
 import copy
 
-import Assets as A, State as St
-import Classes
+from Core import Assets as A, State as St, Classes
 
 
 class Module(Classes.Object, Classes.Vulnerable):
@@ -170,7 +169,7 @@ class Weapon(Module):
             # TODO Add timer event
             skipped_len = self.rect.height // 2
             shot = Classes.Projectile(self.bolt, self.rect.centerx,
-                              self.rect.centery, self.range)
+                                      self.rect.centery, self.range)
             shot.ang = self.ang
             shot.rect.centerx = (self.rect.centerx
                                  - skipped_len * np.cos(np.deg2rad(shot.ang

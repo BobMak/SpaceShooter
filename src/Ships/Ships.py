@@ -6,9 +6,8 @@ Add whatever module you find or manufacture to your (or someone else's?) ship.
 import random as r
 import numpy as np
 import pygame as pg
-import Classes
-import Modules as M
-import Utils
+from Ships import Modules as M
+from Core import Utils, Classes
 
 
 # Ships can be controlled by a player. Ships are composed of modules

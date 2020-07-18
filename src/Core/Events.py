@@ -5,7 +5,8 @@ import pygame
 import sys
 import random as r
 
-import State
+from Core import State
+
 # Index event - BASE to get the desired event from eve list
 BASE = pygame.USEREVENT
 

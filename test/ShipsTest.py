@@ -2,9 +2,8 @@ import pygame as pg
 import threading
 
 import unittest
-import Ships
-import Scripts as Sc
-import State as St
+from Ships import Ships
+from Core import Scripts as Sc, State as St
 
 
 class TestShips(unittest.TestCase):

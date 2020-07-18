@@ -1,13 +1,8 @@
-import numpy as np
 import random
 import pygame as pg
-from pygame import gfxdraw as gfx
 import time
-import copy
 
-import Utils
-import Maps
-
+from Map import Maps
 
 # Do a graph like map
 # Every point is a system

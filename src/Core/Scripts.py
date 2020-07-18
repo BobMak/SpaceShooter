@@ -1,13 +1,10 @@
 import threading
-import numpy as np
 import time
 import pygame as pg
 
-import State as St
-import Assets as A
-import Ships as Sp
-import Maps
-import Events
+from Ships import Ships as Sp
+from Map import Maps
+from Core import Events, Assets as A, State as St
 
 clock = pg.time.Clock()
 
@@ -64,7 +61,7 @@ def main_loop():
             # Handle events
             for event in pg.event.get():
                 if event.type in Events.eve:
-                    e=Events.eve[event.type]
+                    e= Events.eve[event.type]
                     e[0](*e[1])
                     print('event {}({})'.format(e[0], e[1]))
             # Updates to object groups
