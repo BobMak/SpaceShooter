@@ -73,7 +73,6 @@ def generate_tree(size, dist=18, ddist=6, dang=60, branching=0.5, clusterRad=25,
     :param branching: probability starting to grow from a random previous block
     """
     points = []
-    centers = []
     x, y = 0, 0
     ang = 0
     points.append(Point(x,y))
