@@ -39,6 +39,10 @@ class Window:
             for object in sector.movable:
                 object.modify_position()
 
+    def followFocus(self):
+        self.move(self.focus.rect.centerx - self.width // 2 + self.focus.speed[0]*10,
+                  self.focus.rect.centery - self.height // 2 + self.focus.speed[1]*10)
+
 
 # Contains all event groups that objects can subscribe to.
 # Some of most important ones are collision groups. I hope to gain speed by

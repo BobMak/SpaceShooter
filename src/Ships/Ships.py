@@ -27,16 +27,16 @@ class Ship(Classes.Object):
             pass
             # TODO 5 skeleton_b for every skeleton_a
         # Map of keys to controlled modules
-        self.        mass = 0
-        self.      energy = 0
-        self.   energyCap = 0
-        self.   energyGen = 0
-        self.   integrity = 0
+        self.mass         = 0
+        self.energy       = 0
+        self.energyCap    = 0
+        self.energyGen    = 0
+        self.integrity    = 0
         self.integrityCap = 0
-        self.     storage = 0
-        self.  propulsion = 0
-        self.    maxSpeed = 0
-        self.       tasks = {}  # eg. go to x, shoot at y, do z
+        self.storage      = 0
+        self.propulsion   = 0
+        self.maxSpeed     = 0
+        self.tasks = {}  # eg. go to x, shoot at y, do z
         # dict of keys and functions associated with them. Every module should
         # add their action callback to this dict. E.g propulsion adds
         # pygame right click code with its move_to function
@@ -71,9 +71,25 @@ class Ship(Classes.Object):
         self.arrived = 0
         self.tasks['moveTo'] = (self.moveTo, goal)
 
-    # Use propulsion modules to move to the target. Working with one source of
-    # propulsion. Accelerate towards goal while there is enough time to stop by
-    # with friction or rotate and burn.
+    def handleW(self):
+        self.accelerate(self.dSpeed, 0)
+        speed = np.sqrt(self.speed[0]**2 + self.speed[1]**2)
+        if speed > self.maxSpeed:
+            ang = np.arctan(self.speed[1]/self.speed[0])
+            self.accelerate(self.dSpeed, ang+180)
+
+    def handleS(self):
+        self.accelerate(self.dSpeed, 180)
+
+    def handleD(self):
+        self.accelerate(self.dSpeed, 90)
+
+    def handleA(self):
+        self.accelerate(self.dSpeed, -90)
+
+    def handleRotate(self, right=1):
+        self.rotate(self.dAng * right)
+
     def moveTo(self, goal):
         dist = self.get_distance(goal)
         speed = max(np.sqrt(self.speed[0] ** 2 + self.speed[1] ** 2), 0.01)
@@ -81,25 +97,7 @@ class Ship(Classes.Object):
         if dist > 20 or speed>0.01:
             # Face the goal and accelerate if have time to rotate and slow down
             ang_goal = self.get_aim_dir(goal)
-            # If can stop with friction and speed is not maxed out
-            fric_stop = speed**2 / (0.004)
-            # How much time it will take to rotate from the target
-            rot_time = (180)/self.dAng
-            stop_speed = (0.001+self.dSpeed)
-            # Distance to pass with rotation thruster slow down until speed=0
-            rot_stop_dist = (self.dSpeed*rot_time)**2/stop_speed \
-                            -(self.dSpeed*rot_time/stop_speed)*(2*self.dSpeed*rot_time - speed) \
-                            + self.dSpeed*rot_time**2
-            # if can stop with friction
-            if dist > fric_stop:
-                ang = Utils.angle_diff(self.ang, ang_goal)
-            # if can stop with rotation and burn
-            elif dist > rot_stop_dist:
-                ang = Utils.angle_diff(self.ang, ang_goal)
-            # Slow down by rotation and burn
-            else:
-                ang_goal = ang_goal - 180
-                ang = Utils.angle_diff(self.ang, ang_goal)
+            ang = Utils.angle_diff(self.ang, ang_goal)
             # Rotate toward a goal
             if abs(ang) > 0:
                 if abs(ang) > self.dAng:
@@ -108,10 +106,10 @@ class Ship(Classes.Object):
                 else:
                     self.rotate(ang)
                     ang = 0
-            # Accelerate if inline with a goal
-            if abs(ang) <= 1:
+            if abs(ang) <= 1 and speed < self.maxSpeed:
                 self.accelerate(self.dSpeed, self.ang)
             return False
+
         # Success
         else:
             return True
@@ -132,7 +130,7 @@ class Ship(Classes.Object):
             self.tasks.pop(_type)
 
 
-class ShipGenerator:
+class ShipFactory:
     def generate_specific(self, size, tech, shape) -> Ship:
         raise NotImplementedError()
 

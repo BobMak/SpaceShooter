@@ -28,23 +28,23 @@ class Object(pg.sprite.Sprite):
             self.sector = sector
         else:
             self.sector = St.getCurrentSector()
-        self.          ang = 0  # float [0,360)
+        self.ang           = 0  # float [0,360)
         self.rotated_image = 0
-        self. rotated_rect = 0
-        self.       radius = None
-        self.          dmg = None
-        self.   time_count = 0
-        self.        timer = 0
-        self.         type = 0
-        self.      updates = []
+        self.rotated_rect  = 0
+        self.radius        = None
+        self.dmg           = None
+        self.time_count    = 0
+        self.timer         = 0
+        self.type          = 0
+        self.updates       = []
         pg.sprite.Sprite.__init__(self)
         if image:
-            self.      image = image
+            self.image       = image
             self.image_alpha = copy.copy(image)
             self.image_alpha.fill((255,255,255,128), None, pg.BLEND_RGBA_MULT)
-            self.      rotated_image = image
+            self.rotated_image = image
             self.rotated_image_alpha = image
-            self.        rect = self.image.get_rect()
+            self.rect         = self.image.get_rect()
             self.rotated_rect = self.rect  # Use it to draw rotated objects
             self.rect.centerx = x
             self.rect.centery = y
@@ -69,8 +69,8 @@ class Object(pg.sprite.Sprite):
             self.position = (self.position[0]+self.speed[0], self.position[1]+self.speed[1])
             self.rect = pg.Rect(self.position[0]-self.rect.width//2, self.position[1]-self.rect.height//2, self.rect.width, self.rect.height)
             ang = np.arctan(self.speed[1]/self.speed[0])
-            self.speed[0] += -np.sign(self.speed[0]) * 0.001 * abs(np.cos(ang))
-            self.speed[1] += -np.sign(self.speed[1]) * 0.001 * abs(np.sin(ang))
+            self.speed[0] += -np.sign(self.speed[0]) * 0.01 * abs(np.cos(ang))
+            self.speed[1] += -np.sign(self.speed[1]) * 0.01 * abs(np.sin(ang))
 
     def accelerate(self, dl, angle):
         self.speed[0] += dl * np.cos(np.deg2rad(angle - 90.0))

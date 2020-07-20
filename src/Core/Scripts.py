@@ -14,7 +14,7 @@ def main_loop():
         if St.gamestate == "new_player":
             St.verse = Maps.Verse()
             St.window = Maps.Window(St.verse.sectors)
-            basic_ship = Sp.ShipGenerator.generate_test()
+            basic_ship = Sp.ShipFactory.generate_test()
             St.window.addAvailable(basic_ship)
             St.window.focus = basic_ship
             St.graphics = Graphics()
@@ -35,20 +35,20 @@ def main_loop():
                 while St.paused:
                     time.sleep(0.1)
             # camera control
-            if keys[pg.K_c]:
-                if St.window.focus:
-                    St.window.move(St.window.focus.rect.centerx-St.window.width//2,
-                                   St.window.focus.rect.centery-St.window.height//2)
             if keys[pg.K_w] or keys[pg.K_UP]:
-                St.window.base_y += -1
+                St.window.focus.handleW()
             if keys[pg.K_s] or keys[pg.K_DOWN]:
-                St.window.base_y += 1
+                St.window.focus.handleS()
             if keys[pg.K_a] or keys[pg.K_LEFT]:
-                St.window.base_x += -1
+                St.window.focus.handleA()
             if keys[pg.K_d] or keys[pg.K_RIGHT]:
-                St.window.base_x += 1
+                St.window.focus.handleD()
             # Player module abilities
             if St.window.focus:
+                St.window.followFocus()
+                # if keys[pg.K_c]:
+                #     St.window.move(St.window.focus.rect.centerx - St.window.width // 2,
+                #                    St.window.focus.rect.centery - St.window.height // 2)
                 for key in St.window.focus.controls.keys():
                     if isinstance(key, int) and keys[key]:
                         St.window.focus.controls[key]()

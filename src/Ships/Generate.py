@@ -1,5 +1,5 @@
 import numpy as np
-import random
+import random as r
 import copy
 
 from Core import Utils
@@ -40,9 +40,9 @@ def generate_skeleton_torus(size, radius, radius_var, symmetry=True):
     points = []
     size = size // 2 if symmetry else size
     for point in range(size):
-        angle = random.random() * 2 * np.pi
-        x = np.cos(angle) * radius + random.uniform(-radius_var, radius_var)
-        y = np.sin(angle) * radius + random.uniform(-radius_var, radius_var)
+        angle = r.random() * 2 * np.pi
+        x = np.cos(angle) * radius + r.uniform(-radius_var, radius_var)
+        y = np.sin(angle) * radius + r.uniform(-radius_var, radius_var)
         points.append((x,y))
         if symmetry:
             points.append((-x, y))
@@ -53,8 +53,8 @@ def generate_skeleton_triangle(size, radius, radius_var, symmetry=True, ang=1.0)
     points = []
     size = size//2 if symmetry else size
     for point in range(size):
-        x = random.uniform(-radius, radius) + random.uniform(-radius_var, radius_var)
-        y = radius - (ang * np.absolute(x)) + random.uniform(-radius_var, radius_var)
+        x = r.uniform(-radius, radius) + r.uniform(-radius_var, radius_var)
+        y = radius - (ang * np.absolute(x)) + r.uniform(-radius_var, radius_var)
         points.append(Point(x, -y))
         if symmetry:
             points.append(Point(-x, -y))
@@ -80,21 +80,21 @@ def generate_tree(size, dist=18, ddist=6, dang=60, branching=0.5, clusterRad=25,
         size=size//2  # will copy left side points to the right
     for point in range(size):
         # start growing from different point
-        if random.random() < branching:
-            newPivot = random.choice(points)
+        if r.random() < branching:
+            newPivot = r.choice(points)
             x, y = newPivot.x, newPivot.y
         attempts=0
         # Try to generate a new point that is n pixels away from any other point.
         while True:
-            _dist = random.normalvariate(dist, ddist)  # a random distance to a new point
-            ang += random.uniform(-dang, dang)         # new angle shouldn't change too fast
+            _dist = r.normalvariate(dist, ddist)  # a random distance to a new point
+            ang += r.uniform(-dang, dang)         # new angle shouldn't change too fast
             x += _dist * np.cos(np.deg2rad(ang))
             y += _dist * np.sin(np.deg2rad(ang))
             p = Point(x, y)
             if p.getClosest(points)[0].getDist(p) > 10:
                 break
             elif attempts > 10:
-                newPivot = random.choice(points)
+                newPivot = r.choice(points)
                 x, y = newPivot.x, newPivot.y
                 attempts = 0
             attempts+=1
@@ -116,7 +116,7 @@ def generate_tree(size, dist=18, ddist=6, dang=60, branching=0.5, clusterRad=25,
         _layer+=1
         p1 = _hull_points[0]
         while True:
-            p2 = random.choice(_hull_points)
+            p2 = r.choice(_hull_points)
             for p in _hull_points:
                 if Utils.orientation(p1, p2, p) == 1:
                     p2 = p
