@@ -1,4 +1,5 @@
 import random
+import time
 import pyglet as pg
 import numpy as np
 
@@ -14,22 +15,25 @@ conwey = np.zeros([400, 400])
 active_regions = {}  # rects 40x40 (x, y)
 BLK = 20
 
+xys = []
+colors = []
+
 
 def update(s):
     screen.clear()
     global conwey
-    for y in range(len(conwey)-1):
-        # pg.graphics.draw(4, pg.graphics.GL_QUADS,
-        #                  ('v2f', [0, y, 0, y + 1, 0, y, 0 + 800, y]),
-        #                  ('c4B', (0, int(255*conwey[y][0]), 0, 255) * 4))
-        # pg.graphics.draw(2, pg.gl.GL_POINTS,
-        #                  ('v2i', (0, y, 1, y)),
-        #                  ('c4B', (0, int(255 * conwey[y][0]), 0, 255) * 4))
-        pg.graphics.draw(2, pg.gl.GL_POINTS,
-                             ('v6i', (0, y, 1, y, 2, y, 0, y, 1, y, 2, y))
-                             )
-            # print(x)
-        # print(y)
+    t1 = time.time()
+    # pg.gl.glBegin(pg.gl.GL_POINTS)
+    # for y in range(len(conwey)-1):
+    #     for x in range(len(conwey[0]-1)):
+    #         pg.gl.glVertex2f(x, y)
+    #         pg.gl.glColor3b(0, int(255 * conwey[y][x]), 0)
+    # pg.gl.glEnd()
+    pg.graphics.draw(160000, pg.graphics.GL_POINTS,
+                     ('v2f', xys),  # [x, y]
+                     ('c4B', colors))
+    print(time.time() - t1)
+
 
 @screen.event
 def on_mouse_press(x, y, mouse, status):
@@ -51,5 +55,10 @@ if __name__ == "__main__":
     for y in range(1, len(conwey)-2):
         conwey[y] = lerp(conwey[y-1][0], 0, 0.01)
 
-    pg.clock.schedule_interval(update, 1 / 16.0)
+    for y in range(len(conwey)):
+        for x in range(len(conwey[0])):
+            xys.extend([x, y])
+            colors.extend([0, int(255 * conwey[y][0]), 0, 255])  # (0, int(255*conwey[y][0]), 0, 255)
+
+    pg.clock.schedule_interval(update, 1 / 60.0)
     pg.app.run()

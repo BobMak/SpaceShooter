@@ -62,9 +62,6 @@ def update(x):
         if np.sum(newconwey[ a[1]:a[1]+BLK, a[0]+BLK-1])>2:
             toAdd.append(((a[0]+BLK)// BLK * BLK, a[1]// BLK * BLK))  # right
         # # highlight active regions
-        pg.graphics.draw(4, pg.gl.GL_QUADS,
-                         ('v2f', [a[0]*2, a[1]*2, (a[0]+BLK)*2, a[1]*2, (a[0]+BLK)*2, (a[1]+BLK)*2, a[0]*2, (a[1]+BLK)*2]),
-                         ('c4B', (40, 150, 40, 100) * 4))
     for region in toRemove:
         del active_regions[region]
     for region in toAdd:
