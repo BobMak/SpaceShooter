@@ -23,9 +23,6 @@ class Ship(Classes.Object):
         self.modules = []
         self.skeleton_a = []  # Primary mount points: [(x, y), ...]
         self.skeleton_b = []  # Secondary mount points
-        for n in range(size):
-            pass
-            # TODO 5 skeleton_b for every skeleton_a
         # Map of keys to controlled modules
         self.mass         = 0
         self.energy       = 0
@@ -37,10 +34,12 @@ class Ship(Classes.Object):
         self.propulsion   = 0
         self.maxSpeed     = 0
         self.tasks = {}  # eg. go to x, shoot at y, do z
-        # dict of keys and functions associated with them. Every module should
-        # add their action callback to this dict. E.g propulsion adds
-        # pygame right click code with its move_to function
-        self.controls = {}
+        self.controls = {
+            pg.K_w: self.handleW,
+            pg.K_s: self.handleS,
+            pg.K_d: self.handleD,
+            pg.K_a: self.handleA
+        }
         self.dAng = 0
 
     def updateSystem(self):

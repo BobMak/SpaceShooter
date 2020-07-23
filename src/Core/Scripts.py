@@ -34,16 +34,7 @@ def main_loop():
                 St.paused = True
                 while St.paused:
                     time.sleep(0.1)
-            # camera control
-            if keys[pg.K_w] or keys[pg.K_UP]:
-                St.window.focus.handleW()
-            if keys[pg.K_s] or keys[pg.K_DOWN]:
-                St.window.focus.handleS()
-            if keys[pg.K_a] or keys[pg.K_LEFT]:
-                St.window.focus.handleA()
-            if keys[pg.K_d] or keys[pg.K_RIGHT]:
-                St.window.focus.handleD()
-            # Player module abilities
+            # Control of focused object
             if St.window.focus:
                 St.window.followFocus()
                 # if keys[pg.K_c]:

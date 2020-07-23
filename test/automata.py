@@ -3,7 +3,7 @@ import pyglet as pg
 import numpy as np
 
 
-screen = pg.window.Window(800, 800, )
+screen = pg.window.Window(400, 400, )
 pg.resource.path = ["../assets"]
 pg.resource.reindex()
 asteroid = pg.resource.image("asteroid.png")
