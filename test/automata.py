@@ -10,7 +10,7 @@ asteroid = pg.resource.image("asteroid.png")
 astr = pg.sprite.Sprite(asteroid, 100, 100)
 lable = pg.text.Label(text=f"bruh ::, ::", x=100, y=500)
 
-conwey = np.zeros([400, 400])
+pureNoise = np.zeros([400, 400])
 active_regions = {}  # rects 40x40 (x, y)
 BLK = 20
 
@@ -18,7 +18,7 @@ BLK = 20
 def update(x):
     screen.clear()
     astr.draw()
-    global conwey, active_regions
+    global pureNoise, active_regions
     newconwey = np.copy(conwey)
     toRemove  = []
     toAdd     = []
@@ -70,7 +70,7 @@ def update(x):
 
 
 def update_naive():
-    global conwey, active_regions
+    global pureNoise, active_regions
     newconwey = np.copy(conwey)
     for y in range(len(conwey)//4):
         for x in range(len(conwey[0])//4):
@@ -84,7 +84,7 @@ def update_naive():
 
 @screen.event
 def on_mouse_press(x, y, mouse, status):
-    global conwey
+    global pureNoise
     if mouse == 1:
         _miny, _minx = y // 2 - 5, x//2-5
         _maxy, _maxx = y // 2 + 5, x//2+5
