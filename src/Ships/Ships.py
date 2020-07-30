@@ -147,7 +147,7 @@ class ShipFactory:
     def generate_r_l(self):
         # Ships are built based on r vectors defining their role.
         # These roles, along with constrains such as max tech level and cost, should be used to generate a ship.
-        # Role is a vector consisting of following dimensions: attack, defence, support-attack, support-defence
+        # Role is a vector consisting of following size: attack, defence, support-attack, support-defence
         # There might be modules that may be used for different roles.
 
         # Fleets may contain different roles to compensate for weaknesses and strengthen powers of individual ships.

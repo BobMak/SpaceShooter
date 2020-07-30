@@ -3,6 +3,8 @@ import random as r
 import pickle
 import os
 
+from Core import Noise
+
 
 # A part of map for which events are computed on a more granular level.
 # Includes several sectors that are closest to a player.
@@ -45,30 +47,44 @@ class Window:
 
 
 # Contains all event groups that objects can subscribe to.
-# Some of most important ones are collision groups. I hope to gain speed by
-# computing collisions only for objects in the same sector.
 class Sector:
-    def __init__(self, start:(int,int), type=0):
+    def __init__(self, id:(int,int), type=0):
         """
         :param start: top left Verse coordinate of a sector (coordinates / LENGTH)
             e.g. (3000, 3000) -> (1,1)
-        :param type: different types of sectors have different probability of spawn for various things
+        :param type:
         """
-        self.    verse_crds = start
-        self.          type = r.randint(0, 5)
-        self.        LENGTH = 3000  # square 3000x3000
-        self.   all_objects = []
-        self.    updateable = []
-        self.       movable = pg.sprite.Group()
-        self.   projectiles = pg.sprite.Group()
+        print("Generating new sector", id)
+        self.id          = id
+        self.type        = r.randint(0, 5)
+        self.LENGTH      = 3000  # square 3000x3000
+        self.all_objects = []
+        self.updateable  = []
+        self.movable        = pg.sprite.Group()
+        self.projectiles    = pg.sprite.Group()
         self.time_dependent = pg.sprite.Group()
-        self.  player_group = pg.sprite.Group()
-        self.          glow = pg.sprite.Group()
-        self.       effects = pg.sprite.Group()
-        self.       visible = pg.sprite.Group()
+        self.player_group   = pg.sprite.Group()
+        self.glow           = pg.sprite.Group()
+        self.effects        = pg.sprite.Group()
+        self.visible        = pg.sprite.Group()
+        self.bgImage = Noise.getNoiseImage(300, [0.8, 0.3, 0.1, 1])
+
+    def __new__(cls, id=None, *args, **kwargs):
+        if str(id).replace(' ', '')[1:-1] + '.pkl' in os.listdir('../map'):
+            with open('../map/' + id + '.pkl', 'rb') as f:
+                inst = pickle.load(f)
+            if not isinstance(inst, cls):
+                raise TypeError('Unpickled object is not of type {}'.format(cls))
+        else:
+            inst = super(Sector, cls).__new__(cls, *args, **kwargs)
+        return inst
 
     def __str__(self):
         return "Sector "+str(self.type)
+
+    def save(self):
+        with open('../map/' + self.id + '.pkl', 'wb') as f:
+            pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 class Verse:
@@ -79,7 +95,7 @@ class Verse:
         2. Ships, obejcts
         3. Sectors and details
         """
-        self.N = 5  # verse sector dimensions
+        self.N = 5  # verse sector size
         self.sectors = [ [ Sector((x,y)) for y in range(self.N) ] for x in range(self.N)]
         # Generate sectors
 
