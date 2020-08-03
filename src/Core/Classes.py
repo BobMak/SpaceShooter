@@ -1,6 +1,7 @@
 import random, copy
 import numpy as np
 import pygame.gfxdraw as gfx
+import pyglet as pg
 
 from Core import State as St
 from Core.Assets import *
@@ -15,7 +16,7 @@ class Vulnerable:
         self.hp += -max(0, damage)
 
 
-class Object(pg.sprite.Sprite):
+class Object:
     def __init__(self, sector=None, image=None, x=None, y=None, rect=None):
         """Sprite with an assigned image spawned at point x y.
         :type sector: Sector,
