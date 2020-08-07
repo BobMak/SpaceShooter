@@ -73,7 +73,7 @@ def calculate_display(conwey, active_regions):
     return newconwey, new_active_regions
 
 
-# @njit
+@njit
 def calculate(conwey, active_regions):
     newconwey = np.copy(conwey)
     toRemove = []
@@ -109,15 +109,16 @@ def calculate(conwey, active_regions):
     # Process known active regions
     for a in active_regions:
         update_active(a)
-
     # The inactive region has to be add
     for region in toRemove:
         idx = active_regions.index(region)
         active_regions.pop(idx)
     for region in new_regions:
-        if region not in active_regions:
+        if region in active_regions:
+            pass
+        else:
             active_regions.append(region)
-            update_active(a)
+            update_active(region)
     return newconwey, active_regions
 
 
