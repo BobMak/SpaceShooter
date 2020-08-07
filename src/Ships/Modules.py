@@ -3,7 +3,7 @@ Modular ships!
 integrity vs utility?
 Add whatever module you find or manufacture to your (or someone else's?) ship.
 """
-import pygame as pg
+import pyglet as pg
 import numpy as np
 import copy
 
@@ -14,8 +14,7 @@ class Module(Classes.Object, Classes.Vulnerable):
     """ A basic part of the ship."""
     def __init__(self, image=None, hp=1, mass=1):
         if not image:
-            image = pg.Surface((30*1.5, 30*1.5), flags=pg.SRCALPHA)
-            pg.gfxdraw.box(image, (0, 0, 30, 30), (160, 160, 160, 200))
+            image = pg.resource.image("Ball.png")
         Classes.Object.__init__(self, image=image, x=0, y=0)
         Classes.Vulnerable.__init__(self, hp=hp)
         self.             ship = None
@@ -56,23 +55,18 @@ class Module(Classes.Object, Classes.Vulnerable):
         self.position = (_x, _y)
         super().rotate(deg)
 
-    def draw(self):
-        print("--fakeDrawing")
-
 
 class Hull(Module):
     """ Nothing but integrity and cns between other modules"""
     def __init__(self, hp):
-        image = pg.Surface((50*1.5, 50*1.5), flags=pg.SRCALPHA)
-        pg.gfxdraw.box(image, (0, 0, 50, 50), (90, 190, 90, 200))
+        image = pg.resource.image("Ball.png")
         Module.__init__(self, hp=hp, image=image)
 
 
 class Storage(Module):
     """ Can contain other modules """
     def __init__(self, capacity: int, integrity: int):
-        image = pg.Surface((40*1.5, 40*1.5), flags=pg.SRCALPHA)
-        pg.gfxdraw.box(image, (0, 0, 40, 40), (110, 110, 110, 200))
+        image = pg.resource.image("Ball.png")
         Module.__init__(self, hp=integrity, image=image)
         self.capacity = capacity
 
@@ -104,8 +98,7 @@ class Weapon(Module):
         self.  distance = 0
         self.    d_dist = 0
         self.d_dist_dir = -1  # 1 or -1 -- is object getting closer or further
-        image = pg.Surface((20*1.5, 20*1.5), flags=pg.SRCALPHA)
-        pg.gfxdraw.box(image, (0, 0, 20, 20), (190, 30, 30, 200))
+        image = pg.resource.image("Ball.png")
         Module.__init__(self, hp=hp, mass=mass, image=image)
 
         self.      range = range
@@ -117,8 +110,6 @@ class Weapon(Module):
             self.prj_speed = type[2]
             self.reload = type[3] / St.FPS
             self.passive_energy_drain = type[3] * type[4] / St.FPS
-        elif type[0] == 'ls':
-            self.shot = self._shot_laser
         self.target = None
         self.bolt = [1]
         self.active_energy_drain = energy_drain
@@ -139,19 +130,19 @@ class Weapon(Module):
         :param locked: Object
         :return:
         """
-        predict_pos = Classes.Object(A.blanc, 0, 0)
+        predict_pos = Classes.Object(pg.resource.image("blanc.png"), 0, 0)
         predict_pos.rect = copy.copy(locked.rect)
         length = np.sqrt((self.rect.x - locked.rect.x)**2
                + (self.rect.y - self.target.rect.y)**2)
         try:
             if (self.prj_speed*np.cos(np.deg2rad(self.ang))) != -99:
-                predict_pos.rect.centerx += (round(self.target.speed[0] * length/self.prj_speed)
+                predict_pos.rect[0] += (round(self.target.speed[0] * length/self.prj_speed)
                     * (1/self.prj_speed + 1))
         except:
             pass
         try:
             if (self.prj_speed*np.sin(np.deg2rad(self.ang))) != -99:
-                predict_pos.rect.centery += (round(self.target.speed[1] * length/self.prj_speed)
+                predict_pos.rect[1] += (round(self.target.speed[1] * length/self.prj_speed)
                     * (1/self.prj_speed + 1))
         except:
             pass
@@ -168,13 +159,13 @@ class Weapon(Module):
             self.blocked = True
             # TODO Add timer event
             skipped_len = self.rect.height // 2
-            shot = Classes.Projectile(self.bolt, self.rect.centerx,
-                                      self.rect.centery, self.range)
+            shot = Classes.Projectile(self.bolt, self.rect[0],
+                                      self.rect[1], self.range)
             shot.ang = self.ang
-            shot.rect.centerx = (self.rect.centerx
+            shot.rect[0] = (self.rect[0]
                                  - skipped_len * np.cos(np.deg2rad(shot.ang
                                                                    + 90)))
-            shot.rect.centery = (self.rect.centery
+            shot.rect[1] = (self.rect[1]
                                  - skipped_len * np.sin(np.deg2rad(shot.ang
                                                                    + 90)))
             shot.speed = [self.speed * np.cos(np.deg2rad(self.ang - 90)),
@@ -185,11 +176,6 @@ class Weapon(Module):
     def _shot_projectile(self):
         raise NotImplementedError("Weapon Projectile")
 
-    def _shot_laser(self):
-        if self.aim(self.target) and self.target.get_dist() < self.range:
-            gl = Classes.FX_Glow(self.rect, 1, 10, 5, (255, 0, 0))
-            # self.target
-
 
 class Network(Module):
     """ Interconnection between modules within the ship
@@ -197,8 +183,7 @@ class Network(Module):
     """
     def __init__(self, hp):
         _len = 15
-        image = pg.Surface((_len*1.5, _len*1.5), flags=pg.SRCALPHA)
-        pg.gfxdraw.box(image, (0, 0, _len, _len), (120, 160, 200, 200))
+        image = pg.resource.image("Ball.png")
         mass = 1
         Module.__init__(self, hp=hp, mass=mass, image=image)
 
@@ -206,8 +191,7 @@ class Network(Module):
 class Propulsion(Module):
     """ Might be divided on several modules """
     def __init__(self, hp, propulsion, consump=0.1, mass=1, max_speed=1):
-        image = pg.Surface((30*1.5, 30*1.5), flags=pg.SRCALPHA)
-        pg.gfxdraw.box(image, (0, 0, 30, 30), (50, 50, 220, 200))
+        image = pg.resource.image("Ball.png")
         Module.__init__(self, hp=hp, mass=mass, image=image)
         self.max_speed = max_speed
         self.consump = consump
@@ -223,8 +207,7 @@ class Propulsion(Module):
 class Generator(Module):
     """ Might be divided on several modules """
     def __init__(self, hp, energyGen):
-        image = pg.Surface((40*1.5, 40*1.5), flags=pg.SRCALPHA)
-        pg.gfxdraw.box(image, (0, 0, 40, 40), (150, 10, 10, 200))
+        image = pg.resource.image("Ball.png")
         mass = 1
         Module.__init__(self, hp=hp, mass=mass, image=image)
         self.energyGen = energyGen
@@ -237,8 +220,7 @@ class Generator(Module):
 
 class Capacitor(Module):
     def __init__(self,hp, energyCapacity):
-        image = pg.Surface((50*1.5, 50*1.5), flags=pg.SRCALPHA)
-        pg.gfxdraw.box(image, (0, 0, 50, 50), (10, 10, 250, 200))
+        image = pg.resource.image("Ball.png")
         mass = 1
         Module.__init__(self, hp=hp, mass=mass, image=image)
         self.energyCap = energyCapacity
@@ -248,8 +230,7 @@ class Capacitor(Module):
 class Shield(Module):
     """ :param hitBoxArr: list of all rects that shield covers """
     def __init__(self, hp, shieldCapacity):
-        image = pg.Surface((20*1.5, 20*1.5), flags=pg.SRCALPHA)
-        pg.gfxdraw.box(image, (0, 0, 20, 20), (90, 90, 250, 200))
+        image = pg.resource.image("Ball.png")
         mass = 1
         Module.__init__(self, hp=hp, image=image, mass=mass)
         self.shieldCapacity = shieldCapacity

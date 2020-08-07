@@ -1,13 +1,13 @@
 """
 Initial script
 """
-import pygame
+import pyglet
 from Core import State
 
-pygame.init()
-# Load start menu
-State.init()
-from Core.Scripts import main_loop
 
-
-main_loop()
+if __name__ == "__main__":
+    State.init()
+    State.screen = pyglet.window.Window(800, 600)
+    from Core.Scripts import main_loop
+    pyglet.clock.schedule_interval(main_loop, 1 / 60.0)
+    pyglet.app.run()

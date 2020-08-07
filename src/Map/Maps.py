@@ -1,4 +1,4 @@
-import pygame as pg
+import pyglet as pg
 import random as r
 import pickle
 import os
@@ -16,9 +16,8 @@ class Window:
         # with respect to the leftmost sector. These are changed when player
         # moves in direction outside of displayed region
         self.base_x, self.base_y = 0, 0
-        self.current_sector = sectors[r.randint(0, 4)][r.randint(0, 4)]
+        self.current_sector = sectors[0][0]
         self.sectors_on_screen = [self.current_sector]
-        self.interface = pg.sprite.Group()  # Game interface objects
         # Player function
         self.focus = None  # Object that the player is looking at
         self._available = []  # can control these
@@ -34,16 +33,15 @@ class Window:
 
     def move(self, x, y):
         self.base_x, self.base_y = x, y
-        print('moved to', x, y)
-
-    def move_movable(self):
-        for sector in self.sectors_on_screen:
-            for object in sector.movable:
-                object.modify_position()
 
     def followFocus(self):
-        self.move(self.focus.rect.centerx - self.width // 2 + self.focus.speed[0]*10,
-                  self.focus.rect.centery - self.height // 2 + self.focus.speed[1]*10)
+        self.move(self.focus.rect[0] - self.width  // 2 + self.focus.speed[0]*10,
+                  self.focus.rect[1] - self.height // 2 + self.focus.speed[1]*10)
+
+    def draw(self):
+        self.current_sector.bgImage.blit(0, 0,
+                                         width=self.current_sector.LENGTH,
+                                         height=self.current_sector.LENGTH)
 
 
 # Contains all event groups that objects can subscribe to.
@@ -60,18 +58,11 @@ class Sector:
         self.LENGTH      = 3000  # square 3000x3000
         self.all_objects = []
         self.updateable  = []
-        self.movable        = pg.sprite.Group()
-        self.projectiles    = pg.sprite.Group()
-        self.time_dependent = pg.sprite.Group()
-        self.player_group   = pg.sprite.Group()
-        self.glow           = pg.sprite.Group()
-        self.effects        = pg.sprite.Group()
-        self.visible        = pg.sprite.Group()
-        self.bgImage = Noise.getNoiseImage(300, [0.8, 0.3, 0.1, 1])
+        self.bgImage = Noise.getNoiseImage(size=400, persistance=0.5, depth=8)
 
     def __new__(cls, id=None, *args, **kwargs):
-        if str(id).replace(' ', '')[1:-1] + '.pkl' in os.listdir('../map'):
-            with open('../map/' + id + '.pkl', 'rb') as f:
+        if str(id).replace(' ', '')[1:-1] + '.pkl' in os.listdir('../data/map'):
+            with open('../data/map/' + id + '.pkl', 'rb') as f:
                 inst = pickle.load(f)
             if not isinstance(inst, cls):
                 raise TypeError('Unpickled object is not of type {}'.format(cls))
@@ -83,7 +74,7 @@ class Sector:
         return "Sector "+str(self.type)
 
     def save(self):
-        with open('../map/' + self.id + '.pkl', 'wb') as f:
+        with open('../data/map/' + self.id + '.pkl', 'wb') as f:
             pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -95,7 +86,7 @@ class Verse:
         2. Ships, obejcts
         3. Sectors and details
         """
-        self.N = 5  # verse sector size
+        self.N = 2  # verse sector size
         self.sectors = [ [ Sector((x,y)) for y in range(self.N) ] for x in range(self.N)]
         # Generate sectors
 

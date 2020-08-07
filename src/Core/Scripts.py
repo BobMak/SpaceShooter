@@ -1,106 +1,61 @@
 import threading
 import time
-import pygame as pg
+import pyglet as pg
 
 from Ships import Ships as Sp
 from Map import Maps
 from Core import Events, Assets as A, State as St
 
-clock = pg.time.Clock()
 
-
-def main_loop():
-    while True:
-        if St.gamestate == "new_player":
-            St.verse = Maps.Verse()
-            St.window = Maps.Window(St.verse.sectors)
-            basic_ship = Sp.ShipFactory.generate_test()
-            St.window.addAvailable(basic_ship)
-            St.window.focus = basic_ship
-            St.graphics = Graphics()
-            St.graphics_thread = threading.Thread(target=St.graphics.screen_redraw)
-            St.graphics_thread.start()
+def main_loop(u):
+    keys = pg.window.key.KeyStateHandler()
+    if St.gamestate == "new_player":
+        St.verse = Maps.Verse()
+        St.window = Maps.Window(St.verse.sectors)
+        player = Sp.ShipFactory.generate_test()
+        St.window.addAvailable(player)
+        St.window.focus = player
+        St.gamestate = "game"
+    elif St.gamestate == "game":
+        # Getting in pause menu
+        if keys[pg.window.key.ESCAPE]:
+            St.gamestate = "pause"
+        # Control of focused object
+        if St.window.focus:
+            St.window.followFocus()
+            for key in St.window.focus.controls.keys():
+                if isinstance(key, int) and keys[key]:
+                    St.window.focus.controls[key]()
+        # Sector updates
+        for sector in St.window.sectors_on_screen:
+            for obj in sector.updateable:
+                obj.update()
+        Graphics.screen_redraw()
+    elif St.gamestate == "pause":
+        time.sleep(1)
+        if keys[pg.window.key.ESCAPE]:
             St.gamestate = "game"
-        elif St.gamestate == "game":
-            # Handle player input
-            keys  = pg.key.get_pressed()
-            m_left, m_middle, m_right = pg.mouse.get_pressed()
-            # Getting in pause menu
-            if keys[pg.K_ESCAPE]:  # and St.t[0]
-                # To stop graphics thread
-                pg.time.set_timer(pg.USEREVENT + 2, 10)
-                # To unblock esc button
-                pg.time.set_timer(pg.USEREVENT + 1, 300)
-                St.paused = True
-                while St.paused:
-                    time.sleep(0.1)
-            # Control of focused object
-            if St.window.focus:
-                St.window.followFocus()
-                # if keys[pg.K_c]:
-                #     St.window.move(St.window.focus.rect.centerx - St.window.width // 2,
-                #                    St.window.focus.rect.centery - St.window.height // 2)
-                for key in St.window.focus.controls.keys():
-                    if isinstance(key, int) and keys[key]:
-                        St.window.focus.controls[key]()
-                    if m_right and "mouse_right" in St.window.focus.controls:
-                        posx, posy = pg.mouse.get_pos()
-                        posx += St.window.base_x
-                        posy += St.window.base_y
-                        St.window.focus.controls["mouse_right"](posx, posy)
-            # Handle events
-            for event in pg.event.get():
-                if event.type in Events.eve:
-                    e= Events.eve[event.type]
-                    e[0](*e[1])
-                    print('event {}({})'.format(e[0], e[1]))
-            # Updates to object groups
-            # Execute events that all objects are subscribed to
-            for event in St.all_objects:
-                event.run()
-            # Sector updates
-            for sector in St.window.sectors_on_screen:
-                for obj in sector.updateable:
-                    obj.update()
-            # Every movable
-            St.window.move_movable()
-            # logic tick
-            clock.tick(St.LOGIC_PER_SECOND)
+
+
+@St.screen.event
+def on_mouse_press(x, y, button, modifiers):
+    pass
+@St.screen.event
+def on_mouse_release(x, y, button, modifiers):
+    pass
+@St.screen.event
+def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
+    pass
 
 
 class Graphics:
-    def __init__(self):
-        # Alive until player quits
-        self.alive = True
-        self.screen = pg.display.set_mode((St.window.width, St.window.height))
-
-    def draw_rotating(self, obj):
-        rect = obj.rotated_image.get_rect()
-        rect.centerx = obj.rect.centerx - St.window.base_x
-        rect.centery = obj.rect.centery - St.window.base_y
-        self.screen.blit(obj.rotated_image_alpha, rect)
-
-    def screen_redraw(self):
-        while self.alive:
-            self.screen_draw()
-            pg.display.flip()
-            clock.tick(St.FRAMES_PER_SECOND)
-
-    def screen_draw(self):
-        """Draws all game scene, does not flip."""
+    @staticmethod
+    def screen_redraw():
+        St.screen.clear()
+        St.window.draw()
         for sector in St.window.sectors_on_screen:
-            try:
-                self.screen.blit(A.BG, (0, 0))
-            except Exception as e:
-                print("err: {}".format(e))
-            for group in (sector.player_group, sector.visible, sector.effects):
-                for obj in group:
-                    try:
-                        self.draw_rotating(obj)
-                    except Exception as e:
-                        print("** failed to draw {}:".format(obj), e)
-            for object in sector.glow:
-                object.update()
-            for pl in sector.player_group:
-                pl.show_HP()
+            for obj in sector.all_objects:
+                obj.draw()
+                print('drwn', obj)
+
 

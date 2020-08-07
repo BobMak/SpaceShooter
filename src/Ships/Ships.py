@@ -50,8 +50,8 @@ class Ship(Classes.Object):
          In game such systems may be ships or other arrays of modules that can
          act in different ways"""
         for m in self.modules:
-            m.rect.centerx = self.rect.centerx + m.placement[0]
-            m.rect.centery = self.rect.centery + m.placement[1]
+            m.rect[0] = self.rect[0] + m.placement[0]
+            m.rect[1] = self.rect[1] + m.placement[1]
             m.speed = self.speed
             m.  ang = self.ang
         assert self.mass > 0, "Ship's mass can't be zero"
@@ -127,6 +127,10 @@ class Ship(Classes.Object):
                 _finished.append(_type)
         for _type in _finished:
             self.tasks.pop(_type)
+
+    def draw(self):
+        for m in self.modules:
+            m.draw()
 
 
 class ShipFactory:

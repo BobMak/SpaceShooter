@@ -14,12 +14,9 @@ LOGIC_PER_SECOND = 240
 # Key locks
 t = (True, True, True, True)
 FPS = 30
-graphics = None
-graphics_thread = None
+screen = None
 # Game is paused or not
 paused = False
-# Collection of all current objects
-all_objects = []
 verse = None
 # Window instance
 window = None
