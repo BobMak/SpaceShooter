@@ -36,11 +36,14 @@ class Object:
         self.timer         = 0
         self.type          = 0
         self.updates       = []
+        self.image         = None
         if image:
-            self.image       = image
-            self.image_alpha = copy.copy(image)
-            self.rotated_image = image
-            self.rotated_image_alpha = image
+            image.anchor_x = image.width//2
+            image.anchor_y = image.height//2
+            self.image     = pg.sprite.Sprite(image, x=x, y=y)
+            # self.image_alpha = copy.copy(image)
+            # self.rotated_image = image
+            # self.rotated_image_alpha = image
             self.rect = [x, y, image.width, image.height]
         elif rect:
             self.rect = rect
@@ -60,6 +63,8 @@ class Object:
         if self.speed[0] or self.speed[1]:
             self.position = (self.position[0]+self.speed[0], self.position[1]+self.speed[1])
             self.rect = (self.position[0]-self.rect[2]//2, self.position[1]-self.rect[3]//2, self.rect[2], self.rect[3])
+            self.image.x = self.rect[0] // 2
+            self.image.y = self.rect[1] // 2
             ang = np.arctan(self.speed[1]/self.speed[0])
             self.speed[0] += -np.sign(self.speed[0]) * 0.01 * abs(np.cos(ang))
             self.speed[1] += -np.sign(self.speed[1]) * 0.01 * abs(np.sin(ang))
@@ -76,9 +81,10 @@ class Object:
             self.ang += 360 + dir
         else:
             self.ang += dir
-        if self.rotated_image:
+        if self.image:
+            # self.rotated_image_alpha.rotation = self.ang
+            # self.image = self.image.get_transform(False, False, self.ang)
             self.image.rotation = self.ang
-            self.rotated_image_alpha.rotation = self.ang
 
     def get_aim_dir(self, rect):
         """Returns the angle specifying direction to 'aim' object"""
@@ -108,7 +114,7 @@ class Object:
     def get_distance(self, rect):
         """returns distance to object x"""
         return np.sqrt((self.rect[0] - rect[0])**2
-                       + (self.rect[1] - rect[1])**2)
+                     + (self.rect[1] - rect[1])**2)
 
     def update(self):
         """Execute all pending callbacks for the object every logic tick!"""
@@ -116,12 +122,11 @@ class Object:
             f()
 
     def draw(self):
-        self.image.blit(self.rect[0] - St.window.base_x,
-                        self.rect[1] - St.window.base_y,
-                        self.rect[2], self.rect[3])
+        # print("draw", self.__class__, self.image.x, self.image.y)
+        self.image.draw()
         
     def __str__(self):
-        return "sector: {}, x: {}, y: {}".format(self.sector, self.rect[0], self.rect[1])
+        return "{} sector: {}, x: {}, y: {}".format(self.__class__, self.sector, self.rect[0], self.rect[1])
 
 
 class FX(Object):

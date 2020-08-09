@@ -11,6 +11,8 @@ pg.resource.reindex()
 asteroid = pg.resource.image("asteroid.png")
 astr = pg.sprite.Sprite(asteroid, 100, 100)
 lable = pg.text.Label(text=f"bruh ::, ::", x=100, y=500)
+ang = 0
+map = pg.image.ImageData(400, 400, "RGBA", b"".join([x.to_bytes(1, "big") for x in mapData]))
 
 class glob:
     pureNoise = np.zeros([400, 400])
@@ -123,6 +125,7 @@ def calculate(conwey, active_regions):
 
 
 def update(x):
+    global ang, map
     screen.clear()
     astr.draw()
     glob.active_regions.append((0,0))
@@ -133,7 +136,7 @@ def update(x):
         for x in range(len(glob.conwey[0])):
             strgth = 255 if glob.conwey[y][x] > 0 else 0
             mapData.extend([strgth, strgth, 0, strgth])
-    map = pg.image.ImageData(400, 400, "RGBA", b"".join([x.to_bytes(1, "big") for x in mapData]))
+    map.rotation = ang
     map.blit(0,0, width=800, height=800)
     # print('y')
 

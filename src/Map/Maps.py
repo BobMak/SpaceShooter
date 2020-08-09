@@ -9,9 +9,9 @@ from Core import Noise
 # A part of map for which events are computed on a more granular level.
 # Includes several sectors that are closest to a player.
 class Window:
-    def __init__(self, sectors):
+    def __init__(self, sectors, w, h):
         # Displayed map x and y
-        self.width, self.height = 1200, 1000
+        self.width, self.height = w, h
         # coordinates of the highest left point of the screen
         # with respect to the leftmost sector. These are changed when player
         # moves in direction outside of displayed region

@@ -11,7 +11,7 @@ def main_loop(u):
     keys = pg.window.key.KeyStateHandler()
     if St.gamestate == "new_player":
         St.verse = Maps.Verse()
-        St.window = Maps.Window(St.verse.sectors)
+        St.window = Maps.Window(St.verse.sectors, St.width, St.height)
         player = Sp.ShipFactory.generate_test()
         St.window.addAvailable(player)
         St.window.focus = player
@@ -39,7 +39,8 @@ def main_loop(u):
 
 @St.screen.event
 def on_mouse_press(x, y, button, modifiers):
-    pass
+    aim = St.window.focus.get_aim_dir((x, y, 1, 1))
+    St.window.focus.rotate(aim)
 @St.screen.event
 def on_mouse_release(x, y, button, modifiers):
     pass
@@ -56,6 +57,4 @@ class Graphics:
         for sector in St.window.sectors_on_screen:
             for obj in sector.all_objects:
                 obj.draw()
-                print('drwn', obj)
-
 

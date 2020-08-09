@@ -7,7 +7,8 @@ from Core import State
 
 if __name__ == "__main__":
     State.init()
-    State.screen = pyglet.window.Window(800, 600)
+    State.width, State.height = 800, 600
+    State.screen = pyglet.window.Window(State.width, State.height)
     from Core.Scripts import main_loop
     pyglet.clock.schedule_interval(main_loop, 1 / 60.0)
     pyglet.app.run()

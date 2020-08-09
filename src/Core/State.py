@@ -20,6 +20,8 @@ paused = False
 verse = None
 # Window instance
 window = None
+width = 800
+height = 600
 # Game state
 gamestate = "game"
 Gamestates = ("new_player", "game", "pause", "dead", "main_menu")

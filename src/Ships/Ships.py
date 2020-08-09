@@ -175,7 +175,7 @@ class ShipFactory:
         sk_tor = self.generate_skeleton_torus
         sk_rec = self.generate_skeleton_rect
         sk_tri = self.generate_skeleton_triangle
-        skeleton = r.choice([sk_tor, sk_rec, sk_tri])(size, radius, radius_diff, sim)
+        skeleton = r.choice([sk_tor, sk_rec, sk_tri])  # (size, radius, radius_diff, sim)
         # self.generate_module(type, size, tech, distribution)
 
     def generate_skeleton_torus(self, size, radius, radius_var, symmetry=True):
