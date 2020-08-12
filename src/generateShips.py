@@ -9,7 +9,7 @@ from Ships import Generate
 if __name__ == "__main__":
     pg.init()
     screen = pg.display.set_mode((500, 500))
-    random.seed(145)
+    # random.seed(145)
     while 1:
         sim = random.choice([True, False])  # symmetrical or asymmetrical
         size = 100
@@ -20,14 +20,12 @@ if __name__ == "__main__":
         blocks, cds, hull = Generate.generate_tree(20)
         screen.fill((0, 0, 0))
         hull = Generate.shrink(hull, 1)
-        # hull = shrink(hull, len(hull[0])-_idx)
+        pg.event.pump()
         for b in blocks:
             pg.draw.rect(screen, b.color, (b.getX()-5, b.getY()-5, 10, 10))
-        # for c in cds:
-        #     pg.draw.circle(screen, (0,0,255), (int(c.x-3 + screen_size//4)*2,int(c.y-3+ screen_size//4)*2), 15, 2)
         for line in [l for subhull in hull for l in subhull]:
             c = (255, 0,0, 150) if (255,0,0, 150)==line[0].color==line[1].color else (0,255,0, 150)
             gfx.line(screen, int(line[0].getX()), int(line[0].getY()), int(line[1].getX()), int(line[1].getY()), c)
 
         pg.display.flip()
-        time.sleep(2)
+        time.sleep(1)
