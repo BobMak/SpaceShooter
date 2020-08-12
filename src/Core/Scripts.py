@@ -39,8 +39,9 @@ def main_loop(u):
 
 @St.screen.event
 def on_mouse_press(x, y, button, modifiers):
-    aim = St.window.focus.get_aim_dir((x, y, 1, 1))
-    St.window.focus.rotate(aim)
+    aim = St.window.focus.get_aim_dir((x+St.window.base_x, y+St.window.base_y, 1, 1))
+    print(aim)
+    St.window.focus.set_rotation(aim)
 @St.screen.event
 def on_mouse_release(x, y, button, modifiers):
     pass

@@ -113,6 +113,10 @@ class Ship(Classes.Object):
         else:
             return True
 
+    def set_rotation(self, deg):
+        for m in self.modules:
+            m.set_rotation(deg)
+
     def rotate(self, deg):
         super().rotate(deg)
         for m in self.modules:

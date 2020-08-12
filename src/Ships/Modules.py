@@ -45,6 +45,19 @@ class Module(Classes.Object, Classes.Vulnerable):
         ship.modules.append(self)
         return self
 
+    def set_rotation(self, deg):
+        super().set_rotation(deg)
+        self.place_ang = deg * np.pi / 180
+        rot_x = np.cos(self.place_ang) * self.radius
+        rot_y = np.sin(self.place_ang) * self.radius
+        self.placement = (rot_x, rot_y)
+        _x = self.ship.position[0] - rot_x
+        _y = self.ship.position[1] + rot_y
+        self.position = (_x, _y)
+        self.rect[0] = int(_x)
+        self.rect[1] = int(_y)
+
+    # the module position with respect to a center of the ship
     def rotate(self, deg):
         self.place_ang += deg*np.pi/180
         rot_x = np.cos(self.place_ang) * self.radius
@@ -163,11 +176,9 @@ class Weapon(Module):
                                       self.rect[1], self.range)
             shot.ang = self.ang
             shot.rect[0] = (self.rect[0]
-                                 - skipped_len * np.cos(np.deg2rad(shot.ang
-                                                                   + 90)))
+                            - skipped_len * np.cos(np.deg2rad(shot.ang + 90)))
             shot.rect[1] = (self.rect[1]
-                                 - skipped_len * np.sin(np.deg2rad(shot.ang
-                                                                   + 90)))
+                            - skipped_len * np.sin(np.deg2rad(shot.ang + 90)))
             shot.speed = [self.speed * np.cos(np.deg2rad(self.ang - 90)),
                           self.speed * np.sin(np.deg2rad(self.ang - 90))]
             shot.rotate(0)

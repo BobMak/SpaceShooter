@@ -63,8 +63,8 @@ class Object:
         if self.speed[0] or self.speed[1]:
             self.position = (self.position[0]+self.speed[0], self.position[1]+self.speed[1])
             self.rect = (self.position[0]-self.rect[2]//2, self.position[1]-self.rect[3]//2, self.rect[2], self.rect[3])
-            self.image.x = self.rect[0] // 2
-            self.image.y = self.rect[1] // 2
+            self.image.x = self.rect[0] + St.window.base_x
+            self.image.y = self.rect[1] + St.window.base_y
             ang = np.arctan(self.speed[1]/self.speed[0])
             self.speed[0] += -np.sign(self.speed[0]) * 0.01 * abs(np.cos(ang))
             self.speed[1] += -np.sign(self.speed[1]) * 0.01 * abs(np.sin(ang))
@@ -72,6 +72,9 @@ class Object:
     def accelerate(self, dl, angle):
         self.speed[0] += dl * np.cos(np.deg2rad(angle - 90.0))
         self.speed[1] += dl * np.sin(np.deg2rad(angle - 90.0))
+
+    def set_rotation(self, angle):
+        self.ang = 360-angle
 
     def rotate(self, dir):
         # Ensure that look_dir is in range [0 - 360)
@@ -122,7 +125,9 @@ class Object:
             f()
 
     def draw(self):
-        # print("draw", self.__class__, self.image.x, self.image.y)
+        self.image.x = self.rect[0] - St.window.base_x
+        self.image.y = self.rect[1] - St.window.base_y
+        self.image.rotation = self.ang
         self.image.draw()
         
     def __str__(self):
