@@ -17,20 +17,13 @@ def main_loop(u):
         St.window.focus = player
         St.gamestate = "game"
     elif St.gamestate == "game":
-        # Getting in pause menu
-        if keys[pg.window.key.ESCAPE]:
-            St.gamestate = "pause"
-        # Control of focused object
-        if St.window.focus:
-            St.window.followFocus()
-            for key in St.window.focus.controls.keys():
-                if isinstance(key, int) and keys[key]:
-                    St.window.focus.controls[key]()
         # Sector updates
         for sector in St.window.sectors_on_screen:
             for obj in sector.updateable:
                 obj.update()
         Graphics.screen_redraw()
+        if St.window.focus:
+            St.window.followFocus()
     elif St.gamestate == "pause":
         time.sleep(1)
         if keys[pg.window.key.ESCAPE]:
@@ -40,7 +33,6 @@ def main_loop(u):
 @St.screen.event
 def on_mouse_motion(x, y, dx, dy):
     aim = St.window.focus.get_aim_dir((x + St.window.base_x, y + St.window.base_y, 1, 1))
-    print(aim - 180)
     St.window.focus.set_rotation(aim - 180)
 @St.screen.event
 def on_mouse_press(x, y, button, modifiers):
@@ -51,6 +43,19 @@ def on_mouse_release(x, y, button, modifiers):
 @St.screen.event
 def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
     pass
+@St.screen.event
+def on_key_press(symbol, modifiers):
+    # Getting in pause menu
+    if symbol==pg.window.key.ESCAPE:
+        St.gamestate = "pause"
+    # Control of focused object
+    if St.window.focus:
+        St.window.focus.add_update(St.window.focus.controls[symbol])
+@St.screen.event
+def on_key_release(symbol, modifiers):
+    # Control of focused object
+    if St.window.focus:
+        St.window.focus.remove_update(St.window.focus.controls[symbol])
 
 
 class Graphics:

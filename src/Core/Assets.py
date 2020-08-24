@@ -3,6 +3,8 @@ import pyglet as pg
 
 pg.resource.path = ["../assets", "../assets/ships", "../assets/"]
 pg.resource.reindex()
+
+blanc = pg.image.load('../assets/blanc.png')
 # ball_img = pg.image.load(os.path.join("..", "assets", "Ball.png"))
 # bolt_1 = pg.image.load(os.path.join("..", "assets", "projectiles", "bolt_1.png"))
 # expl_2 = pg.image.load(os.path.join("..", "assets", "animations", "Explosions", "Expl_2.png"))

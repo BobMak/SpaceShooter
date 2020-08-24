@@ -71,14 +71,14 @@ class Ship(Classes.Object):
         self.tasks['moveTo'] = (self.moveTo, goal)
 
     def handleW(self):
-        self.accelerate(self.dSpeed, 0)
+        self.accelerate(self.dSpeed, 180)
         speed = np.sqrt(self.speed[0]**2 + self.speed[1]**2)
         if speed > self.maxSpeed:
             ang = np.arctan(self.speed[1]/self.speed[0])
             self.accelerate(self.dSpeed, ang+180)
 
     def handleS(self):
-        self.accelerate(self.dSpeed, 180)
+        self.accelerate(self.dSpeed, 0)
 
     def handleD(self):
         self.accelerate(self.dSpeed, 90)
@@ -132,6 +132,14 @@ class Ship(Classes.Object):
         for _type in _finished:
             self.tasks.pop(_type)
 
+    def add_update(self, callback):
+        """adds the update() to a callback"""
+        self.updates.append(callback)
+
+    def remove_update(self, callback):
+        """adds the update() to a callback"""
+        self.updates.remove(callback)
+
     def draw(self):
         for m in self.modules:
             m.draw()
@@ -143,7 +151,7 @@ class ShipFactory:
 
     @staticmethod
     def generate_test():
-        ship = Ship((1, 1))  # Start in the middle of the screen
+        ship = Ship((700, 700))  # Start in the middle of the screen
         M.Propulsion(1, 0.1, 1, max_speed=3).assignShip(ship).place(0, 50)
         M.Hull(5).assignShip(ship).place(0, 10)
         M.Capacitor(1, 5).assignShip(ship).place(40, 0)

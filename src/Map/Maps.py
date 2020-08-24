@@ -39,7 +39,8 @@ class Window:
                   self.focus.rect[1] - self.height // 2 + self.focus.speed[1]*10)
 
     def draw(self):
-        self.current_sector.bgImage.blit(0, 0,
+        self.current_sector.bgImage.blit(-self.base_x,
+                                         -self.base_y,
                                          width=self.current_sector.LENGTH,
                                          height=self.current_sector.LENGTH)
 

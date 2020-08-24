@@ -35,7 +35,7 @@ class Module(Classes.Object, Classes.Vulnerable):
         # self.placement_angles =
         _x = self.ship.position[0] + x
         _y = self.ship.position[1] + y
-        self.position = (_x, _y)
+        self.position = [_x, _y]
         self.radius = np.sqrt(self.placement[0]**2 + self.placement[1]**2)
         self.place_ang = np.arctan2(x, y)
         return self
@@ -54,12 +54,11 @@ class Module(Classes.Object, Classes.Vulnerable):
         new_deg = self.place_ang - deg * np.pi / 180
         rot_x = np.sin(new_deg) * self.radius
         rot_y = np.cos(new_deg) * self.radius
-        # self.placement = (rot_x, rot_y)
-        _x = self.ship.position[0] - rot_x
-        _y = self.ship.position[1] - rot_y
+        self.position[0] = self.ship.position[0] - rot_x  # - self.placement[0]
+        self.position[1] = self.ship.position[1] - rot_y  # - self.placement[1] 
         # self.position = (_x, _y)
-        self.rect[0] = int(_x)
-        self.rect[1] = int(_y)
+        self.rect[0] = int(self.position[0])
+        self.rect[1] = int(self.position[1])
 
 
 class Hull(Module):

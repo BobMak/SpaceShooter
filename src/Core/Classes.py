@@ -16,7 +16,7 @@ class Vulnerable:
 
 
 class Object:
-    def __init__(self, sector=None, image=None, x=None, y=None, rect=None):
+    def __init__(self, sector=None, image=blanc, x=0, y=0, rect=None):
         """Sprite with an assigned image spawned at point x y.
         :type sector: Sector,
         :type image: image,
@@ -37,32 +37,23 @@ class Object:
         self.type          = 0
         self.updates       = []
         self.image         = None
-        if image:
-            image.anchor_x = image.width//2
-            image.anchor_y = image.height//2
-            self.image     = pg.sprite.Sprite(image, x=x, y=y)
-            # self.image_alpha = copy.copy(image)
-            # self.rotated_image = image
-            # self.rotated_image_alpha = image
-            self.rect = [x, y, image.width, image.height]
-        elif rect:
-            self.rect = rect
-        elif x and y:
-            self.rect = (x, y, 10, 10)
-        else:
-            raise Exception('Neither Rect nor Position are provided')
+
+        image.anchor_x = image.width//2
+        image.anchor_y = image.height//2
+        self.image     = pg.sprite.Sprite(image, x=x, y=y)
+        self.rect = [x, y, image.width, image.height]
         self.radius = self.rect[2]//2
         # Moving properties
         self.speed = [0.0, 0.0]
-        self.position = (self.rect[0], self.rect[1])  # can be float to respect <0 speed
+        self.position = [self.rect[0], self.rect[1]]  # can be float to respect <0 speed
         self.updates.append(self.modify_position)
         self.sector.all_objects.append(self)
         self.sector.updateable.append(self)
 
     def modify_position(self):
         if self.speed[0] or self.speed[1]:
-            self.position = (self.position[0]+self.speed[0], self.position[1]+self.speed[1])
-            self.rect = (self.position[0]-self.rect[2]//2, self.position[1]-self.rect[3]//2, self.rect[2], self.rect[3])
+            self.position = [self.position[0]+self.speed[0], self.position[1]+self.speed[1]]
+            self.rect = [self.position[0]-self.rect[2]//2, self.position[1]-self.rect[3]//2, self.rect[2], self.rect[3]]
             self.image.x = self.rect[0] + St.window.base_x
             self.image.y = self.rect[1] + St.window.base_y
             ang = np.arctan(self.speed[1]/self.speed[0])
@@ -120,7 +111,7 @@ class Object:
                      + (self.rect[1] - rect[1])**2)
 
     def update(self):
-        """Execute all pending callbacks for the object every logic tick!"""
+        """Execute all pending callbacks for the object every logic tick"""
         for f in self.updates:
             f()
 
