@@ -22,8 +22,8 @@ class Module(Classes.Object, Classes.Vulnerable):
         self.             mass = mass
         self.connected_modules = []
         self.        placement = (0, 0)  # x, y with respect to ships center
-        self.           radius = 0  # distance from ship's center to module
-        self.        place_ang = 0  # angle at which the module is placed
+        self.           radius = 0   # distance from ship's center to module
+        self.        place_ang = 0   # angle at which the module is placed in radians
 
     def connect_module(self, module):
         self.connected_modules.append(module)
@@ -32,11 +32,12 @@ class Module(Classes.Object, Classes.Vulnerable):
     def place(self, x, y):
         assert self.ship, "Can't place a module without ship"
         self.placement = (x, y)
+        # self.placement_angles =
         _x = self.ship.position[0] + x
         _y = self.ship.position[1] + y
         self.position = (_x, _y)
         self.radius = np.sqrt(self.placement[0]**2 + self.placement[1]**2)
-        self.place_ang = np.arcsin(y / self.radius)
+        self.place_ang = np.arctan2(x, y)
         return self
 
     def assignShip(self, ship):
@@ -46,27 +47,19 @@ class Module(Classes.Object, Classes.Vulnerable):
         return self
 
     def set_rotation(self, deg):
-        super().set_rotation(deg)
-        self.place_ang = deg * np.pi / 180
-        rot_x = np.cos(self.place_ang) * self.radius
-        rot_y = np.sin(self.place_ang) * self.radius
-        self.placement = (rot_x, rot_y)
+        # Rotate the sprite around its center
+        super().set_rotation(deg - self.place_ang)
+        # Rotate the sprite around module carrier's center
+        # deg = abs(deg)
+        new_deg = self.place_ang - deg * np.pi / 180
+        rot_x = np.sin(new_deg) * self.radius
+        rot_y = np.cos(new_deg) * self.radius
+        # self.placement = (rot_x, rot_y)
         _x = self.ship.position[0] - rot_x
-        _y = self.ship.position[1] + rot_y
-        self.position = (_x, _y)
+        _y = self.ship.position[1] - rot_y
+        # self.position = (_x, _y)
         self.rect[0] = int(_x)
         self.rect[1] = int(_y)
-
-    # the module position with respect to a center of the ship
-    def rotate(self, deg):
-        self.place_ang += deg*np.pi/180
-        rot_x = np.cos(self.place_ang) * self.radius
-        rot_y = np.sin(self.place_ang) * self.radius
-        self.placement = (rot_x, rot_y)
-        _x = self.ship.position[0] + rot_x
-        _y = self.ship.position[1] + rot_y
-        self.position = (_x, _y)
-        super().rotate(deg)
 
 
 class Hull(Module):

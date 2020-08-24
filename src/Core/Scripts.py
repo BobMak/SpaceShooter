@@ -38,10 +38,13 @@ def main_loop(u):
 
 
 @St.screen.event
+def on_mouse_motion(x, y, dx, dy):
+    aim = St.window.focus.get_aim_dir((x + St.window.base_x, y + St.window.base_y, 1, 1))
+    print(aim - 180)
+    St.window.focus.set_rotation(aim - 180)
+@St.screen.event
 def on_mouse_press(x, y, button, modifiers):
-    aim = St.window.focus.get_aim_dir((x+St.window.base_x, y+St.window.base_y, 1, 1))
-    print(aim)
-    St.window.focus.set_rotation(aim)
+    pass
 @St.screen.event
 def on_mouse_release(x, y, button, modifiers):
     pass
