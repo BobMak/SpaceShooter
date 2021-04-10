@@ -20,60 +20,6 @@ class glob:
 BLK = 20
 
 
-def calculate_display(conwey, active_regions):
-    newconwey = np.copy(conwey)
-    toRemove = []
-    toAdd = []
-    # Only process the active regions
-    for a in active_regions:
-        active = False
-        for _y in range(BLK):
-            y = _y + a[1]
-            for _x in range(BLK):
-                x = _x + a[0]
-                ssm = np.sum(conwey[y - 1:y + 2, x - 1:x + 2])
-                if (ssm > 4 or ssm < 3) and conwey[y][x]:
-                    newconwey[y][x] = 0
-                    active = True
-                    pg.graphics.draw(4, pg.graphics.GL_QUADS,
-                                     ('v2f', [x * 2, y * 2, x * 2, y * 2 + 2, x * 2, y * 2, x * 2 + 2, y * 2]),
-                                     ('c4B', (0, 0, 0, 255) * 4))
-                elif conwey[y][x] and ssm == 4:
-                    active = True
-                    newconwey[y][x] = 1
-                    pg.graphics.draw(4, pg.graphics.GL_QUADS,
-                                     ('v2f', [x * 2, y * 2, x * 2, y * 2 + 2, x * 2, y * 2, x * 2 + 2, y * 2]),
-                                     ('c4B', (0, 255, 0, 200) * 4))
-                elif not conwey[y][x] and ssm == 3:
-                    newconwey[y][x] = 1
-                    active = True
-                    pg.graphics.draw(4, pg.graphics.GL_QUADS,
-                                     ('v2f', [x * 2, y * 2, x * 2, y * 2 + 2, x * 2, y * 2, x * 2 + 2, y * 2]),
-                                     ('c4B', (0, 255, 0, 200) * 4))
-        if not active:
-            toRemove.append(a)
-            continue
-        # check bounds to see if other regions need to be checked next round.
-        # Looks kinda dumb
-        if np.sum(newconwey[a[1] + BLK - 1, a[0]:a[0] + BLK]) > 2:
-            toAdd.append((a[0] // BLK * BLK, (a[1] + BLK) // BLK * BLK))  # top
-        if np.sum(newconwey[a[1], a[0]:a[0] + BLK]) > 2:
-            toAdd.append((a[0] // BLK * BLK, (a[1] - BLK) // BLK * BLK))  # bottom
-        if np.sum(newconwey[a[1]:a[1] + BLK, a[0]]) > 2:
-            toAdd.append(((a[0] - BLK) // BLK * BLK, a[1] // BLK * BLK))  # left
-        if np.sum(newconwey[a[1]:a[1] + BLK, a[0] + BLK - 1]) > 2:
-            toAdd.append(((a[0] + BLK) // BLK * BLK, a[1] // BLK * BLK))  # right
-        # # highlight active regions
-    new_active_regions = active_regions
-    for region in toRemove:
-        idx = active_regions.index(region)
-        new_active_regions.pop(idx)
-    for region in toAdd:
-        if region not in new_active_regions:
-            new_active_regions.append(region)
-    return newconwey, new_active_regions
-
-
 @njit
 def calculate(conwey, active_regions):
     newconwey = np.copy(conwey)
