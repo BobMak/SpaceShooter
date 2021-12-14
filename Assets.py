@@ -68,7 +68,7 @@ shld_7 = pygame.image.load(os.path.join("assets", "animations", "Shields", "shie
 
 model_BG = pygame.image.load(os.path.join("assets", "ModelBG.bmp"))
 
-SIZE = WIDTH, HEIGHT = 720, 576
+SIZE = WIDTH, HEIGHT = 1280, 720
 BG = pygame.transform.scale(pygame.image.load(os.path.join("assets", "BG_720.png")), (WIDTH, HEIGHT))
 
 menu_BG = pygame.image.load(os.path.join("assets", "menu_BG.png"))
