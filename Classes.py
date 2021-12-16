@@ -48,8 +48,7 @@ class Moving:
                           *abs(np.sin(np.deg2rad(self.look_dir-90.0)))
                           *-np.sign(self.speed[1]))
 
-    def accelerate(self, temp):
-
+    def _accelerate(self, temp):
         self.speed[0] += temp*np.cos(np.deg2rad(self.look_dir-90.0))
         self.speed[1] += temp*np.sin(np.deg2rad(self.look_dir-90.0))
 
@@ -236,20 +235,18 @@ class FX_Track(FX):
 class Object(pygame.sprite.Sprite):
     '''Object(image, x, y, width=None, height=None)'''
 
-    look_dir = 0
-    rotated_image = 0
-    rotated_rect = 0
-    radius = None
-    dmg = None
-    time_count = 0
-    timer = 0
-    type = 0
-
     def __init__(self, image, x, y, width=None, height=None):
+        pygame.sprite.Sprite.__init__(self)
 
-       pygame.sprite.Sprite.__init__(self)
-
-       if width != None:
+        self.look_dir = 0
+        self.rotated_image = 0
+        self.rotated_rect = 0
+        self.radius = None
+        self.dmg = None
+        self.time_count = 0
+        self.timer = 0
+        self.type = 0
+        if width != None:
            self.image = pygame.transform.scale(image, (width, height))
            self.image_alpha = pygame.transform.scale(copy.copy(image),
                                                      (width, height))
@@ -257,24 +254,24 @@ class Object(pygame.sprite.Sprite):
            self.image_alpha.fill((255, 255, 255, alpha),
                                  None, pygame.BLEND_RGBA_MULT)
 
-       else:
+        else:
            self.image = image
            self.image_alpha = copy.copy(image)
            alpha = 128
            self.image_alpha.fill((255, 255, 255, alpha),
                                  None, pygame.BLEND_RGBA_MULT)
 
-       self.rotated_image = image
-       self.rotated_image_alpha = image
+        self.rotated_image = image
+        self.rotated_image_alpha = image
 
-       # Fetch the rectangle object that has the dimensions of the image
-       # Update the position of this object by setting the values of rect.x and rect.y
-       self.rect = self.image.get_rect()
-       self.rotated_rect = self.rect
+        # Fetch the rectangle object that has the dimensions of the image
+        # Update the position of this object by setting the values of rect.x and rect.y
+        self.rect = self.image.get_rect()
+        self.rotated_rect = self.rect
 
-       self.rect.centerx = x
-       self.rect.centery = y
-       self.radius = self.rect.width
+        self.rect.centerx = x
+        self.rect.centery = y
+        self.radius = self.rect.width
 
        # movable.add(self)
 
@@ -395,26 +392,29 @@ class Player(Object, Moving, Vulnerable):
 
     hull_group_ang = 0
 
-    HP = 10
-    MAX_HP = 10
-    S_HP = 10
-    MAX_S_HP = 10
-    ROTATION = 10
-    ACCELERATION = 1
-    DEACCELERATION = 0.5
-    ENV_DEACCELERATION = 0.25
-
     space_lock = False
     special_lock = False
     missile_lock = False
     shield_lock = False
-    locks = [space_lock, special_lock, missile_lock, shield_lock]
-
-    #time in frames
+    acceleration_lock = False
+    locks = [space_lock, special_lock, missile_lock, shield_lock, acceleration_lock]
 
     def __init__(self, image, x, y, lives, bolt=0,
                  complex_sh=-1, player=True, width=None, height=None):
 
+        self.MAX_HP = 10
+        self.MAX_S_HP = 10
+        self.ROTATION = 10
+        self.ACCELERATION = 1
+        self.DEACCELERATION = 0.5
+        self.ENV_DEACCELERATION = 0.25
+        self.MAX_ACCELERATION_RESERVE = 8.0
+        self.ACCELERATION_RESERVE_REGENERATION = 0.07
+        self.ACCELERATION_RATE = 0.2
+
+        self.acceleration_reserve = copy.deepcopy(self.MAX_ACCELERATION_RESERVE)
+        self.hp = copy.deepcopy(self.MAX_HP)
+        self.shield_hp = copy.deepcopy(self.MAX_S_HP)
         self.speed = [0,0]
         self.lives = lives
         super().__init__(image, x, y, width=width, height=height)
@@ -448,6 +448,9 @@ class Player(Object, Moving, Vulnerable):
 
         self.time_count_shield = 0
         self.timer_shield = 50
+
+        self.time_count_acceleration = 0
+        self.timer_acceleration = 50
 
         self.counts = [self.time_count_fire, self.time_count_special,
                        self.time_count_missile, self.time_count_shield]
@@ -491,14 +494,20 @@ class Player(Object, Moving, Vulnerable):
 
     def damage(self, dmg):
 
-        self.HP += -max(0, dmg)
-        if self.HP < 0:
+        self.hp += -max(0, dmg)
+        if self.hp < 0:
             self.destroy()
             if self.player == True:
                 return True
 
     def show_HP(self):
-        gfx.box(State.screen, (10, 10, self.HP*100/self.MAX_HP, 20), (0, 255, 0, 50))
+        gfx.box(State.screen,
+                (10, 10, self.hp * 100 / self.MAX_HP, 20), (0, 255, 0, 50))
+
+    def show_acceleration_reserve(self):
+        gfx.box(State.screen,
+                (10, 30, self.acceleration_reserve * 100 / self.MAX_ACCELERATION_RESERVE, 20),
+                (255, 255, 0, 50))
 
     def m_add(self, mounted):
         self.mounts.append(mounted)
@@ -518,18 +527,20 @@ class Player(Object, Moving, Vulnerable):
         return min_dist
 
     def fire(self):
-
         if self.locks[0] == False:
             self.locks[0] = True
             Funcs.shot(self, self.look_dir, self.bolt)
 
-    def update(self):
+    def accelerate(self, temp):
+        if not self.acceleration_reserve < 0.4:
+            self.acceleration_reserve = max(0.0, self.acceleration_reserve - self.ACCELERATION_RATE)
+            super()._accelerate(temp)
+        else:
+            self.acceleration_lock = True
 
-        # if self.space_lock:
-        #     self.time_count_fire += 1
-        #     if self.timer_fire < self.time_count_fire:
-        #         self.time_count_fire = 0
-        #         self.space_lock = False
+    def update(self):
+        self.acceleration_reserve = min(self.MAX_ACCELERATION_RESERVE,
+                                        self.ACCELERATION_RESERVE_REGENERATION + self.acceleration_reserve)
 
         for n in range(len(self.locks)):
             if self.locks[n]:
@@ -909,18 +920,18 @@ class Script_Mob(Player):
             if abs(t) < 90:
                 if speed_mod < ((self.DEACCELERATION+self.ENV_DEACCELERATION)
                                  *(dist/max(speed_mod,0.001)) + self.ENV_DEACCELERATION):
-                    self.accelerate(self.ACCELERATION)
+                    self._accelerate(self.ACCELERATION)
 
                 elif speed_mod>1 and abs(true_ang) < 30:
-                    self.accelerate(-self.DEACCELERATION)
+                    self._accelerate(-self.DEACCELERATION)
 
             else:
                 if speed_mod < ((self.DEACCELERATION+self.ENV_DEACCELERATION)
                                  *(dist/speed_mod) + self.ENV_DEACCELERATION):
-                    self.accelerate(-self.DEACCELERATION)
+                    self._accelerate(-self.DEACCELERATION)
 
                 elif speed_mod>1 and true_ang < 30:
-                    self.accelerate(self.ACCELERATION)
+                    self._accelerate(self.ACCELERATION)
 
         else:
             self.to_do_list.remove(self.go)
@@ -1018,10 +1029,10 @@ class Agressor(Script_Mob):
                 self.rotate(-np.sign(t) * self.ROTATION)
 
             if abs(t) < 90:
-                self.accelerate(self.ACCELERATION)
+                self._accelerate(self.ACCELERATION)  # no don't track acceleration reserve
 
             else:
-                self.accelerate(self.ACCELERATION)
+                self._accelerate(self.ACCELERATION)
 
         if self.rush not in self.to_do_list:
             self.to_do_list.append(self.rush)
@@ -1392,7 +1403,7 @@ class Shield(Animation):
         self.rotate(0)
         self.speed = source.speed
         self.type = type
-        self.HP = source.S_HP
+        self.HP = source.shield_hp
 
         self.rect.width = width
         self.rect.height = height

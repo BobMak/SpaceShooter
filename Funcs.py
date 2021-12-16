@@ -64,8 +64,8 @@ def ship_assign(picked_ship, lives, player):
     ship.ACCELERATION = State.SHIP_CONSTANTS[picked_ship][1]
     ship.DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][2]
     ship.ENV_DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][3]
-    ship.HP = State.SHIP_CONSTANTS[picked_ship][4]
-    ship.S_HP = State.SHIP_CONSTANTS[picked_ship][5]
+    ship.hp = State.SHIP_CONSTANTS[picked_ship][4]
+    ship.shield_hp = State.SHIP_CONSTANTS[picked_ship][5]
     ship.type = State.SHIP_CONSTANTS[picked_ship][6]
 
     return ship
@@ -235,7 +235,6 @@ def FX_explosion(x, y, xpl=Assets.expl, radius=(30,30)):
     State.effects.add(obj)
 
 def FX_engine_mark(source):
-    object = 0
     object = Classes.Animation(Assets.engi, 10, 10,
                                source.rect.centerx, source.rect.centery)
     object.look_dir = source.look_dir

@@ -264,6 +264,7 @@ def screen_draw():
 
     for pl in player_group:
         pl.show_HP()
+        pl.show_acceleration_reserve()
 
         for x in pl.shields:
             draw_rotating(x)
