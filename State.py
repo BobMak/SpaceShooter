@@ -93,12 +93,22 @@ FPS = 30
 levels = [[4, 0], [5, 1], [6, 2], [5, 3]]
 level = 0
 wave_spawning = False
+pl = None
 
 screen = pg.display.set_mode((SIZE[0], SIZE[1]))
+graphics = None
 graphics_thread = None
 
 # Game is paused or not
-paused = False
+state = 'game_started'
+# 'paused'
+# 'game_over'
+# 'game_won'
+# 'player_selection'
+# 'game_started'
+# 'game_playing'
+# 'exit'
+
 
 # Collection of all current objects
 all_objects = []

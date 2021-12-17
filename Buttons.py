@@ -50,12 +50,10 @@ class B_Start_Over(Button):
         self.text = 'Start Over'
 
     def action(self):
-        global realGuy
         # global t
         State.t = False
 
         for object in State.player_group:
-
             object.speed = [0,0]
             object.kill()
         for object in State.movable:
@@ -63,13 +61,14 @@ class B_Start_Over(Button):
         for object in State.interface:
             object.kill()
 
-        realGuy = Funcs.ship_assign(State.picked_ship, State.start_lives,
+        newPlayer = Funcs.ship_assign(State.picked_ship, State.start_lives,
                               player=True)
 
         State.save['level'] = 0
+        State.level = 0
 
-        Funcs.spawn_wave(realGuy)
-        Scripts.main_loop(realGuy)
+        Funcs.spawn_wave(newPlayer)
+        Scripts.main_loop(newPlayer)
 
 
 class B_New_Game(Button):

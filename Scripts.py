@@ -11,35 +11,35 @@ clock = pygame.time.Clock()
 
 
 def main_loop(realGuy):
-    pl = realGuy
-    for x, y in enumerate(pl.turrets):
+    State.pl = realGuy
+    for x, y in enumerate(State.pl.turrets):
         y.number = x
 
-    graphics = Graphics()
-    State.graphics_thread = threading.Thread(target=graphics.screen_redraw)
+    # terminate previous graphics thread if needed
+    if State.graphics_thread:
+        State.graphics.alive = False
+        State.graphics_thread.join()
+    State.graphics = Graphics()
+    State.graphics_thread = threading.Thread(target=State.graphics.screen_redraw)
     State.graphics_thread.start()
 
-    """
-                    <TESTING ZONE>
-            Spawn components to test here
-    """
-
-    """
-                    </TESTING ZONE>
-    """
     while True:
         keys = pygame.key.get_pressed()
 
         # Getting in pause menue
-        if keys[pygame.K_ESCAPE]:  # and State.t[0]
+        if keys[pygame.K_ESCAPE] and State.t[0]:  # and State.t[0]
             # To stop graphics thread
             pygame.time.set_timer(pygame.USEREVENT + 5, 10)
             # To unblock esc button
             pygame.time.set_timer(pygame.USEREVENT + 1, 300)
             State.t = (False, False, False, False)
-            State.paused = True
-            while State.paused:
-                time.sleep(0.1)
+            State.state = 'paused'
+
+        if State.state == 'paused':
+            time.sleep(0.5)
+            continue
+        elif State.state == 'exit':
+            return
 
         # Handle in-game events
         for event in pygame.event.get():
@@ -65,7 +65,7 @@ def main_loop(realGuy):
                 buff_sp.rect.centery = HEIGHT / 2
                 if len(pygame.sprite.spritecollide(buff_sp, asteroids, 0)) == 0:
                     interface.empty()
-                    pl = ship_assign(State.picked_ship, pl.lives, True)
+                    State.pl = ship_assign(State.picked_ship, pl.lives, True)
                 # Do not spawn player if there are asteroids around, and wait 100 milliseconds instead
                 else:
                     pygame.time.set_timer(pygame.USEREVENT + 2, 100)
@@ -239,22 +239,18 @@ def screen_draw():
     for object in glow:
         object.update()
 
-    """TEST"""
     for x in script_mob_group:
         draw_rotating(x)
-    """/TEST"""
 
     for object in projectiles:
         try:
             draw_rotating(object)
             blur(object, object.speed_max)
         except:
-            print("projectile fails to be drawn")
+            print("failed to draw a projectile")
 
     for object in missiles:
         draw_rotating(object)
-        if object.aim != None:
-            draw_triangle(object.aim, (0, 255, 0), 40, 2)
 
     for object in effects:
         draw_rotating(object)
@@ -271,7 +267,6 @@ def screen_draw():
             x.show_HP()
 
         for x in pl.turrets:
-
             try:
                 draw_triangle(x.locked, (255, 0, 0), x.locked.rect.width, 1)
                 draw_triangle(x.predict_pos, (255, 0, 0), 5, 1)
@@ -279,7 +274,6 @@ def screen_draw():
                 pass
 
         for x in pl.orbiting:
-
             try:
                 draw_triangle(x.locked, (255, 0, 0), x.locked.rect.width, 1)
                 draw_triangle(x.predict_pos, (255, 0, 0), 5, 1)
@@ -294,11 +288,9 @@ def screen_draw():
     #     pygame.draw.rect(State.screen, (0,255,0), z.rect)
 
     for x in player_group:
-
         for x_2 in x.mounts:
             x_2.bg_rect.x = x_2.rect.x + 3
             x_2.bg_rect.y = x_2.rect.y + 3
-
             try:
                 State.screen.blit(x_2.bg, x_2.bg_rect)
             except:
@@ -322,8 +314,12 @@ class Graphics:
             pygame.display.flip()
             clock.tick(FRAMES_PER_SECOND)
 
-            if State.paused:
+            if State.state=='paused':
                 pause_menu()
+            if State.state=='game_over':
+                death_menu()
+            if State.state == 'exit':
+                self.alive = False
 
 
 def spawn_mob():
@@ -343,13 +339,12 @@ def pause_menu():
     menu[0].select()
     State.screen.blit(menu_BG, (0, 0))  # Draw a background
 
-    while State.paused:
+    while State.state=='paused':
 
         screen_draw()
 
         for x in menu:
             State.screen.blit(x.image, x.rect)
-
             State.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
 
         pg.display.flip()
@@ -357,56 +352,55 @@ def pause_menu():
         for event in pg.event.get():
             # Propagate exit into main loop
             if event.type == pg.QUIT:
-                State.paused = False
+                State.state = 'exit'
                 pg.event.post(pg.event.Event(pg.QUIT, {'QUIT': True}))
+                sys.exit()
+
             keys = pg.key.get_pressed()
 
             if event.type == pg.USEREVENT + 1:
                 State.t = (True, True, True, True)
                 pg.time.set_timer(pg.USEREVENT + 1, 0)
 
-            if keys[pg.K_UP]:
+            if keys[pg.K_UP] and State.t[0]:
+                new_selection = max(0, selection -1)
+                menu[selection].deselect()
+                menu[new_selection].select()
+                State.screen.blit(temporary_bg, (0, 0))
+                State.screen.blit(menu_BG, (0, 0))
+                for x in menu:
+                    State.screen.blit(x.image, x.rect)
+                    State.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
+                selection = new_selection
+                print(selection)
+                State.t = (False, False, False, False)
+                pg.time.set_timer(pg.USEREVENT + 1, 300)
 
-                if selection > 0:
-
-                    menu[selection - 1].select()
-                    menu[selection].deselect()
-                    selection += -1
-                    State.screen.blit(temporary_bg, (0, 0))
-                    State.screen.blit(menu_BG, (0, 0))
-                    for x in menu:
-                        State.screen.blit(x.image, x.rect)
-                        State.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
-
-            if keys[pg.K_DOWN]:
-
-                if selection < len(menu) - 1:
-
-                    menu[selection + 1].select()
-                    menu[selection].deselect()
-                    selection += 1
-                    State.screen.blit(temporary_bg, (0, 0))
-                    State.screen.blit(menu_BG, (0, 0))
-                    for x in menu:
-                        State.screen.blit(x.image, x.rect)
-                        State.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
-
-            if keys[pg.K_RETURN]:
-
-                menu[selection].action()
-                if selection == 0:
-                    State.paused = False
-                    State.t = (False, False, False, False)
-                    pg.time.set_timer(pg.USEREVENT + 1, 300)
+            if keys[pg.K_DOWN] and State.t[0]:
+                new_selection = min(len(menu)-1, selection + 1)
+                menu[selection].deselect()
+                menu[new_selection].select()
+                State.screen.blit(temporary_bg, (0, 0))
+                State.screen.blit(menu_BG, (0, 0))
+                for x in menu:
+                    State.screen.blit(x.image, x.rect)
+                    State.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
+                selection = new_selection
+                print(selection)
+                State.t = (False, False, False, False)
+                pg.time.set_timer(pg.USEREVENT + 1, 300)
 
             if keys[pg.K_ESCAPE]:
                 if State.t[0] == True:
-                    State.paused = False
+                    State.state = 'game_playing'
                     State.t = (False, False, False, False)
                     pg.time.set_timer(pg.USEREVENT + 1, 300)
                 else:
                     pg.time.set_timer(pg.USEREVENT + 1, 0)
                     pg.time.set_timer(pg.USEREVENT + 1, 300)
+
+            if keys[pg.K_RETURN]:
+                menu[selection].action()
 
 
 def death_menu():
@@ -420,8 +414,10 @@ def death_menu():
     # draw buttons
     for x in menu:
         State.screen.blit(x.image, x.rect)
-
         State.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
+
+    # remove player from screen
+    player_group.empty()
 
     while (True):
         move_movable()
@@ -438,11 +434,10 @@ def death_menu():
             else:
                 i.time_count += 1
 
-        screen_draw()
+        # screen_draw()
 
         for x in menu:
             State.screen.blit(x.image, x.rect)
-
             State.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
 
         pg.display.flip()
@@ -600,3 +595,4 @@ def player_set():
                     State.t = (False, False, False, False)
                     print("breaking")
                     menu_run = False
+
