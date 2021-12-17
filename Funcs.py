@@ -70,11 +70,12 @@ def ship_assign(picked_ship, lives, player):
 
     return ship
 
-def draw_rotating(obj):
 
+def draw_rotating(obj):
     rect = obj.rotated_image.get_rect()
     rect.center = (obj.rect.center)
     State.screen.blit(obj.rotated_image, rect)
+
 
 def blur(obj, speed):
     '''blur effect along the speed direction'''

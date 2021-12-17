@@ -137,56 +137,43 @@ def main_loop(realGuy):
 
         ##########      Logic       #########
 
-        for x in hit_waves:
-            for y in asteroids:
+        for y in asteroids:
+            for x in hit_waves:
                 if pygame.sprite.collide_circle(x, y):
-                    y.damage(x.hp)
                     x.damage(y.hp)
+                    if y.damage(x.hp):
+                        break
+            for x in pl.shields:
+                if pygame.sprite.collide_circle(y, x):
+                    x.damage(2 * y.type)
+                    if y.damage(5):
+                        break
+            for i in projectiles:
+                if pygame.sprite.collide_circle(y, i):
+                    FX_explosion(i.rect.centerx, i.rect.centery)
+                    i.damage(y)
+            for i in missiles:
+                if pygame.sprite.collide_circle(y, i):
+                    FX_explosion(i.rect.centerx, i.rect.centery)
+                    i.blow_up()
+            if y not in noclip_asteroids:
+                for pl in player_group:
+                    for i in pl.player_hull_group:
+                        if pygame.sprite.collide_circle(y, i):
+                            pl.damage(y.hp)
+                            if y.damage(2):
+                                break
 
         for pl in player_group:
-
             pl.update()
-
             for i in pl.shields:
                 i.rect.move(i.speed)
-
-            for z in pl.player_hull_group:
-
-                for i in pygame.sprite.spritecollide(z, asteroids, 0):
-                    if i not in noclip_asteroids:
-                        i.damage(pl.type * 1)
-
-                        if pl.damage(2):
-                            break
-
-            for i in pl.shields:
-                for i_2 in pygame.sprite.spritecollide(i, asteroids, 0):
-
-                    i_2.damage(5)
-                    if len(asteroids) == 0:
-                        pygame.time.set_timer(pygame.USEREVENT + 3, 2000)
-                    i.damage(2 * i_2.type)
 
             for x in pl.turrets:
                 x.auto_fire()
 
             for x in pl.orbiting:
                 x.active()
-
-        for i in projectiles:
-            for i_2 in pygame.sprite.spritecollide(i, asteroids, 0):
-                FX_explosion(i.rect.centerx, i.rect.centery)
-                i.damage(i_2)
-
-                if len(asteroids) == 0:
-                    pygame.time.set_timer(pygame.USEREVENT + 3, 2000)
-
-        for i in missiles:
-            for i_2 in pygame.sprite.spritecollide(i, asteroids, 0):
-                FX_explosion(i.rect.centerx, i.rect.centery)
-                i.blow_up()
-                if len(asteroids) == 0:
-                    pygame.time.set_timer(pygame.USEREVENT + 3, 2000)
 
         for i in time_dependent:
             if i.timer < i.time_count:
