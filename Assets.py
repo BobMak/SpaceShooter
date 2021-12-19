@@ -3,6 +3,15 @@ import pygame
 
 pygame.init()
 
+# CONSTANTS
+
+map_size = m_width, m_size = 3000, 3000
+SIZE = WIDTH, HEIGHT = 1280, 720
+BLACK = 0, 0, 0
+WHITE = 255, 255, 255
+GREEN = 0, 255, 0
+MAX_BALL_SPEED = 10
+
 blanc = pygame.image.load(os.path.join("assets", "blanc.png"))
 green = pygame.image.load(os.path.join("assets", "ships", "green.png"))
 bad_thing = pygame.image.load(os.path.join("assets", "bad_thing.png"))

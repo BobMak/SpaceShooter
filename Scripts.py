@@ -1,13 +1,42 @@
+import random
 import threading
 import sys
 import time
 
-from Classes import *
-from State import *
-from Funcs import *
-import Buttons as bt
+import numpy as np
+import pygame as pg
 
-clock = pygame.time.Clock()
+import Assets
+from Asteroids import AdvAsteroid
+from Mechanics import Moving, Animation
+from Player import Player
+from Bot import Bot
+import State
+from Funcs import blur, \
+    draw_triangle, \
+    orbit_eliptic, orbit_rotate
+
+import Buttons as bt
+from Assets import *
+
+clock = pg.time.Clock()
+
+
+def spawn_wave():
+    level = State.level
+    for i in range(State.levels[level][0]):
+        if random.choice([True, False]):
+            proX = random.choice([random.randint(-20,0),
+                                  random.randint(Assets.WIDTH, Assets.WIDTH+20)])
+            proY = random.randint(-20, Assets.HEIGHT+20)
+        else:
+            proX = random.randint(-20, Assets.WIDTH+20)
+            proY = random.choice([random.randint(-20,0),
+                                  random.randint(Assets.HEIGHT, Assets.HEIGHT+20)])
+
+        x = AdvAsteroid(State.levels[level][1] + 1, proX, proY, 4, [0, 0])
+
+    State.level += 1
 
 
 def main_loop(realGuy):
@@ -24,14 +53,14 @@ def main_loop(realGuy):
     State.graphics_thread.start()
 
     while True:
-        keys = pygame.key.get_pressed()
+        keys = pg.key.get_pressed()
 
         # Getting in pause menue
-        if keys[pygame.K_ESCAPE] and State.t[0]:  # and State.t[0]
+        if keys[pg.K_ESCAPE] and State.t[0]:  # and State.t[0]
             # To stop graphics thread
-            pygame.time.set_timer(pygame.USEREVENT + 5, 10)
+            pg.time.set_timer(pg.USEREVENT + 5, 10)
             # To unblock esc button
-            pygame.time.set_timer(pygame.USEREVENT + 1, 300)
+            pg.time.set_timer(pg.USEREVENT + 1, 300)
             State.t = (False, False, False, False)
             State.state = 'paused'
 
@@ -42,39 +71,39 @@ def main_loop(realGuy):
             return
 
         # Handle in-game events
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                graphics.alive = False
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                State.graphics.alive = False
                 sys.exit()
 
             # Release all key locks
-            if event.type == pygame.USEREVENT + 1:
+            if event.type == pg.USEREVENT + 1:
                 State.t = (True, True, True, True)
-                pygame.time.set_timer(pygame.USEREVENT + 1, 0)
+                pg.time.set_timer(pg.USEREVENT + 1, 0)
 
             # Spawn player if no asteroid in range. Called after player's death
-            if event.type == pygame.USEREVENT + 2:
+            if event.type == pg.USEREVENT + 2:
 
-                pygame.time.set_timer(pygame.USEREVENT + 2, 0)
+                pg.time.set_timer(pg.USEREVENT + 2, 0)
 
-                buff_sp = pygame.sprite.Sprite()
+                buff_sp = pg.sprite.Sprite()
                 buff_sp.rect = menu_button.get_rect()
                 buff_sp.rect.width = 100
                 buff_sp.rect.height = 100
-                buff_sp.rect.centerx = WIDTH / 2
-                buff_sp.rect.centery = HEIGHT / 2
-                if len(pygame.sprite.spritecollide(buff_sp, asteroids, 0)) == 0:
-                    interface.empty()
-                    State.pl = ship_assign(State.picked_ship, pl.lives, True)
-                # Do not spawn player if there are asteroids around, and wait 100 milliseconds instead
+                buff_sp.rect.centerx = Assets.WIDTH / 2
+                buff_sp.rect.centery = Assets.HEIGHT / 2
+                if len(pg.sprite.spritecollide(buff_sp, State.asteroids, 0)) == 0:
+                    State.interface.empty()
+                    State.pl = Player.ship_assign(State.picked_ship, pl.lives, True)
+                # Do not spawn player if there are State.asteroids around, and wait 100 milliseconds instead
                 else:
-                    pygame.time.set_timer(pygame.USEREVENT + 2, 100)
+                    pg.time.set_timer(pg.USEREVENT + 2, 100)
 
             # Spawn wave
-            if event.type == pygame.USEREVENT + 3:
-                spawn_wave(pl)
+            if event.type == pg.USEREVENT + 3:
+                spawn_wave()
                 State.wave_spawning = False
-                pygame.time.set_timer(pygame.USEREVENT + 3, 0)
+                pg.time.set_timer(pg.USEREVENT + 3, 0)
 
         # Updates to object groups
         #
@@ -82,19 +111,19 @@ def main_loop(realGuy):
         for event in State.all_objects:
             event.run()
         # Perform player input
-        for pl in player_group:
+        for pl in State.player_group:
             for x in pl.arr_input:
                 x(pl, keys)
             #
-            bound_pass(pl)
+            pl.bound_pass()
 
-        move_movable()
+        Moving.move_movable()
 
-        for x in asteroids:
-            bound_pass(x)
+        for x in State.asteroids:
+            x.bound_pass()
 
-        for m in script_mob_group:
-            bound_pass(m)
+        for m in State.script_mob_group:
+            m.bound_pass()
 
             try:
                 m.update()
@@ -103,68 +132,68 @@ def main_loop(realGuy):
 
             m.slow_down()
 
-        for pl in player_group:
+        for pl in State.player_group:
 
             pl.slow_down()
-            bound_pass(pl)
+            pl.bound_pass()
 
             for x in pl.player_hull_group:
                 orbit_rotate(x.source, x, 0, x.distance, x.angle)
-                bound_pass(x)
+                x.bound_pass()
 
             for x in pl.turrets:
-                bound_pass(x)
+                x.bound_pass()
 
             for x in pl.shields:
                 x.rect.centerx = x.source.rect.centerx
                 x.rect.centery = x.source.rect.centery
 
             for x in pl.orbiting:
-                bound_pass(x)
+                x.bound_pass()
                 orbit_eliptic(pl, x)
 
-        for x in projectiles:
-            bound_pass(x)
+        for x in State.projectiles:
+            x.bound_pass()
 
-        for z in missiles:
-            bound_pass(z)
+        for z in State.missiles:
+            z.bound_pass()
             z.update()
             z.rect.move(z.speed)
 
-        for x in mob_group:
-            bound_pass(x)
+        for x in State.mob_group:
+            x.bound_pass()
             x.slow_down()
 
         ##########      Logic       #########
 
-        for y in asteroids:
-            for x in hit_waves:
-                if pygame.sprite.collide_circle(x, y):
+        for y in State.asteroids:
+            for x in State.hit_waves:
+                if pg.sprite.collide_circle(x, y):
                     x.damage(y.hp)
                     if y.damage(x.hp):
                         break
             for x in pl.shields:
-                if pygame.sprite.collide_circle(y, x):
+                if pg.sprite.collide_circle(y, x):
                     x.damage(2 * y.type)
                     if y.damage(5):
                         break
-            for i in projectiles:
-                if pygame.sprite.collide_circle(y, i):
-                    FX_explosion(i.rect.centerx, i.rect.centery)
+            for i in State.projectiles:
+                if pg.sprite.collide_circle(y, i):
+                    Animation.FX_explosion(i.rect.centerx, i.rect.centery)
                     i.damage(y)
-            for i in missiles:
-                if pygame.sprite.collide_circle(y, i):
-                    FX_explosion(i.rect.centerx, i.rect.centery)
+            for i in State.missiles:
+                if pg.sprite.collide_circle(y, i):
+                    Animation.FX_explosion(i.rect.centerx, i.rect.centery)
                     i.blow_up()
-            if y not in noclip_asteroids:
-                for pl in player_group:
+            if y not in State.noclip_asteroids:
+                for pl in State.player_group:
                     for i in pl.player_hull_group:
-                        if pygame.sprite.collide_circle(y, i):
+                        if pg.sprite.collide_circle(y, i):
                             pl.damage(y.hp)
                             if y.damage(2):
                                 break
 
-        for pl in player_group:
+        for pl in State.player_group:
             pl.update()
             for i in pl.shields:
                 i.rect.move(i.speed)
@@ -175,38 +204,38 @@ def main_loop(realGuy):
             for x in pl.orbiting:
                 x.active()
 
-        for i in time_dependent:
+        for i in State.time_dependent:
             if i.timer < i.time_count:
                 i.kill()
             else:
                 i.time_count += 1
 
-        if len(asteroids) == 0 and not State.wave_spawning:
+        if len(State.asteroids) == 0 and not State.wave_spawning:
             print('spawning...')
-            pygame.time.set_timer(pygame.USEREVENT + 3, 2000)
+            pg.time.set_timer(pg.USEREVENT + 3, 2000)
             State.wave_spawning = True
 
         # logic tick
-        clock.tick(LOGIC_PER_SECOND)
+        clock.tick(State.LOGIC_PER_SECOND)
 
 
 def screen_draw():
     """
     Draws all game scene, does not flip.
     """
-    for object in effects:
+    for object in State.effects:
         object.update()
 
-    for x in noclip_asteroids:
+    for x in State.noclip_asteroids:
         x.update()
     try:
         State.screen.blit(BG, (0, 0))
     except Exception as e:
         print("err: {}".format(e))
 
-    for pl in player_group:
+    for pl in State.player_group:
         try:
-            draw_rotating(pl)
+            pl.draw_rotating()
         except:
             print("player faild to be drawn")
         speed = np.sqrt(pl.speed[0] ** 2 + pl.speed[1] ** 2)
@@ -215,42 +244,45 @@ def screen_draw():
 
         '''Check the hull group sprites'''
         # for x in pl.player_hull_group:
-        # pygame.draw.rect(screen, (0,255,0), x.rect)
+        # pg.draw.rect(screen, (0,255,0), x.rect)
 
-    for object in asteroids:
-        draw_rotating(object)
+    for object in State.asteroids:
+        object.draw_rotating()
 
-    for object in noclip_asteroids:
-        draw_rotating(object)
+    for object in State.noclip_asteroids:
+        object.draw_rotating()
 
-    for object in glow:
+    for object in State.glow:
         object.update()
 
-    for x in script_mob_group:
-        draw_rotating(x)
+    for x in State.script_mob_group:
+        x.draw_rotating()
 
-    for object in projectiles:
+    for object in State.projectiles:
         try:
-            draw_rotating(object)
+            object.draw_rotating()
             blur(object, object.speed_max)
         except:
             print("failed to draw a projectile")
 
-    for object in missiles:
-        draw_rotating(object)
+    for object in State.missiles:
+        try:
+            object.draw_rotating()
+        except:
+            print("failed to draw a missile")
 
-    for object in effects:
-        draw_rotating(object)
+    for object in State.effects:
+        object.draw_rotating()
 
-    for object in interface:
+    for object in State.interface:
         State.screen.blit(object.image, object.rect)
 
-    for pl in player_group:
+    for pl in State.player_group:
         pl.show_HP()
         pl.show_acceleration_reserve()
 
         for x in pl.shields:
-            draw_rotating(x)
+            x.draw_rotating()
             x.show_HP()
 
         for x in pl.turrets:
@@ -266,15 +298,15 @@ def screen_draw():
                 draw_triangle(x.predict_pos, (255, 0, 0), 5, 1)
             except:
                 pass
-            draw_rotating(x)
+            x.draw_rotating()
 
     # for x in test.sub_group:
-    #     pygame.draw.rect(State.screen, (0,255,0), x.rect)
+    #     pg.draw.rect(State.screen, (0,255,0), x.rect)
     """colliding rects test"""
     # for z in pl.player_hull_group:
-    #     pygame.draw.rect(State.screen, (0,255,0), z.rect)
+    #     pg.draw.rect(State.screen, (0,255,0), z.rect)
 
-    for x in player_group:
+    for x in State.player_group:
         for x_2 in x.mounts:
             x_2.bg_rect.x = x_2.rect.x + 3
             x_2.bg_rect.y = x_2.rect.y + 3
@@ -283,7 +315,7 @@ def screen_draw():
             except:
                 print('wrong')
 
-            draw_rotating(x_2)
+            x_2.draw_rotating()
 
 
 class Graphics:
@@ -298,8 +330,8 @@ class Graphics:
         """
         while self.alive:
             screen_draw()
-            pygame.display.flip()
-            clock.tick(FRAMES_PER_SECOND)
+            pg.display.flip()
+            clock.tick(State.FRAMES_PER_SECOND)
 
             if State.state=='paused':
                 pause_menu()
@@ -310,7 +342,7 @@ class Graphics:
 
 
 def spawn_mob():
-    Script_Mob(ship_3, 250, 200)
+    Bot(ship_3, 250, 200)
 
 
 def pause_menu():
@@ -404,18 +436,18 @@ def death_menu():
         State.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
 
     # remove player from screen
-    player_group.empty()
+    State.player_group.empty()
 
     while (True):
-        move_movable()
+        Moving.move_movable()
 
-        for x in asteroids:
-            bound_pass(x)
+        for x in State.asteroids:
+            x.bound_pass()
 
-        for x in projectiles:
-            bound_pass(x)
+        for x in State.projectiles:
+            x.bound_pass()
 
-        for i in time_dependent:
+        for i in State.time_dependent:
             if i.timer - i.time_count < 0:
                 i.remove()
             else:
@@ -429,7 +461,7 @@ def death_menu():
 
         pg.display.flip()
 
-        for object in effects:
+        for object in State.effects:
             object.update()
 
         clock.tick(30)

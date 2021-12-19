@@ -6,6 +6,7 @@ from Assets import *
 import State
 import Funcs
 import Scripts
+from Player import Player
 
 
 class Button(pygame.sprite.Sprite):
@@ -61,13 +62,13 @@ class B_Start_Over(Button):
         for object in State.interface:
             object.kill()
 
-        newPlayer = Funcs.ship_assign(State.picked_ship, State.start_lives,
+        newPlayer = Player.ship_assign(State.picked_ship, State.start_lives,
                               player=True)
 
         State.save['level'] = 0
         State.level = 0
 
-        Funcs.spawn_wave(newPlayer)
+        Scripts.spawn_wave()
         Scripts.main_loop(newPlayer)
 
 
@@ -80,7 +81,7 @@ class B_New_Game(Button):
     def action(self):
         State.level = 0
 
-        realGuy = Funcs.ship_assign(State.picked_ship, State.start_lives,
+        realGuy = Player.ship_assign(State.picked_ship, State.start_lives,
                               player=True)
 
         Scripts.main_loop(realGuy)

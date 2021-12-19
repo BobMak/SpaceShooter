@@ -1,13 +1,14 @@
 import copy
 from Assets import *
-import Classes
 import Funcs
+from Mechanics import Animation
+from Missile import Missile
 
 
 def listen_acceleration(player, keys):
     if keys[pygame.K_UP]:
         player.accelerate(player.ACCELERATION)
-        Funcs.FX_engine_mark(player)
+        Animation.FX_engine_mark(player)
 
 
 def listen_reverse(player, keys):
@@ -33,7 +34,6 @@ def listen_right(player, keys):
 
 
 def listen_left(player, keys):
-
     if keys[pygame.K_LEFT]:
         player.rotate(-player.ROTATION)
         for x in player.turrets:
@@ -57,7 +57,7 @@ def listen_shot(player, keys):
 def listen_shot_missile(player, keys):
     if keys[pygame.K_x] and player.locks[2] == False:
         player.locks[2] = True
-        x = Classes.Missile(0, player.rect.centerx, player.rect.centery)
+        x = Missile(0, player.rect.centerx, player.rect.centery)
         x.look_dir = player.look_dir
         x.speed = copy.deepcopy(player.speed)
 

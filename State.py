@@ -2,16 +2,7 @@
 This file contains game state and all relevant variables
 """
 import pygame as pg
-
-
-# CONSTANTS
-
-map_size = m_width, m_size = 3000, 3000
-SIZE = WIDTH, HEIGHT = 1280, 720
-BLACK = 0, 0, 0
-WHITE = 255, 255, 255
-GREEN = 0, 255, 0
-MAX_BALL_SPEED = 10
+from Assets import SIZE
 
 #####################      Ships       ####################
 
