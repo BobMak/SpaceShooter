@@ -87,6 +87,7 @@ class FX(pygame.sprite.Sprite, Moving):
 
         State.time_dependent.add(self)
 
+    # this stub is required to be able to use the class in the sprite group
     def draw_rotating(self):
         pass
 
@@ -135,7 +136,7 @@ class FX_Track(FX):
     '''
 
     def __init__(self, image, rect, duration,
-                fading=None, enlarging=None, rotating=None, color=None,
+                fading=None, enlarging=None, color=None,
                 look_dir=None, speed=None):
         '''density - [0-1]'''
         FX.__init__(self, rect, duration)
@@ -176,18 +177,12 @@ class FX_Track(FX):
             self.enlarging_tempo = enlarging[1]
             self.updates.append(self.enlarge)
 
-        if rotating != None:
-            self.rotating = rotating[0]
-            self.rotating_tempo = rotating[1]
-            self.updates.append(self.rotate)
-
         if speed != None:
             self.speed = speed
 
         State.effects.add(self)
 
     def enlarge(self):
-
         self.enlarging_count += 1
         if self.enlarging_count > self.enlarging_tempo:
             self.enlarging_count = 0
@@ -198,14 +193,6 @@ class FX_Track(FX):
             self.rotated_image = pygame.transform.scale(self.rotated_image,
                                                 (self.rect.width+self.enlarging,
                                                 self.rect.height+self.enlarging))
-
-    def rotate(self):
-        self.rotating_count += 1
-        if self.rotating_count > self.rotating_tempo:
-            self.rotating_count = 0
-
-            self.look_dir += self.rotating
-            self.rotated_image = pygame.transform.rotate(self.image, -self.look_dir)
 
     def fade(self):
         self.fading_count += 1
@@ -224,6 +211,11 @@ class FX_Track(FX):
         self.rotated_image = copy.copy(self.rotated_image_base)
         for f in self.updates:
             f()
+
+    def draw_rotating(self):
+        rect = self.rotated_image.get_rect()
+        rect.center = (self.rect.center)
+        State.screen.blit(self.rotated_image, rect)
 
 
 class GObject(pygame.sprite.Sprite):
