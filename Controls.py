@@ -57,9 +57,11 @@ def listen_shot(player, keys):
 def listen_shot_missile(player, keys):
     if keys[pygame.K_x] and player.locks[2] == False:
         player.locks[2] = True
-        x = Missile(0, player.rect.centerx, player.rect.centery)
-        x.look_dir = player.look_dir
-        x.speed = copy.deepcopy(player.speed)
+        if player.missiles > 0:
+            player.missiles -= 1
+            x = Missile(0, player.rect.centerx, player.rect.centery)
+            x.look_dir = player.look_dir
+            x.speed = copy.deepcopy(player.speed)
 
 
 def listen_shield(player, keys):

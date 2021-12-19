@@ -1,5 +1,6 @@
 import random
 
+import Items
 from Mechanics import *
 from Bot import Bot
 
@@ -64,3 +65,6 @@ class Agressor(Bot):
         if self.rush not in self.to_do_list:
             self.to_do_list.append(self.rush)
 
+    def destroy(self):
+        super().kill()
+        Items.MissileItem(self.rect.centerx, self.rect.centery, 1)

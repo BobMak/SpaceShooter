@@ -8,10 +8,10 @@ from Assets import SIZE
 
 #              rotation rate    deacceleration        hull   shields type(mass)
  #                      acceleration    env. deacceleration
-SHIP_CONSTANTS = [[1.6666, 0.4166, 0.0333,   0.0083,    5,      2,      1],
-                  [  1.25,  0.025, 0.0125,    0.005,   15,      5,      2],
-                  [   2.5, 0.0625,   0.05,   0.0125,  7.5,    2.5,      1],
-                  [   1.2,   0.03,   0.01,     0.01,    2,      2,      1],
+SHIP_CONSTANTS = [[1.6666, 0.4166, 0.0333,   0.0083,    5,      2,      1, 5],
+                  [  1.25,  0.025, 0.0125,    0.005,   15,      5,      2, 5],
+                  [   2.5, 0.0625,   0.05,   0.0125,  7.5,    2.5,      1, 10],
+                  [   1.2,   0.03,   0.01,     0.01,    2,      2,      1, 5],
                   []]
 
 
@@ -123,3 +123,4 @@ script_mob_group = pg.sprite.Group()
 glow = pg.sprite.Group()
 effects = pg.sprite.Group()
 interface = pg.sprite.Group()
+pickupables = pg.sprite.Group()

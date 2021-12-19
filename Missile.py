@@ -51,11 +51,12 @@ class Missile(Projectile):
 
         # create engine particles
         FX_Track(particle, r, 40, look_dir=random.randint(0,358),
-                        fading=[20,16], enlarging=[20,16],
+                        fading=(20,16), enlarging=(20,16),
                         color=(200,200,200,random.randint(40,130)),
                         speed=[random.uniform(-0.5,0.5), random.uniform(-0.5,0.5)])
 
-        FX_Glow(r, 1, 2, 10, (255, 200, 125, 20))
+        brightness = max(0.0, random.gauss(0.5, 0.2))
+        FX_Glow(r, 1, int(20 * brightness), int(20 * brightness), (255, 200, 125, int(brightness * 10)))
 
         self.rotate_to_aim()
         self.mod_speed += self.d_speed
@@ -93,7 +94,6 @@ class Missile(Projectile):
             self.aim = self.lock_closest()
 
     def blow_up(self):
-
         x = Zone(self.rect.x, self.rect.y, self.hit_range, self.hp, 2)
         Animation.FX_explosion(self.rect.centerx, self.rect.centery,
                        xpl=expN, radius=(60,60))

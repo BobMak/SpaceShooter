@@ -204,6 +204,10 @@ def main_loop(realGuy):
             for x in pl.orbiting:
                 x.active()
 
+            for x in State.pickupables:
+                if pg.sprite.collide_circle(pl, x):
+                    x.pickup(pl)
+
         for i in State.time_dependent:
             if i.timer < i.time_count:
                 i.kill()
@@ -224,7 +228,10 @@ def screen_draw():
     Draws all game scene, does not flip.
     """
     for object in State.effects:
-        object.update()
+        try:
+            object.update()
+        except:
+            pass
 
     for x in State.noclip_asteroids:
         x.update()
@@ -272,7 +279,10 @@ def screen_draw():
             print("failed to draw a missile")
 
     for object in State.effects:
-        object.draw_rotating()
+        try:
+            object.draw_rotating()
+        except:
+            print("failed to draw an effect")
 
     for object in State.interface:
         State.screen.blit(object.image, object.rect)
@@ -280,6 +290,7 @@ def screen_draw():
     for pl in State.player_group:
         pl.show_HP()
         pl.show_acceleration_reserve()
+        pl.show_missiles()
 
         for x in pl.shields:
             x.draw_rotating()

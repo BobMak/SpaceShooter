@@ -1,6 +1,7 @@
 import random
 import pygame
 
+import Items
 import State
 from Assets import particle, asteroid_imgs, bad_thing
 from Mechanics import GObject, Moving, Vulnerable, FX_Track
@@ -97,7 +98,6 @@ class AdvAsteroid(Asteroid):
             State.noclip_asteroids.add(self)
 
     def crash(self):
-
         if self.type >2:
             for x in range(6):
                 FX_Track(particle, self.rect, random.randint(20,80),

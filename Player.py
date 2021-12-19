@@ -67,6 +67,7 @@ class Player(GObject, Moving, Vulnerable):
                 self.player_hull_group.add(b)
 
         self.bolt = bolt
+        self.missiles = 0
 
         self.time_count_fire = 0
         self.timer_fire = State.prj_cooldown[bolt]
@@ -92,6 +93,9 @@ class Player(GObject, Moving, Vulnerable):
         self.distance = 0
         self.orbit_ang = 0
         self.player = player
+
+    def addMissiles(self, number):
+        self.missiles += number
 
     def destroy(self):
 
@@ -139,6 +143,10 @@ class Player(GObject, Moving, Vulnerable):
         gfx.box(State.screen,
                 (10, 30, self.acceleration_reserve * 100 / self.MAX_ACCELERATION_RESERVE, 20),
                 (255, 255, 0, 50))
+
+    def show_missiles(self):
+        for x in range(self.missiles):
+            gfx.box(State.screen, (10 + x * 10, 50, 9, 10), (255, 0, 0, 50))
 
     def m_add(self, mounted):
         self.mounts.append(mounted)
@@ -198,5 +206,6 @@ class Player(GObject, Moving, Vulnerable):
         ship.hp = State.SHIP_CONSTANTS[picked_ship][4]
         ship.shield_hp = State.SHIP_CONSTANTS[picked_ship][5]
         ship.type = State.SHIP_CONSTANTS[picked_ship][6]
+        ship.addMissiles(State.SHIP_CONSTANTS[picked_ship][7])
 
         return ship
