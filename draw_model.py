@@ -1,8 +1,3 @@
-"""
-
-from https://github.com/Natsu6767/Generating-Devanagari-Using-DRAW
-"""
-
 import torch
 import torch.nn as nn
 import torchvision.utils as vutils
@@ -31,7 +26,7 @@ class DRAWModel(nn.Module):
 
         # Stores the generated image for each time step.
         self.cs = [0] * self.T
-        
+
         # To store appropriate values used for calculating the latent loss (KL-Divergence loss)
         self.logsigmas = [0] * self.T
         self.sigmas = [0] * self.T
@@ -84,10 +79,14 @@ class DRAWModel(nn.Module):
         (Fx, Fy), gamma = self.attn_window(h_dec_prev, self.read_N)
 
         def filter_img(img, Fx, Fy, gamma):
-            Fxt = Fx.transpose(self.channel, 2)
             if self.channel == 3:
+                Fxt = Fx.transpose(3, 2)
                 img = img.view(-1, 3, self.B, self.A)
+            elif self.channel == 4:
+                Fxt = Fx.transpose(3, 2)
+                img = img.view(-1, 4, self.B, self.A)
             elif self.channel == 1:
+                Fxt = Fx.transpose(1, 2)
                 img = img.view(-1, self.B, self.A)
 
             # Equation 27.
@@ -109,11 +108,16 @@ class DRAWModel(nn.Module):
         w = self.fc_write(h_dec)
         if self.channel == 3:
             w = w.view(self.batch_size, 3, self.write_N, self.write_N)
+        elif self.channel == 4:
+            w = w.view(self.batch_size, 4, self.write_N, self.write_N)
         elif self.channel == 1:
             w = w.view(self.batch_size, self.write_N, self.write_N)
 
         (Fx, Fy), gamma = self.attn_window(h_dec, self.write_N)
-        Fyt = Fy.transpose(self.channel, 2)
+        if self.channel>=3:
+            Fyt = Fy.transpose(3, 2)
+        else:
+            Fyt = Fy.transpose(self.channel, 2)
 
         # Equation 29.
         wr = torch.matmul(Fyt, torch.matmul(w, Fx))
@@ -131,7 +135,7 @@ class DRAWModel(nn.Module):
         # Equation 2.
         log_sigma = self.fc_sigma(h_enc)
         sigma = torch.exp(log_sigma)
-        
+
         z = mu + e * sigma
 
         return z, mu, log_sigma, sigma
@@ -154,7 +158,7 @@ class DRAWModel(nn.Module):
 
     def filterbank(self, gx, gy, sigma_2, delta, N, epsilon=1e-8):
         grid_i = torch.arange(start=0.0, end=N, device=self.device, requires_grad=True,).view(1, -1)
-        
+
         # Equation 19.
         mu_x = gx + (grid_i - N / 2 - 0.5) * delta
         # Equation 20.
@@ -177,9 +181,15 @@ class DRAWModel(nn.Module):
         if self.channel == 3:
             Fx = Fx.view(Fx.size(0), 1, Fx.size(1), Fx.size(2))
             Fx = Fx.repeat(1, 3, 1, 1)
-            
+
             Fy = Fy.view(Fy.size(0), 1, Fy.size(1), Fy.size(2))
             Fy = Fy.repeat(1, 3, 1, 1)
+        elif self.channel == 4:
+            Fx = Fx.view(Fx.size(0), 1, Fx.size(1), Fx.size(2))
+            Fx = Fx.repeat(1, 4, 1, 1)
+
+            Fy = Fy.view(Fy.size(0), 1, Fy.size(1), Fy.size(2))
+            Fy = Fy.repeat(1, 4, 1, 1)
 
         return Fx, Fy
 

@@ -14,12 +14,12 @@ if __name__ == '__main__':
 
     generator = Generator()
     # res = generator.generate()
-    ship = generator.generateShip(0, 0)
+    ship = generator.generateShipSurf()
     for _ in range(10):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        display.blit(ship.image, (0, 0))
+        display.blit(ship, (0, 0))
         # display.blit(ship_2, (0, 0))
         # ship.draw_rotating()
         pygame.display.update()
