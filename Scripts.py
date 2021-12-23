@@ -105,6 +105,11 @@ def main_loop(realGuy):
                 State.wave_spawning = False
                 pg.time.set_timer(pg.USEREVENT + 3, 0)
 
+            # handle game over
+            if event.type == pg.USEREVENT + 4:
+                State.state = "game_over"
+                pg.time.set_timer(pg.USEREVENT + 4, 0)
+
         # Updates to object groups
         #
         # Execute events that all objects are subscribed to
@@ -435,8 +440,8 @@ def pause_menu():
 
 def death_menu():
     temporary_BG = State.screen.copy()
-    b_exit = bt.B_Exit((200, 320, 100, 30))
-    b_startover = bt.B_Start_Over((200, 200, 100, 30))
+    b_exit = bt.B_Exit((Assets.WIDTH//2 - 50, 320, 100, 30))
+    b_startover = bt.B_Start_Over((Assets.WIDTH//2 - 50, 200, 100, 30))
     menu = [b_startover, b_exit]
     selection = 0
     menu[0].select()
@@ -517,11 +522,14 @@ def player_set():
     temporary_BG = pg.transform.scale(temporary_BG, [WIDTH, HEIGHT])
     State.screen.blit(temporary_BG, (0, 0))
     b_new_game = bt.B_New_Game((140, 400, 100, 30))
-    ship_highlights_1 = bt.B_Ship_Highlihgts((30, 20, 60, 200), 0)
-    ship_highlights_2 = bt.B_Ship_Highlihgts((100, 20, 60, 200), 1)
-    ship_highlights_3 = bt.B_Ship_Highlihgts((170, 20, 60, 200), 2)
     b_exit = bt.B_Exit((250, 400, 100, 30))
-    menu = [[ship_highlights_1, ship_highlights_2, ship_highlights_3], [b_new_game, b_exit]]
+    menu = [
+        [
+            bt.B_Ship_Highlihgts((30, 20, 60, 200), 0),
+            bt.B_Ship_Highlihgts((100, 20, 60, 200), 1),
+            bt.B_Ship_Highlihgts((170, 20, 60, 200), 2),
+            bt.B_Ship_Highlihgts((240, 20, 60, 200), -1)],
+        [b_new_game, b_exit]]
     selection = [0, 0]
     ship_selected = 0
     menu[0][0].select()
@@ -603,8 +611,6 @@ def player_set():
                 if selection[0] == 0:
                     ship_selected = selection[1]
 
-                print(selection)
-
             if keys[pg.K_LEFT]:
 
                 if selection[1] > 0:
@@ -615,14 +621,11 @@ def player_set():
                 if selection[0] == 0:
                     ship_selected = selection[1]
 
-                print(selection)
-
             if keys[pg.K_RETURN]:
 
                 menu[selection[0]][selection[1]].action()
 
                 if selection[0] == 1 and selection[1] == 0:
                     State.t = (False, False, False, False)
-                    print("breaking")
                     menu_run = False
 

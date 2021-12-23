@@ -1,12 +1,16 @@
 import pickle
+import random
+
 import pygame as pg
 import sys
 
+import Controls
 from Assets import *
 import State
 import Funcs
 import Scripts
 from Player import Player
+from ShipGen import Generator
 
 
 class Button(pygame.sprite.Sprite):
@@ -80,9 +84,8 @@ class B_New_Game(Button):
 
     def action(self):
         State.level = 0
-
         realGuy = Player.ship_assign(State.picked_ship, State.start_lives,
-                              player=True)
+                          player=True)
 
         Scripts.main_loop(realGuy)
 

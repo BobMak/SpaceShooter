@@ -124,7 +124,11 @@ class Bot(Player):
         """Execute all functions in to_do_list if there is any goal"""
         # Excecute all to-dos if goal is player
         if self.goal in State.player_group:
-            [x() for x in self.to_do_list]
+            for x in self.to_do_list:
+                try:
+                    x()
+                except:
+                    pass
         else:
             try:
                 self.goal = State.player_group.sprites()[0]

@@ -73,12 +73,7 @@ def listen_shield(player, keys):
             player.shields.remove(x)
 
 
-ABILITIES = [[listen_shield, listen_shot,
-            listen_left, listen_right,
-            listen_acceleration, listen_reverse],
-            [listen_shield, listen_shot,
-            listen_left, listen_right,
-            listen_acceleration, listen_reverse, listen_shot_missile],
-            [listen_shield, listen_shot,
-            listen_left, listen_right,
-            listen_acceleration, listen_reverse, listen_shot_missile]]
+ABILITIES = [
+    [listen_shield, listen_shot,listen_left, listen_right,listen_acceleration, listen_reverse],
+    [listen_shield, listen_shot,listen_left, listen_right,listen_acceleration, listen_reverse, listen_shot_missile],
+    [listen_shield, listen_shot,listen_left, listen_right,listen_acceleration, listen_reverse, listen_shot_missile]]

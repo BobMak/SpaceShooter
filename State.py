@@ -12,7 +12,7 @@ SHIP_CONSTANTS = [[1.6666, 0.4166, 0.0333,   0.0083,    5,      2,      1, 5],
                   [  1.25,  0.025, 0.0125,    0.005,   15,      5,      2, 5],
                   [   2.5, 0.0625,   0.05,   0.0125,  7.5,    2.5,      1, 10],
                   [   1.2,   0.03,   0.01,     0.01,    2,      2,      1, 5],
-                  []]
+                  [   1.2,   0.03,   0.01,     0.01,    2,      2,      1, 5]]
 
 
 picked_ship = 2
@@ -51,10 +51,10 @@ asteroid_densities = [(1,2), (2,2), (1,3), (2,3)]
 
 SHIP_HP = [40, 23, 10]
 
-SHIPS_TEXTS = ['space - shoot, c - shield',
-               'space - shoot, c - shield, x - missile',
-               'space - shoot, c - shield, x - missile',
-               'space - shoot, c - shield']
+SHIPS_TEXTS = ['space - shoot\nc - shield',
+               'space - shoot\nc - shield\nx - missile',
+               'space - shoot\nc - shield\nx - missile',
+               'space - ?\nc - ?\nx - ?',]
 
 # Standard save for a player. Should be replaced by a save if such is present in save.pkl
 save = {

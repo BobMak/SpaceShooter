@@ -1,7 +1,6 @@
 import random
 import pygame
 
-import Items
 import State
 from Assets import particle, asteroid_imgs, bad_thing
 from Mechanics import GObject, Moving, Vulnerable, FX_Track
@@ -122,6 +121,9 @@ class AdvAsteroid(Asteroid):
                 if random.choice((0,0,0,0,0,0,0,0,1)):
                     c = Agressor(bad_thing, self.rect.centerx, self.rect.centery)
                     c.remove(State.player_group)
-                    c.rush()
+                    try:
+                        c.rush()
+                    except:
+                        pass
 
         self.kill()

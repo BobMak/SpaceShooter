@@ -2,36 +2,37 @@ import pickle
 
 import Controls
 from Mechanics import *
-import Scripts
 
 import pygame.gfxdraw as gfx
 
 from Projectile import Projectile
+from ShipGen import Generator
 
 
 class Player(GObject, Moving, Vulnerable):
     '''Player(image, x, y, lives, bolt=0,
               complex_sh=-1, width=None, height=None)'''
-    bolt = 0
-    arr_input = []
-    player_hull_group = pygame.sprite.Group()
-    shields_orbit_group = pygame.sprite.Group()
-    shields = pygame.sprite.Group()
-    turrets = pygame.sprite.Group()
-    orbiting = pygame.sprite.Group()
-    mounts = []
-
-    hull_group_ang = 0
-
-    space_lock = False
-    special_lock = False
-    missile_lock = False
-    shield_lock = False
-    acceleration_lock = False
-    locks = [space_lock, special_lock, missile_lock, shield_lock, acceleration_lock]
 
     def __init__(self, image, x, y, lives, bolt=0,
                  complex_sh=-1, player=True, width=None, height=None):
+
+        self.bolt = 0
+        self.arr_input = []
+        self.player_hull_group = pygame.sprite.Group()
+        self.shields_orbit_group = pygame.sprite.Group()
+        self.shields = pygame.sprite.Group()
+        self.turrets = pygame.sprite.Group()
+        self.orbiting = pygame.sprite.Group()
+        self.mounts = []
+
+        self.hull_group_ang = 0
+
+        self.space_lock = False
+        self.special_lock = False
+        self.missile_lock = False
+        self.shield_lock = False
+        self.acceleration_lock = False
+        self.locks = [self.space_lock, self.special_lock, self.missile_lock, self.shield_lock, self.acceleration_lock]
 
         self.MAX_HP = 10
         self.MAX_S_HP = 10
@@ -48,7 +49,7 @@ class Player(GObject, Moving, Vulnerable):
         self.shield_hp = copy.deepcopy(self.MAX_S_HP)
         self.speed = [0,0]
         self.lives = lives
-        super().__init__(image, x, y, width=width, height=height)
+        GObject.__init__(self, image, x, y, width=width, height=height)
         Moving.__init__(self)
         Vulnerable.__init__(self, State.SHIP_HP[complex_sh])
         """#################FIX HP###################"""
@@ -125,7 +126,7 @@ class Player(GObject, Moving, Vulnerable):
                 with open('save.pkl', 'wb') as f:
                     pickle.dump(State.save, f, pickle.HIGHEST_PROTOCOL)
 
-                Scripts.death_menu()
+                pygame.time.set_timer(pygame.USEREVENT + 4, 1000)
 
     def damage(self, dmg):
 
@@ -192,20 +193,41 @@ class Player(GObject, Moving, Vulnerable):
     def ship_assign(picked_ship, lives, player):
         '''Assign all properties to given ship. Usually when creating new instance
         of ship'''
-        ship = Player(Assets.SHIPS_IMGS[picked_ship],
-                      Assets.HEIGHT // 2, Assets.HEIGHT // 2,
-                      complex_sh=picked_ship - 1, bolt=picked_ship,
-                      lives=lives, width=None, height=None, player=player)
-        ship.rotate(0)
-        ship.arr_input = Controls.ABILITIES[picked_ship]
+        if picked_ship==-1:
+            g = Generator()
+            img = g.generateShipSurf()
+            ship = Player(img,
+                          Assets.HEIGHT // 2, Assets.HEIGHT // 2,
+                          complex_sh=picked_ship - 1, bolt=random.randint(0, 2),
+                          lives=0, width=None, height=None, player=player)
+            ship.rotate(0)
+            ship.arr_input = Controls.ABILITIES[-1]
+            # 1.2,   0.03,   0.01,     0.01,    2,      2,      1, 5
+            ship.ROTATION = max(1.0, random.random() * 3)
+            ship.ACCELERATION = max(0.04, random.random() * 0.1)
+            ship.DEACCELERATION = max(0.01, random.random()*0.1)
+            ship.ENV_DEACCELERATION = 0.01
+            ship.MAX_ACCELERATION_RESERVE = max(1.0, random.random() * 5)
+            ship.hp = 3
+            ship.shield_hp = 3
+            ship.type = 1
+            ship.addMissiles(5)
 
-        ship.ROTATION = State.SHIP_CONSTANTS[picked_ship][0]
-        ship.ACCELERATION = State.SHIP_CONSTANTS[picked_ship][1]
-        ship.DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][2]
-        ship.ENV_DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][3]
-        ship.hp = State.SHIP_CONSTANTS[picked_ship][4]
-        ship.shield_hp = State.SHIP_CONSTANTS[picked_ship][5]
-        ship.type = State.SHIP_CONSTANTS[picked_ship][6]
-        ship.addMissiles(State.SHIP_CONSTANTS[picked_ship][7])
+        else:
+            ship = Player(Assets.SHIPS_IMGS[picked_ship],
+                          Assets.HEIGHT // 2, Assets.HEIGHT // 2,
+                          complex_sh=picked_ship - 1, bolt=picked_ship,
+                          lives=lives, width=None, height=None, player=player)
+            ship.rotate(0)
+            ship.arr_input = Controls.ABILITIES[picked_ship]
+
+            ship.ROTATION = State.SHIP_CONSTANTS[picked_ship][0]
+            ship.ACCELERATION = State.SHIP_CONSTANTS[picked_ship][1]
+            ship.DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][2]
+            ship.ENV_DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][3]
+            ship.hp = State.SHIP_CONSTANTS[picked_ship][4]
+            ship.shield_hp = State.SHIP_CONSTANTS[picked_ship][5]
+            ship.type = State.SHIP_CONSTANTS[picked_ship][6]
+            ship.addMissiles(State.SHIP_CONSTANTS[picked_ship][7])
 
         return ship

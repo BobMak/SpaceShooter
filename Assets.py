@@ -1,7 +1,7 @@
 import os
 import pygame
 
-pygame.init()
+# pygame.init()
 
 # CONSTANTS
 
@@ -80,7 +80,7 @@ model_BG = pygame.image.load(os.path.join("assets", "ModelBG.bmp"))
 SIZE = WIDTH, HEIGHT = 1280, 720
 BG = pygame.transform.scale(pygame.image.load(os.path.join("assets", "BG_720.png")), (WIDTH, HEIGHT))
 
-menu_BG = pygame.image.load(os.path.join("assets", "menu_BG.png"))
+menu_BG = pygame.transform.scale(pygame.image.load(os.path.join("assets", "menu_BG.png")), (WIDTH, HEIGHT))
 menu_button = pygame.image.load(os.path.join("assets", "menu_button.png"))
 menu_button_selected = pygame.image.load(os.path.join("assets", "menu_button_selected.png"))
 live = pygame.image.load(os.path.join("assets", "1live.png"))
@@ -93,4 +93,4 @@ engi = [engi_5, engi_3, engi_2]
 shield = [shld_0, shld_1, shld_2, shld_3, shld_4, shld_5, shld_6, shld_7]
 asteroid_imgs = [img_asteroid_1, img_asteroid_2, img_asteroid_3, img_asteroid_4]
 
-SHIPS_IMGS = [guy_img, ship_2, ship_3]
+SHIPS_IMGS = [guy_img, ship_2, ship_3, live]
