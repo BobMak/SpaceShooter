@@ -182,6 +182,10 @@ missile_types = {
     },
 }
 
+buff_explosions = {
+
+}
+
 spec_cooldown = [30, 60, 120]
 
 asteroid_hps = [2, 3, 4, 5]

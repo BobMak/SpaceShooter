@@ -5,6 +5,7 @@ from Mechanics import *
 
 import pygame.gfxdraw as gfx
 
+from Missile import Missile
 from Projectile import Projectile
 
 
@@ -226,5 +227,7 @@ class Player(GObject, Moving, Vulnerable):
             ship.arr_input.append(Controls.controls[a])
 
         ship.addMissiles(State.ship_types[picked_ship]['missiles'])
+        mslType = State.ship_types[picked_ship]['missile']
+        Animation.prepareExplosions(State.missile_types[mslType]['hit_range'])
 
         return ship

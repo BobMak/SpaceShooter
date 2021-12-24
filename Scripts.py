@@ -179,7 +179,7 @@ def main_loop(realGuy):
                         break
             for x in pl.shields:
                 if pg.sprite.collide_circle(y, x):
-                    x.damage(2 * y.type)
+                    x.damage(4)
                     if y.damage(5):
                         break
             for i in State.projectiles:
@@ -259,7 +259,10 @@ def screen_draw():
         # pg.draw.rect(screen, (0,255,0), x.rect)
 
     for object in State.asteroids:
-        object.draw_rotating()
+        try:
+            object.draw_rotating()
+        except:
+            print("failed to draw an asteroid")
 
     for object in State.noclip_asteroids:
         object.draw_rotating()

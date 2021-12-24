@@ -1,9 +1,12 @@
 import random
+import time
+
+import numba
+import threading
 
 from Mechanics import *
 from Zone import Zone
 from Projectile import Projectile
-import Funcs
 
 
 class Missile(Projectile):
@@ -36,6 +39,7 @@ class Missile(Projectile):
         State.projectiles.remove(self)
 
         self.aim = self.lock_closest()
+        self.expAnimation = None
 
     def rotate_to_aim(self):
 
@@ -58,9 +62,7 @@ class Missile(Projectile):
             return None
 
     def pursue(self):
-
         r = copy.copy(self.rect)
-
         # create engine particles
         FX_Track(particle, r, 40, look_dir=random.randint(0,358),
                         fading=(20,16), enlarging=(20,16),
@@ -105,8 +107,18 @@ class Missile(Projectile):
 
     def blow_up(self):
         x = Zone(self.rect.x, self.rect.y, self.hit_range, self.hp, 2)
+
+        if self.expAnimation:
+            explAnimation = self.expAnimation
+        elif self.hit_range in State.buff_explosions:
+            explAnimation = random.choice(State.buff_explosions[self.hit_range])
+        else:
+            for _ in range(10):
+                time.sleep(0.1)
+                if self.hit_range in State.buff_explosions:
+                    explAnimation = random.choice(State.buff_explosions[self.hit_range])
         Animation.FX_explosion(self.rect.centerx, self.rect.centery,
-                       xpl=expN, radius=(60,60))
+                       xpl=explAnimation, radius=(self.hit_range*3,self.hit_range*3))
         State.hit_waves.add(x)
         State.time_dependent.add(x)
         self.kill()
@@ -120,7 +132,7 @@ class Missile(Projectile):
                           damage=State.missile_types[missile]['damage'],
                           distance=State.missile_types[missile]['distance'],
                           max_speed=State.missile_types[missile]['speed'],
-                           acceleration=State.missile_types[missile]['acceleration'],
+                          acceleration=State.missile_types[missile]['acceleration'],
                           rotation_speed=State.missile_types[missile]['rotation_speed'],
                           hit_range=State.missile_types[missile]['hit_range'],
                           )

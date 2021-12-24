@@ -1,6 +1,8 @@
 import copy
 import random
+import threading
 
+import numba
 import numpy as np
 
 import Assets
@@ -481,29 +483,100 @@ class Animation(GObject, Moving):
         else:
             self.delay_count += 1
 
+    # this method shall be called when we know the properties of the required explosion
+    @staticmethod
+    def prepareExplosions(type):
+        def _work(type):
+            if type not in State.buff_explosions:
+                State.buff_explosions[type] = []
+                for i in range(5):
+                    animation = Animation.generateExplosionAnimation(type, type)
+                    State.buff_explosions[type].append(animation)
+
+        threading.Thread(target=_work, args=(type,)).start()
+
+    @staticmethod
+    def generateExplosionAnimation(diameter: int, n_frames: int):
+        """
+        generates a set of explosion animations using cellular automata
+        """
+        animation = []
+        img_buffer = np.zeros((diameter, diameter, 3), dtype=np.int16)
+        # generate an initial circle in the center proporional to damage
+        img_buffer[int(diameter / 2), int(diameter / 2)] = (255, 255, 255)
+        for i in range(int(3)):
+            for j in range(int(3)):
+                img_buffer[int(diameter / 2) + i, int(diameter / 2) + j] = (255, 255, 255)
+                img_buffer[int(diameter / 2) + i, int(diameter / 2) - j] = (255, 255, 255)
+                img_buffer[int(diameter / 2) - i, int(diameter / 2) + j] = (255, 255, 255)
+                img_buffer[int(diameter / 2) - i, int(diameter / 2) - j] = (255, 255, 255)
+
+        # rule set
+        @numba.jit(nopython=True)
+        def automata(x, y, img_buffer):
+            # if pixel has 3 or more neighbors that are > 200, it will be set to their average
+            # when vlaue is != 0, it will decay by a random amount
+            if img_buffer[x, y, 0] != 0:
+                # make sure the decay stops the explosion before it reaches the boundary within the given n_frames
+                # or faster
+                v = (255 + diameter) // n_frames
+                _decay = random.randint(int(v), int(v) + 9)
+                # decay = random.randint(int(diameter/n_frames),int(diameter/n_frames + 10))
+                decay = np.array((_decay, _decay + 6, _decay + 9), dtype=np.int16)
+                img_buffer[x, y] = img_buffer[x, y] - decay
+            # when the value is 0, it will become 255 if it has 3 neighbors that are > 200
+            else:
+                count = 0
+                for i in range(-1, 2):
+                    for j in range(-1, 2):
+                        try:
+                            count += img_buffer[x + i, y + j, 0] > 230
+                        except:
+                            pass
+                if count >= 3:
+                    # the further from center, the less is the probabilit of being set to 255
+                    if random.random() > (abs(x - diameter / 2) + abs(y - diameter / 2)) / diameter:
+                        img_buffer[x, y] = 255
+
+        for i in range(n_frames):
+            # apply cellular automata
+            for x in numba.prange(diameter):
+                for y in numba.prange(diameter):
+                    automata(x, y, img_buffer)
+
+            # create animation frame
+            img_buffer[img_buffer < 0] = 0
+            surf = pygame.surfarray.make_surface(img_buffer)
+            # stop early if all values are 1
+            if np.all(img_buffer == 1):
+                break
+            surf.set_colorkey((0, 0, 0), pygame.RLEACCEL)
+            surf = pygame.transform.scale(surf, (int(diameter * 3), int(diameter * 3)))
+            animation.append(surf)
+
+        return animation
+
     @staticmethod
     def FX_explosion(x, y, xpl=Assets.expl, radius=(30, 30)):
         obj = Animation(xpl, radius[0], radius[1], x, y, True)
         obj.rect.centerx += - 20
         obj.rect.centery += - 20
         State.effects.add(obj)
+        return obj
 
     @staticmethod
     def FX_engine_mark(source):
         object = Animation(Assets.engi, 10, 10,
-                           source.rect.centerx, source.rect.centery)
+                           source.rect.centerx
+                           + source.rect.height//2
+                           * np.cos(np.deg2rad(source.look_dir + 90))
+                           ,
+                           source.rect.centery
+                           + source.rect.height//2
+                           * np.sin(np.deg2rad(source.look_dir + 90))
+                           )
         object.look_dir = source.look_dir
         object.rotate(0)
         object.speed = source.speed
-
-        object.rect.centerx = (source.rect.centerx
-                               + source.rect.height // 2
-                               * np.cos(np.deg2rad(object.look_dir + 90)))
-        object.rect.centery = (source.rect.centery
-                               + source.rect.height // 2
-                               * np.sin(np.deg2rad(object.look_dir + 90)))
-
-        speed0 = np.cos(np.deg2rad(copy.deepcopy(object.look_dir + 90))) * 3
-        speed1 = np.sin(np.deg2rad(copy.deepcopy(object.look_dir + 90))) * 3
 
         State.effects.add(object)
