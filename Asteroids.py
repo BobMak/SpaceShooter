@@ -29,7 +29,7 @@ class Asteroid(GObject, Moving, Vulnerable):
                                                  self.velo_deviation),
                       speed[1] + random.uniform(-self.velo_deviation,
                                                  self.velo_deviation)]
-        self.look_dir = random.randint(-180, 180)
+        self.look_dir = (random.random() - 0.5) * 360
         self.hp = self.type * 2
 
         # movable.add(self)
@@ -94,7 +94,6 @@ class AdvAsteroid(Asteroid):
         if self.hp < 0:
             self.crash()
             return
-            State.noclip_asteroids.add(self)
 
     def crash(self):
         if self.type >2:

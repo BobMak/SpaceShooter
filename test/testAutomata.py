@@ -2,7 +2,6 @@ import time
 
 import pygame
 
-from Missile import Missile
 from Mechanics import Animation
 
 
@@ -12,7 +11,7 @@ if __name__ == '__main__':
     hit_range = 100
 
     for _ in range(5):
-        expAnimation = Missile.generateExplosionAnimation(hit_range, hit_range)
+        expAnimation = Animation.generateExplosionAnimation(hit_range, 20)
         for i in range(0, len(expAnimation)):
             display.blit(expAnimation[i], (0, 0))
             pygame.display.update()

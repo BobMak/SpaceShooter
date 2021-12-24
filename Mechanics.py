@@ -236,7 +236,7 @@ class GObject(pygame.sprite.Sprite):
     def __init__(self, image, x, y, width=None, height=None):
         pygame.sprite.Sprite.__init__(self)
 
-        self.look_dir = 0
+        self.look_dir = 0.0
         self.rotated_image = 0
         self.rotated_rect = 0
         self.radius = None
@@ -490,7 +490,7 @@ class Animation(GObject, Moving):
             if type not in State.buff_explosions:
                 State.buff_explosions[type] = []
                 for i in range(5):
-                    animation = Animation.generateExplosionAnimation(type, type)
+                    animation = Animation.generateExplosionAnimation(type, type//3)
                     State.buff_explosions[type].append(animation)
 
         threading.Thread(target=_work, args=(type,)).start()
@@ -519,7 +519,7 @@ class Animation(GObject, Moving):
             if img_buffer[x, y, 0] != 0:
                 # make sure the decay stops the explosion before it reaches the boundary within the given n_frames
                 # or faster
-                v = (255 + diameter) // n_frames
+                v = (255 + diameter) // diameter
                 _decay = random.randint(int(v), int(v) + 9)
                 # decay = random.randint(int(diameter/n_frames),int(diameter/n_frames + 10))
                 decay = np.array((_decay, _decay + 6, _decay + 9), dtype=np.int16)
@@ -538,7 +538,7 @@ class Animation(GObject, Moving):
                     if random.random() > (abs(x - diameter / 2) + abs(y - diameter / 2)) / diameter:
                         img_buffer[x, y] = 255
 
-        for i in range(n_frames):
+        for i in range(diameter):
             # apply cellular automata
             for x in numba.prange(diameter):
                 for y in numba.prange(diameter):
@@ -554,7 +554,15 @@ class Animation(GObject, Moving):
             surf = pygame.transform.scale(surf, (int(diameter * 3), int(diameter * 3)))
             animation.append(surf)
 
-        return animation
+        # downsample to a specified size if needed
+        final = []
+        if n_frames < len(animation):
+            for i in range(n_frames):
+                final.append(animation[int(i*len(animation)/n_frames)])
+        else:
+            final = animation
+
+        return final
 
     @staticmethod
     def FX_explosion(x, y, xpl=Assets.expl, radius=(30, 30), randdir=True):
