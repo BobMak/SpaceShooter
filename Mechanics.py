@@ -557,8 +557,8 @@ class Animation(GObject, Moving):
         return animation
 
     @staticmethod
-    def FX_explosion(x, y, xpl=Assets.expl, radius=(30, 30)):
-        obj = Animation(xpl, radius[0], radius[1], x, y, True)
+    def FX_explosion(x, y, xpl=Assets.expl, radius=(30, 30), randdir=True):
+        obj = Animation(xpl, radius[0], radius[1], x, y, randdir)
         obj.rect.centerx += - 20
         obj.rect.centery += - 20
         State.effects.add(obj)

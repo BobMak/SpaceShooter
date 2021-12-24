@@ -118,7 +118,7 @@ class Missile(Projectile):
                 if self.hit_range in State.buff_explosions:
                     explAnimation = random.choice(State.buff_explosions[self.hit_range])
         Animation.FX_explosion(self.rect.centerx, self.rect.centery,
-                       xpl=explAnimation, radius=(self.hit_range*3,self.hit_range*3))
+                       xpl=explAnimation, radius=(self.hit_range*3,self.hit_range*3), randdir=False)
         State.hit_waves.add(x)
         State.time_dependent.add(x)
         self.kill()
