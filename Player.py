@@ -6,17 +6,29 @@ from Mechanics import *
 import pygame.gfxdraw as gfx
 
 from Projectile import Projectile
-from ShipGen import Generator
 
 
 class Player(GObject, Moving, Vulnerable):
     '''Player(image, x, y, lives, bolt=0,
               complex_sh=-1, width=None, height=None)'''
 
-    def __init__(self, image, x, y, lives, bolt=0,
-                 complex_sh=-1, player=True, width=None, height=None):
+    def __init__(self, image,
+                 x, y,
+                 lives, hp,
+                 shield=0,
+                 rotation_rate=3,
+                 bolt='',
+                 missile='',
+                 max_acceleration_reserve=0,
+                 acceleration_burn_rate=0,
+                 acceleration_reserve_regeneration=0,
+                 deacceleration=0,
+                 env_deacceleration=0,
+                 acceleration=0,
+                 complex_sh=(), isPlayer=True, width=None, height=None):
 
-        self.bolt = 0
+        self.bolt = bolt
+        self.missile = missile
         self.arr_input = []
         self.player_hull_group = pygame.sprite.Group()
         self.shields_orbit_group = pygame.sprite.Group()
@@ -34,27 +46,27 @@ class Player(GObject, Moving, Vulnerable):
         self.acceleration_lock = False
         self.locks = [self.space_lock, self.special_lock, self.missile_lock, self.shield_lock, self.acceleration_lock]
 
-        self.MAX_HP = 10
-        self.MAX_S_HP = 10
-        self.ROTATION = 10
-        self.ACCELERATION = 1
-        self.DEACCELERATION = 0.5
-        self.ENV_DEACCELERATION = 0.25
-        self.MAX_ACCELERATION_RESERVE = 8.0
-        self.ACCELERATION_RESERVE_REGENERATION = 0.07
-        self.ACCELERATION_RATE = 0.2
+        self.max_hp = hp
+        self.max_shield_hp = shield
+        self.rotation_rate = rotation_rate
+        self.acceleration = acceleration
+        self.deacceleration = deacceleration
+        self.env_deacceleration = env_deacceleration
+        self.max_acceleration_reserve = max_acceleration_reserve
+        self.acceleration_reserve_regeneration = acceleration_reserve_regeneration
+        self.acceleration_burn_rate = acceleration_burn_rate
 
-        self.acceleration_reserve = copy.deepcopy(self.MAX_ACCELERATION_RESERVE)
-        self.hp = copy.deepcopy(self.MAX_HP)
-        self.shield_hp = copy.deepcopy(self.MAX_S_HP)
+        self.acceleration_reserve = copy.deepcopy(self.max_acceleration_reserve)
+        self.hp = copy.deepcopy(self.max_hp)
+        self.shield_hp = copy.deepcopy(self.max_shield_hp)
         self.speed = [0,0]
         self.lives = lives
         GObject.__init__(self, image, x, y, width=width, height=height)
         Moving.__init__(self)
-        Vulnerable.__init__(self, State.SHIP_HP[complex_sh])
+        Vulnerable.__init__(self, hp)
         """#################FIX HP###################"""
 
-        if player == True:
+        if isPlayer == True:
 
             self.add(State.player_group)
 
@@ -63,7 +75,7 @@ class Player(GObject, Moving, Vulnerable):
                 r.add(State.interface)
                 State.movable.remove(r)
 
-            for x in State.complex_rects[complex_sh]:
+            for x in complex_sh:
                 b = Colliding(x[0], x[1], x[2], x[3], self)
                 self.player_hull_group.add(b)
 
@@ -71,13 +83,13 @@ class Player(GObject, Moving, Vulnerable):
         self.missiles = 0
 
         self.time_count_fire = 0
-        self.timer_fire = State.prj_cooldown[bolt]
+        self.timer_fire = State.projectile_types[bolt]['cooldown']
 
         self.time_count_special = 0
-        self.timer_special = State.spec_cooldown[complex_sh]
+        self.timer_special = State.spec_cooldown[0]
 
         self.time_count_missile = 0
-        self.timer_missile = State.prj_cooldown[State.n_bolts + bolt]
+        self.timer_missile = State.missile_types[missile]['cooldown']
 
         self.time_count_shield = 0
         self.timer_shield = 50
@@ -93,7 +105,7 @@ class Player(GObject, Moving, Vulnerable):
 
         self.distance = 0
         self.orbit_ang = 0
-        self.player = player
+        self.player = isPlayer
 
     def addMissiles(self, number):
         self.missiles += number
@@ -129,7 +141,6 @@ class Player(GObject, Moving, Vulnerable):
                 pygame.time.set_timer(pygame.USEREVENT + 4, 1000)
 
     def damage(self, dmg):
-
         self.hp += -max(0, dmg)
         if self.hp < 0:
             self.destroy()
@@ -138,11 +149,11 @@ class Player(GObject, Moving, Vulnerable):
 
     def show_HP(self):
         gfx.box(State.screen,
-                (10, 10, self.hp * 100 / self.MAX_HP, 20), (0, 255, 0, 50))
+                (10, 10, self.hp * 100 / self.max_hp, 20), (0, 255, 0, 50))
 
     def show_acceleration_reserve(self):
         gfx.box(State.screen,
-                (10, 30, self.acceleration_reserve * 100 / self.MAX_ACCELERATION_RESERVE, 20),
+                (10, 30, self.acceleration_reserve * 100 / self.max_acceleration_reserve, 20),
                 (255, 255, 0, 50))
 
     def show_missiles(self):
@@ -173,14 +184,14 @@ class Player(GObject, Moving, Vulnerable):
 
     def accelerate(self, temp):
         if not self.acceleration_reserve < 0.4:
-            self.acceleration_reserve = max(0.0, self.acceleration_reserve - self.ACCELERATION_RATE)
+            self.acceleration_reserve = max(0.0, self.acceleration_reserve - self.acceleration_burn_rate)
             super()._accelerate(temp)
         else:
             self.acceleration_lock = True
 
     def update(self):
-        self.acceleration_reserve = min(self.MAX_ACCELERATION_RESERVE,
-                                        self.ACCELERATION_RESERVE_REGENERATION + self.acceleration_reserve)
+        self.acceleration_reserve = min(self.max_acceleration_reserve,
+                                        self.acceleration_reserve_regeneration + self.acceleration_reserve)
 
         for n in range(len(self.locks)):
             if self.locks[n]:
@@ -190,44 +201,30 @@ class Player(GObject, Moving, Vulnerable):
                     self.locks[n] = False
 
     @staticmethod
-    def ship_assign(picked_ship, lives, player):
+    def ship_assign(picked_ship, lives, isPlayer):
         '''Assign all properties to given ship. Usually when creating new instance
         of ship'''
-        if picked_ship==-1:
-            g = Generator()
-            img = g.generateShipSurf()
-            ship = Player(img,
-                          Assets.HEIGHT // 2, Assets.HEIGHT // 2,
-                          complex_sh=picked_ship - 1, bolt=random.randint(0, 2),
-                          lives=0, width=None, height=None, player=player)
-            ship.rotate(0)
-            ship.arr_input = Controls.ABILITIES[-1]
-            # 1.2,   0.03,   0.01,     0.01,    2,      2,      1, 5
-            ship.ROTATION = max(1.0, random.random() * 3)
-            ship.ACCELERATION = max(0.04, random.random() * 0.1)
-            ship.DEACCELERATION = max(0.01, random.random()*0.1)
-            ship.ENV_DEACCELERATION = 0.01
-            ship.MAX_ACCELERATION_RESERVE = max(1.0, random.random() * 5)
-            ship.hp = 3
-            ship.shield_hp = 3
-            ship.type = 1
-            ship.addMissiles(5)
 
-        else:
-            ship = Player(Assets.SHIPS_IMGS[picked_ship],
-                          Assets.HEIGHT // 2, Assets.HEIGHT // 2,
-                          complex_sh=picked_ship - 1, bolt=picked_ship,
-                          lives=lives, width=None, height=None, player=player)
-            ship.rotate(0)
-            ship.arr_input = Controls.ABILITIES[picked_ship]
+        ship = Player(State.ship_types[picked_ship]["image"],
+                      Assets.HEIGHT // 2, Assets.HEIGHT // 2,
+                      complex_sh=State.ship_types[picked_ship]['hit_box'],
+                      lives=lives,
+                      bolt=State.ship_types[picked_ship]['bolt'],
+                      missile=State.ship_types[picked_ship]['missile'],
+                      hp=State.ship_types[picked_ship]['hull'],
+                      shield=State.ship_types[picked_ship]['shields'],
+                      rotation_rate=State.ship_types[picked_ship]['rotation_rate'],
+                      acceleration=State.ship_types[picked_ship]['acceleration'],
+                      max_acceleration_reserve=State.ship_types[picked_ship]['acceleration_tank'],
+                      acceleration_burn_rate=State.ship_types[picked_ship]['acceleration_burn_rate'],
+                      acceleration_reserve_regeneration=State.ship_types[picked_ship]['acceleration_reserve_regeneration'],
+                      deacceleration=State.ship_types[picked_ship]['deacceleration'],
+                      env_deacceleration=State.ship_types[picked_ship]['env_deacceleration'],
+                      width=None, height=None, isPlayer=isPlayer)
+        ship.rotate(0)
+        for a in State.ship_types[picked_ship]['controls']:
+            ship.arr_input.append(Controls.controls[a])
 
-            ship.ROTATION = State.SHIP_CONSTANTS[picked_ship][0]
-            ship.ACCELERATION = State.SHIP_CONSTANTS[picked_ship][1]
-            ship.DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][2]
-            ship.ENV_DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][3]
-            ship.hp = State.SHIP_CONSTANTS[picked_ship][4]
-            ship.shield_hp = State.SHIP_CONSTANTS[picked_ship][5]
-            ship.type = State.SHIP_CONSTANTS[picked_ship][6]
-            ship.addMissiles(State.SHIP_CONSTANTS[picked_ship][7])
+        ship.addMissiles(State.ship_types[picked_ship]['missiles'])
 
         return ship

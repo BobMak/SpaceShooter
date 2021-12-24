@@ -67,7 +67,7 @@ class B_Start_Over(Button):
             object.kill()
 
         newPlayer = Player.ship_assign(State.picked_ship, State.start_lives,
-                              player=True)
+                                       isPlayer=True)
 
         State.save['level'] = 0
         State.level = 0
@@ -85,7 +85,7 @@ class B_New_Game(Button):
     def action(self):
         State.level = 0
         realGuy = Player.ship_assign(State.picked_ship, State.start_lives,
-                          player=True)
+                                     isPlayer=True)
 
         Scripts.main_loop(realGuy)
 
@@ -119,9 +119,9 @@ class B_Ship_Highlihgts(Button):
 
         super().__init__(rect)
         self.ship_number = ship_number
-        self.text = State.SHIPS_TEXTS[ship_number]
+        self.text = State.ship_types[ship_number]['controls_text']
 
-        self.main_image = SHIPS_IMGS[ship_number]
+        self.main_image = State.ship_types[ship_number]['image']
         ship_rect = self.main_image.get_rect()
         self.ship_img_pos = (rect[2]//2 - ship_rect.width//2,
                              rect[3]//2 - ship_rect.height//2)
@@ -133,13 +133,37 @@ class B_Ship_Highlihgts(Button):
                                           self.ship_img_pos[1]))
 
     def action(self):
-
         State.picked_ship = self.ship_number
+        if self.ship_number == 'generated':
+            g = Generator()
+            img = g.generateShipSurf()
+            # save img as generated.png
+            State.ship_types[self.ship_number]['image'] = img
+            pygame.image.save(img, os.path.join('assets','ships','generated.png'))
+            abilities = ['left', 'right', 'up', 'down']
+            for x in ['shoot', 'shield', 'speed', 'health','missile']:
+                if random.choice([True, False]):
+                    abilities.append(x)
+
+            State.ship_types['generated']['rotation_rate'] = max(1.0, random.random() * 3)
+            State.ship_types['generated']['acceleration'] = max(0.04, random.random() * 0.1)
+            State.ship_types['generated']['deacceleration'] = max(0.01, random.random() * 0.1)
+            State.ship_types['generated']['env_deacceleration'] = 0.01
+            State.ship_types['generated']['acceleration_tank'] = max(1.0, random.random() * 5)
+            State.ship_types['generated']['hull'] = max(1.0, random.random() * 10)
+            State.ship_types['generated']['shields'] = 3
+            State.ship_types['generated']['mass'] = 1
+            State.ship_types['generated']['missiles'] = 5
+            State.ship_types['generated']['abilities'] = abilities
 
     def select(self):
         self.image = pygame.transform.scale(menu_button_selected,
                                             [self.rect.width, self.rect.height])
 
+        self.main_image = State.ship_types[self.ship_number]['image']
+        ship_rect = self.main_image.get_rect()
+        self.ship_img_pos = (self.rect[2] // 2 - ship_rect.width // 2,
+                             self.rect[3] // 2 - ship_rect.height // 2)
         self.image.blit(self.main_image, (self.ship_img_pos[0],
                                           self.ship_img_pos[1]))
 

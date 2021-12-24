@@ -1,10 +1,12 @@
 from Mechanics import GObject, FX_Glow
-from Assets import missile_1, live
+from Assets import live
 import State
 
 
 class Item(GObject):
-    IMAGES = [missile_1, live]
+    IMAGES = [
+        State.missile_types['heavy_missile']['image'],
+        live]
     def __init__(self, type, x, y):
         super().__init__(Item.IMAGES[type], x, y, width=None, height=None)
         State.pickupables.add(self)

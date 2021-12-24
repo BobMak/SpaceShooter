@@ -8,15 +8,27 @@ import Funcs
 
 class Missile(Projectile):
     # how often aim-updaing function to run
-    def __init__(self, bolt, x, y):
-        super().__init__(bolt + State.n_bolts, x, y, State.msl_distances[bolt])
+    def __init__(self, img, x, y,
+                 distance=0,
+                 rotation_speed=0.0,
+                 max_speed=0,
+                 damage=0,
+                 acceleration=0,
+                 hit_range=0,
+                 ):
+        super().__init__(img, x, y,
+                         distance=distance,
+                         max_speed=max_speed,
+                         damage=damage,
+                         )
         self.compute_tempo = 5
         self.compute_count = 0
-        self.d_ang = State.msl_d_angs[bolt]
-        self.d_speed = State.msl_d_speeds[bolt]
-        self.max_speed = State.msl_max_speeds[bolt]
-        self.hit_range = State.msl_hit_ranges[bolt]
-        self.hp = State.bolt_damage[bolt + State.n_bolts]
+        self.d_ang =     rotation_speed
+        self.d_speed =   acceleration
+        self.max_speed = max_speed
+        self.hit_range = hit_range
+        self.hp =        damage
+
         self.mod_speed = 0
         self.dist_prev = 500
         self.dist = None
@@ -70,16 +82,14 @@ class Missile(Projectile):
         self.dist_prev = self.dist
 
         a1 = self.speed[0] + self.d_speed*np.cos(np.deg2rad(self.look_dir-90))
-        if a1 < self.max_speed and a1 > -self.max_speed:
-            self.speed[0] = a1
-        else:
-            self.speed[0] = self.max_speed*np.cos(np.deg2rad(self.look_dir-90))
+        if a1 >= self.max_speed or a1 <= -self.max_speed:
+            a1 = self.max_speed*np.cos(np.deg2rad(self.look_dir-90))
 
         a2 = self.speed[1] + self.d_speed*np.sin(np.deg2rad(self.look_dir-90))
-        if a2 < self.max_speed and a2 > -self.max_speed:
-            self.speed[1] = a2
-        else:
-            self.speed[1] = self.max_speed*np.sin(np.deg2rad(self.look_dir-90))
+        if a2 >= self.max_speed or a2 <= -self.max_speed:
+            a2 = self.max_speed*np.sin(np.deg2rad(self.look_dir-90))
+
+        self.speed = (a1, a2)
 
     def update(self):
 
@@ -101,3 +111,33 @@ class Missile(Projectile):
         State.time_dependent.add(x)
         self.kill()
 
+    @staticmethod
+    def shot(self, direction, missile):
+        skipped_len = self.rect.height // 2
+        shot = Missile(State.missile_types[missile]['image'],
+                          self.rect.centerx,
+                          self.rect.centery,
+                          damage=State.missile_types[missile]['damage'],
+                          distance=State.missile_types[missile]['distance'],
+                          max_speed=State.missile_types[missile]['speed'],
+                           acceleration=State.missile_types[missile]['acceleration'],
+                          rotation_speed=State.missile_types[missile]['rotation_speed'],
+                          hit_range=State.missile_types[missile]['hit_range'],
+                          )
+        if direction:
+            shot.look_dir = direction
+        else:
+            shot.look_dir = self.look_dir
+        shot.rect.centerx = (self.rect.centerx
+                             - skipped_len * np.cos(np.deg2rad(shot.look_dir
+                                                               + 90)))
+        shot.rect.centery = (self.rect.centery
+                             - skipped_len * np.sin(np.deg2rad(shot.look_dir
+                                                               + 90)))
+
+        shot.speed = [State.missile_types[missile]['speed']
+                      * np.cos(np.deg2rad(self.look_dir - 90)),
+                      State.missile_types[missile]['speed']
+                      * np.sin(np.deg2rad(self.look_dir - 90))]
+        shot.rotate(0)
+        return shot

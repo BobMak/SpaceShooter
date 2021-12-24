@@ -7,45 +7,45 @@ from Missile import Missile
 
 def listen_acceleration(player, keys):
     if keys[pygame.K_UP]:
-        player.accelerate(player.ACCELERATION)
+        player.accelerate(player.acceleration)
         Animation.FX_engine_mark(player)
 
 
 def listen_reverse(player, keys):
     if keys[pygame.K_DOWN]:
-        player.accelerate(-player.DEACCELERATION)
+        player.accelerate(-player.deacceleration)
 
 
 def listen_right(player, keys):
     if keys[pygame.K_RIGHT]:
-        player.rotate(player.ROTATION)
+        player.rotate(player.rotation_rate)
 
         for x in player.turrets:
-            x.rotate(player.ROTATION)
-            Funcs.orbit_rotate(player, x, -player.ROTATION,
+            x.rotate(player.rotation_rate)
+            Funcs.orbit_rotate(player, x, -player.rotation_rate,
                                x.distance, x.orbit_ang)
 
         for x in player.shields:
-            x.rotate(player.ROTATION)
+            x.rotate(player.rotation_rate)
 
         for x in player.player_hull_group:
-            Funcs.orbit_rotate(player, x, -player.ROTATION,
+            Funcs.orbit_rotate(player, x, -player.rotation_rate,
                                x.distance, x.orbit_ang)
 
 
 def listen_left(player, keys):
     if keys[pygame.K_LEFT]:
-        player.rotate(-player.ROTATION)
+        player.rotate(-player.rotation_rate)
         for x in player.turrets:
-            x.rotate(-player.ROTATION)
-            Funcs.orbit_rotate(player, x, player.ROTATION,
+            x.rotate(-player.rotation_rate)
+            Funcs.orbit_rotate(player, x, player.rotation_rate,
                                x.distance, x.orbit_ang)
 
         for x in player.shields:
-            x.rotate(-player.ROTATION)
+            x.rotate(-player.rotation_rate)
 
         for x in player.player_hull_group:
-            Funcs.orbit_rotate(player, x, player.ROTATION,
+            Funcs.orbit_rotate(player, x, player.rotation_rate,
                                x.distance, x.orbit_ang)
 
 
@@ -59,9 +59,8 @@ def listen_shot_missile(player, keys):
         player.locks[2] = True
         if player.missiles > 0:
             player.missiles -= 1
-            x = Missile(0, player.rect.centerx, player.rect.centery)
-            x.look_dir = player.look_dir
-            x.speed = copy.deepcopy(player.speed)
+            Missile.shot(player, player.look_dir, player.missile)
+            # x.speed = copy.deepcopy(player.speed)
 
 
 def listen_shield(player, keys):
@@ -73,7 +72,12 @@ def listen_shield(player, keys):
             player.shields.remove(x)
 
 
-ABILITIES = [
-    [listen_shield, listen_shot,listen_left, listen_right,listen_acceleration, listen_reverse],
-    [listen_shield, listen_shot,listen_left, listen_right,listen_acceleration, listen_reverse, listen_shot_missile],
-    [listen_shield, listen_shot,listen_left, listen_right,listen_acceleration, listen_reverse, listen_shot_missile]]
+controls = {
+    "left": listen_left,
+    "right": listen_right,
+    "up": listen_acceleration,
+    "down": listen_reverse,
+    "shoot": listen_shot,
+    "missile": listen_shot_missile,
+    "shield": listen_shield
+}

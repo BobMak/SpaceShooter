@@ -2,18 +2,19 @@ import copy
 
 import numpy as np
 
-from Assets import prj_imgs
 from Mechanics import GObject, Moving, Vulnerable
 import State
 
 
 class Projectile(GObject, Moving, Vulnerable):
-    def __init__(self, bolt, x, y, distance, width=None, height=None):
-        super().__init__(prj_imgs[bolt], x, y, width=width, height=height)
+    def __init__(self, img, x, y, distance, width=None, height=None,
+                 damage=None,
+                 max_speed=None):
+        super().__init__(img, x, y, width=width, height=height)
         Moving.__init__(self)
-        Vulnerable.__init__(self, State.bolt_damage[bolt])
 
-        self.speed_max = State.prj_speeds[bolt]
+        Vulnerable.__init__(self, damage)
+        self.speed_max = max_speed
         self.timer = distance
 
         # movable.add(self)
@@ -31,11 +32,17 @@ class Projectile(GObject, Moving, Vulnerable):
             self.kill()
             self.hp = 0
 
+    # it is assumed to be a bolt the projectile is constructed here
     @staticmethod
     def shot(self, direction, bolt):
         skipped_len = self.rect.height // 2
-        shot = Projectile(bolt, self.rect.centerx,
-                          self.rect.centery, State.prj_distances[bolt])
+        shot = Projectile(State.projectile_types[bolt]['image'],
+                          self.rect.centerx,
+                          self.rect.centery,
+                          damage=State.projectile_types[bolt]['damage'],
+                          distance=State.projectile_types[bolt]['distance'],
+                          max_speed=State.projectile_types[bolt]['speed'],
+                          )
         if direction:
             shot.look_dir = direction
         else:
@@ -47,8 +54,9 @@ class Projectile(GObject, Moving, Vulnerable):
                              - skipped_len * np.sin(np.deg2rad(shot.look_dir
                                                                + 90)))
 
-        shot.speed = [State.prj_speeds[bolt]
+        shot.speed = [State.projectile_types[bolt]['speed']
                       * np.cos(np.deg2rad(self.look_dir - 90)),
-                      State.prj_speeds[bolt]
+                      State.projectile_types[bolt]['speed']
                       * np.sin(np.deg2rad(self.look_dir - 90))]
         shot.rotate(0)
+        return shot

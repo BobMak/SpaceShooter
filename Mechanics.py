@@ -23,10 +23,14 @@ class Moving:
     """
     Inherited by all classes that can move by themselves.
     """
-    def __init__(self):
-        self.ENV_DEACCELERATION = 0.1
-        self.look_dir = 0
-        self.speed = [0.0, 0.0]
+    def __init__(self,
+                 env_deacceleration=0.1,
+                 speed=(0.0, 0.0),
+                 look_dir=0.0,
+                 ):
+        self.env_deacceleration = env_deacceleration
+        self.look_dir = look_dir
+        self.speed = speed
         self.position = [self.rect.x, self.rect.y]
         State.movable.add(self)
 
@@ -39,17 +43,23 @@ class Moving:
                                 self.rect.width, self.rect.height)
 
     def slow_down(self):
-        self.speed[0] += (self.ENV_DEACCELERATION
+        # self.speed[0] += (self.env_deacceleration
+        #                   *abs(np.cos(np.deg2rad(self.look_dir-90.0)))
+        #                   *-np.sign(self.speed[0]))
+        #
+        # self.speed[1] += (self.env_deacceleration
+        #                   *abs(np.sin(np.deg2rad(self.look_dir-90.0)))
+        #                   *-np.sign(self.speed[1]))
+        self.speed = (self.speed[0] + (self.env_deacceleration
                           *abs(np.cos(np.deg2rad(self.look_dir-90.0)))
-                          *-np.sign(self.speed[0]))
-
-        self.speed[1] += (self.ENV_DEACCELERATION
+                          *-np.sign(self.speed[0])),
+                      self.speed[1] + (self.env_deacceleration
                           *abs(np.sin(np.deg2rad(self.look_dir-90.0)))
-                          *-np.sign(self.speed[1]))
+                          *-np.sign(self.speed[1])))
 
     def _accelerate(self, temp):
-        self.speed[0] += temp*np.cos(np.deg2rad(self.look_dir-90.0))
-        self.speed[1] += temp*np.sin(np.deg2rad(self.look_dir-90.0))
+        self.speed = (self.speed[0] + temp*np.cos(np.deg2rad(self.look_dir-90.0)),
+                      self.speed[1] + temp*np.sin(np.deg2rad(self.look_dir-90.0)))
 
     def bound_pass(self):
         if (self.position[0] < -self.rect.width
@@ -231,7 +241,6 @@ class GObject(pygame.sprite.Sprite):
         self.dmg = None
         self.time_count = 0
         self.timer = 0
-        self.type = 0
         if width != None:
            self.image = pygame.transform.scale(image, (width, height))
            self.image_alpha = pygame.transform.scale(copy.copy(image),

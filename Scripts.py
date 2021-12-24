@@ -357,10 +357,6 @@ class Graphics:
                 self.alive = False
 
 
-def spawn_mob():
-    Bot(ship_3, 250, 200)
-
-
 def pause_menu():
     print(State.t)
 
@@ -521,15 +517,16 @@ def player_set():
     temporary_BG = pg.image.load(os.path.join("assets", "BG_12.png"))
     temporary_BG = pg.transform.scale(temporary_BG, [WIDTH, HEIGHT])
     State.screen.blit(temporary_BG, (0, 0))
-    b_new_game = bt.B_New_Game((140, 400, 100, 30))
-    b_exit = bt.B_Exit((250, 400, 100, 30))
     menu = [
         [
-            bt.B_Ship_Highlihgts((30, 20, 60, 200), 0),
-            bt.B_Ship_Highlihgts((100, 20, 60, 200), 1),
-            bt.B_Ship_Highlihgts((170, 20, 60, 200), 2),
-            bt.B_Ship_Highlihgts((240, 20, 60, 200), -1)],
-        [b_new_game, b_exit]]
+            bt.B_Ship_Highlihgts((30, 20, 60, 200), 'tick'),
+            bt.B_Ship_Highlihgts((100, 20, 60, 200), 'hippo'),
+            bt.B_Ship_Highlihgts((170, 20, 60, 200), 'wolf'),
+            bt.B_Ship_Highlihgts((240, 20, 60, 200), 'generated')],
+        [
+            bt.B_New_Game((140, 400, 100, 30)),
+            bt.B_Exit((250, 400, 100, 30))]
+    ]
     selection = [0, 0]
     ship_selected = 0
     menu[0][0].select()

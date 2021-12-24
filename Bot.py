@@ -4,19 +4,26 @@ from Player import Player
 
 class Bot(Player):
 
-    def __init__(self, image, x, y, picked_ship=0):
+    def __init__(self, image, x, y, picked_ship='tick'):
 
-        super().__init__(image, x, y, lives=1, player=False)
+        super().__init__(image, x, y, lives=1, isPlayer=False,
+                         bolt=State.ship_types[picked_ship]['bolt'],
+                         missile=State.ship_types[picked_ship]['missile'],
+                         hp=State.ship_types[picked_ship]['hull'],
+                         shield=State.ship_types[picked_ship]['shields'],
+                         rotation_rate=State.ship_types[picked_ship]['rotation_rate'],
+                         acceleration=State.ship_types[picked_ship]['acceleration'],
+                         max_acceleration_reserve=State.ship_types[picked_ship]['acceleration_tank'],
+                         acceleration_burn_rate=State.ship_types[picked_ship]['acceleration_burn_rate'],
+                         acceleration_reserve_regeneration=State.ship_types[picked_ship][
+                             'acceleration_reserve_regeneration'],
+                         deacceleration=State.ship_types[picked_ship]['deacceleration'],
+                         env_deacceleration=State.ship_types[picked_ship]['env_deacceleration'],
+                         )
         State.script_mob_group.add(self)
         self.close_range = 20
         self.goal = None
         self.to_do_list = []
-        self.ROTATION = State.SHIP_CONSTANTS[picked_ship][0]
-        self.ACCELERATION = State.SHIP_CONSTANTS[picked_ship][1]
-        self.DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][2]
-        self.ENV_DEACCELERATION = State.SHIP_CONSTANTS[picked_ship][3]
-        self.HP = State.SHIP_CONSTANTS[picked_ship][4]
-        self.S_HP = State.SHIP_CONSTANTS[picked_ship][5]
 
     def assign_goal(self, obj=None, x=None, y=None):
         """

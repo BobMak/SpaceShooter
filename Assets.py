@@ -15,9 +15,6 @@ MAX_BALL_SPEED = 10
 blanc = pygame.image.load(os.path.join("assets", "blanc.png"))
 green = pygame.image.load(os.path.join("assets", "ships", "green.png"))
 bad_thing = pygame.image.load(os.path.join("assets", "bad_thing.png"))
-guy_img = pygame.image.load(os.path.join("assets", "ships", "Ship1_22x24.png"))
-ship_2 = pygame.image.load(os.path.join("assets", "ships", "Ship_2.png"))
-ship_3 = pygame.image.load(os.path.join("assets", "ships", "wraith.png"))
 turret = pygame.image.load(os.path.join("assets", "turret.png"))
 d_mask_1 = pygame.image.load(os.path.join("assets", "dron_mask_1.png"))
 bg_ball = pygame.image.load(os.path.join("assets", "ball_base_40x40.png"))
@@ -29,12 +26,6 @@ img_asteroid_2 = pygame.image.load(os.path.join("assets", "asteroid_2.png"))
 img_asteroid_3 = pygame.image.load(os.path.join("assets", "asteroid_3.png"))
 img_asteroid_4 = pygame.image.load(os.path.join("assets", "asteroid_4.png"))
 ball_img = pygame.image.load(os.path.join("assets", "Ball.png"))
-
-bolt_1 = pygame.image.load(os.path.join("assets", "projectiles", "bolt_1.png"))
-bolt_2 = pygame.image.load(os.path.join("assets", "projectiles", "bolt_2.png"))
-bolt_3 = pygame.image.load(os.path.join("assets", "projectiles", "bolt_3.png"))
-
-missile_1 = pygame.image.load(os.path.join("assets", "projectiles", "missile_1.png"))
 
 expl_2 = pygame.image.load(os.path.join("assets", "animations", "Explosions", "Expl_2.png"))
 expl_3 = pygame.image.load(os.path.join("assets", "animations", "Explosions", "Expl_3.png"))
@@ -85,12 +76,8 @@ menu_button = pygame.image.load(os.path.join("assets", "menu_button.png"))
 menu_button_selected = pygame.image.load(os.path.join("assets", "menu_button_selected.png"))
 live = pygame.image.load(os.path.join("assets", "1live.png"))
 
-prj_imgs =  [bolt_1, bolt_3, bolt_2, missile_1]
-
 expl = [expl_1, expl_2, expl_3, expl_4, expl_5, expl_6, expl_7, expl_8, expl_9]
 expN = [expN_1, expN_2, expN_3, expN_4, expN_5, expN_6, expN_7, expN_8, expN_9]
 engi = [engi_5, engi_3, engi_2]
 shield = [shld_0, shld_1, shld_2, shld_3, shld_4, shld_5, shld_6, shld_7]
 asteroid_imgs = [img_asteroid_1, img_asteroid_2, img_asteroid_3, img_asteroid_4]
-
-SHIPS_IMGS = [guy_img, ship_2, ship_3, live]

@@ -7,8 +7,8 @@ from Bot import Bot
 
 class Agressor(Bot):
 
-    def __init__(self, image, x, y):
-        super().__init__(image, x, y, 3)
+    def __init__(self, image, x, y, *kwargs):
+        super().__init__(image, x, y, *kwargs)
         # Assign goal if
         try:
             self.assign_goal(State.player_group.sprites()[0])
@@ -51,16 +51,16 @@ class Agressor(Bot):
                 if t > 360 or t < -360:
                     t += -360*np.sign(t)
 
-            if abs(t) > self.ROTATION:
+            if abs(t) > self.rotation_rate:
                 if t < -180 or t > 180:
                     t = -t
-                self.rotate(-np.sign(t) * self.ROTATION)
+                self.rotate(-np.sign(t) * self.rotation_rate)
 
             if abs(t) < 90:
-                self._accelerate(self.ACCELERATION)  # no don't track acceleration reserve
+                self.accelerate(self.acceleration)  # no don't track acceleration reserve
 
             else:
-                self._accelerate(self.ACCELERATION)
+                self.accelerate(self.acceleration)
 
         if self.rush not in self.to_do_list:
             self.to_do_list.append(self.rush)

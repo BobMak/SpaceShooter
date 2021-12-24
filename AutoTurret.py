@@ -6,9 +6,9 @@ import Funcs
 
 class AutoTurret(Turret):
     mode = 2
-    def __init__(self, image, radius, mounted_on, bolt_number, cooldown,
-                groups = None, distance = 20, look_dir = 0,
-                width = 20, height = 20, restriction = None):
+    def __init__(self, image, radius, mounted_on, bolt_id, cooldown,
+                 groups = None, distance = 20, look_dir = 0,
+                 width = 20, height = 20, restriction = None):
         """
         Turret shoting prjoectiles with predictions of aim's
         position by its speed.
@@ -20,9 +20,9 @@ class AutoTurret(Turret):
         super().__init__(image, radius, mounted_on, groups, distance,
                          look_dir, width, height, restriction)
 
-        self.bolt_number = bolt_number
-        self.bolt_img = prj_imgs[bolt_number]
-        self.prj_speed = State.prj_speeds[bolt_number]
+        self.bolt_id = bolt_id
+        self.bolt_img = State.projectile_types[bolt_id]['image']
+        self.prj_speed = State.projectile_types[bolt_id]['speed']
 
         self.predict_pos = GObject(ball_img, 1, 1, -50, 1)
         self.blocked = False
@@ -69,7 +69,7 @@ class AutoTurret(Turret):
             if self.aim(self.predict_pos) and not self.blocked:
 
                 self.blocked = True
-                Projectile.shot(self, self.look_dir, self.bolt_number)
+                Projectile.shot(self, self.look_dir, self.bolt_id)
 
     def auto_fire(self):
 
