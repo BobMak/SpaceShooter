@@ -43,7 +43,8 @@ class B_Continue(Button):
         self.text = 'Continue'
 
     def action(self):
-        State.t = False
+        State.t = (True, True, True, True)
+        State.state = "game_start"
 
 
 class B_Start_Over(Button):
@@ -54,7 +55,7 @@ class B_Start_Over(Button):
 
     def action(self):
         # global t
-        State.t = False
+        State.t = (True, True, True, True)
 
         for object in State.player_group:
             object.speed = [0,0]
@@ -72,7 +73,7 @@ class B_Start_Over(Button):
 
         Scripts.spawn_wave()
         State.state = 'game_started'
-        Scripts.main_loop(State.pl)
+        # Scripts.main_loop(State.pl)
 
 
 class B_New_Game(Button):
@@ -109,7 +110,8 @@ class B_Exit(Button):
     def action(self):
         State.paused = False
         pg.event.post(pg.event.Event(pg.QUIT, {'QUIT': True}))
-        sys.exit()
+        pg.quit()
+        State.state = "quit"
 
 
 class B_Ship_Highlihgts(Button):

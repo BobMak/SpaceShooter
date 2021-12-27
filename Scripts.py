@@ -52,7 +52,7 @@ def main_loop(realGuy):
     State.graphics_thread = threading.Thread(target=State.graphics.screen_redraw)
     State.graphics_thread.start()
 
-    while True:
+    while State.state is not "quit":
         keys = pg.key.get_pressed()
 
         # Getting in pause menue
@@ -453,7 +453,7 @@ def death_menu():
     # remove player from screen
     State.player_group.empty()
 
-    while (True):
+    while (State.state == 'game_over'):
         Moving.move_movable()
 
         for x in State.asteroids:
