@@ -118,7 +118,7 @@ class FX_Glow(FX):
         State.glow.add(self)
 
     #draw
-    def update(self):
+    def draw_rotating(self):
         """
         drawing funcition
         """

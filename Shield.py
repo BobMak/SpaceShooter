@@ -38,9 +38,3 @@ class Shield(Animation):
 
         if self.HP < 0:
             self.down()
-
-    def show_HP(self):
-
-        gfx.box(State.screen,
-                (self.rect.left, self.rect.bottom, 2*self.HP, 5),
-                (50, 50, 255, 100))

@@ -232,109 +232,40 @@ def screen_draw():
     """
     Draws all game scene, does not flip.
     """
-    for object in State.effects:
-        try:
-            object.update()
-        except:
-            pass
-
-    for x in State.noclip_asteroids:
-        x.update()
+    # drawing related state updates
+    for group in [
+        State.noclip_asteroids,
+        State.effects
+    ]:
+        for object in group:
+            try:
+                object.update()
+            except:
+                pass
+    # background
     try:
         State.screen.blit(BG, (0, 0))
     except Exception as e:
         print("err: {}".format(e))
-
-    for pl in State.player_group:
-        try:
-            pl.draw_rotating()
-        except:
-            print("player faild to be drawn")
-        speed = np.sqrt(pl.speed[0] ** 2 + pl.speed[1] ** 2)
-        if speed > 8:
-            blur(pl, speed)
-
-        '''Check the hull group sprites'''
-        # for x in pl.player_hull_group:
-        # pg.draw.rect(screen, (0,255,0), x.rect)
-
-    for object in State.asteroids:
-        try:
-            object.draw_rotating()
-        except:
-            print("failed to draw an asteroid")
-
-    for object in State.noclip_asteroids:
-        object.draw_rotating()
-
-    for object in State.glow:
-        object.update()
-
-    for x in State.script_mob_group:
-        x.draw_rotating()
-
-    for object in State.projectiles:
-        try:
-            object.draw_rotating()
-            blur(object, object.speed_max)
-        except:
-            print("failed to draw a projectile")
-
-    for object in State.missiles:
-        try:
-            object.draw_rotating()
-        except:
-            print("failed to draw a missile")
-
-    for object in State.effects:
-        try:
-            object.draw_rotating()
-        except:
-            print("failed to draw an effect")
-
+    # drawing
+    for group in [
+        State.asteroids,
+        State.noclip_asteroids,
+        State.script_mob_group,
+        State.projectiles,
+        State.missiles,
+        State.effects,
+        State.glow,
+        State.player_group
+    ]:
+        for object in group:
+            try:
+                object.draw_rotating()
+            except:
+                print("failed to draw")
+    # special drawing
     for object in State.interface:
         State.screen.blit(object.image, object.rect)
-
-    for pl in State.player_group:
-        pl.show_HP()
-        pl.show_acceleration_reserve()
-        pl.show_missiles()
-
-        for x in pl.shields:
-            x.draw_rotating()
-            x.show_HP()
-
-        for x in pl.turrets:
-            try:
-                draw_triangle(x.locked, (255, 0, 0), x.locked.rect.width, 1)
-                draw_triangle(x.predict_pos, (255, 0, 0), 5, 1)
-            except:
-                pass
-
-        for x in pl.orbiting:
-            try:
-                draw_triangle(x.locked, (255, 0, 0), x.locked.rect.width, 1)
-                draw_triangle(x.predict_pos, (255, 0, 0), 5, 1)
-            except:
-                pass
-            x.draw_rotating()
-
-    # for x in test.sub_group:
-    #     pg.draw.rect(State.screen, (0,255,0), x.rect)
-    """colliding rects test"""
-    # for z in pl.player_hull_group:
-    #     pg.draw.rect(State.screen, (0,255,0), z.rect)
-
-    for x in State.player_group:
-        for x_2 in x.mounts:
-            x_2.bg_rect.x = x_2.rect.x + 3
-            x_2.bg_rect.y = x_2.rect.y + 3
-            try:
-                State.screen.blit(x_2.bg, x_2.bg_rect)
-            except:
-                print('wrong')
-
-            x_2.draw_rotating()
 
 
 class Graphics:

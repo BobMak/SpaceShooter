@@ -98,6 +98,7 @@ def orbit_eliptic(center, obj):
 
     orbit_rotate(center, obj, obj.d_ang, obj.distance, obj.orbit_ang)
 
+
 def draw_triangle(player, color, dist_to_edg, width):
     bufx1 = (player.rect.centerx
           + dist_to_edg * np.cos(np.deg2rad(player.look_dir - 90)))

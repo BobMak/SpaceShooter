@@ -1,6 +1,7 @@
 import pickle
 
 import Controls
+from Funcs import blur
 from Mechanics import *
 
 import pygame.gfxdraw as gfx
@@ -189,6 +190,17 @@ class Player(GObject, Moving, Vulnerable):
             super()._accelerate(temp)
         else:
             self.acceleration_lock = True
+
+    def draw_rotating(self):
+        super().draw_rotating()
+        self.show_HP()
+        self.show_acceleration_reserve()
+        self.show_missiles()
+        speed = np.sqrt(self.speed[0] ** 2 + self.speed[1] ** 2)
+        if speed > 8:
+            blur(self, speed)
+        for x in self.shields:
+            x.draw_rotating()
 
     def update(self):
         self.acceleration_reserve = min(self.max_acceleration_reserve,
