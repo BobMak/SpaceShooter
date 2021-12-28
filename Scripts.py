@@ -3,18 +3,14 @@ import threading
 import sys
 import time
 
-import numpy as np
 import pygame as pg
 
 import Assets
 from Asteroids import AdvAsteroid
 from Mechanics import Moving, Animation
 from Player import Player
-from Bot import Bot
 import State
-from Funcs import blur, \
-    draw_triangle, \
-    orbit_eliptic, orbit_rotate
+from Funcs import orbit_eliptic, orbit_rotate
 
 import Buttons as bt
 from Assets import *
@@ -94,7 +90,7 @@ def main_loop(realGuy):
                 buff_sp.rect.centery = Assets.HEIGHT / 2
                 if len(pg.sprite.spritecollide(buff_sp, State.asteroids, 0)) == 0:
                     State.interface.empty()
-                    State.pl = Player.ship_assign(State.picked_ship, pl.lives, True)
+                    State.pl = Player.ship_assign(State.picked_ship, pl.lives)
                 # Do not spawn player if there are State.asteroids around, and wait 100 milliseconds instead
                 else:
                     pg.time.set_timer(pg.USEREVENT + 2, 100)

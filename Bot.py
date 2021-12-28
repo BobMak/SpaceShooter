@@ -1,12 +1,12 @@
 from Mechanics import *
-from Player import Player
+from Ship import Ship
 
 
-class Bot(Player):
+class Bot(Ship):
 
     def __init__(self, image, x, y, picked_ship='tick'):
 
-        super().__init__(image, x, y, lives=1, isPlayer=False,
+        super().__init__(image, x, y, lives=1,
                          bolt=State.ship_types[picked_ship]['bolt'],
                          missile=State.ship_types[picked_ship]['missile'],
                          hp=State.ship_types[picked_ship]['hull'],
