@@ -1,9 +1,6 @@
 import random
 import time
 
-import numba
-import threading
-
 from Mechanics import *
 from Zone import Zone
 from Projectile import Projectile
@@ -125,31 +122,39 @@ class Missile(Projectile):
 
     @staticmethod
     def shot(self, direction, missile):
-        skipped_len = self.rect.height // 2
-        shot = Missile(State.missile_types[missile]['image'],
-                          self.rect.centerx,
-                          self.rect.centery,
-                          damage=State.missile_types[missile]['damage'],
-                          distance=State.missile_types[missile]['distance'],
-                          max_speed=State.missile_types[missile]['speed'],
-                          acceleration=State.missile_types[missile]['acceleration'],
-                          rotation_speed=State.missile_types[missile]['rotation_speed'],
-                          hit_range=State.missile_types[missile]['hit_range'],
-                          )
-        if direction:
-            shot.look_dir = direction
-        else:
-            shot.look_dir = self.look_dir
-        shot.rect.centerx = (self.rect.centerx
-                             - skipped_len * np.cos(np.deg2rad(shot.look_dir
-                                                               + 90)))
-        shot.rect.centery = (self.rect.centery
-                             - skipped_len * np.sin(np.deg2rad(shot.look_dir
-                                                               + 90)))
+        def _delayed_action():
+            skipped_len = self.rect.height // 2
+            for _ in range(State.missile_types[missile]['volley']):
+                # don't shoot if the launches is dead
+                if self.hp <= 0:
+                    return
+                shot = Missile(State.missile_types[missile]['image'],
+                                  self.rect.centerx,
+                                  self.rect.centery,
+                                  damage=State.missile_types[missile]['damage'],
+                                  distance=State.missile_types[missile]['distance'],
+                                  max_speed=State.missile_types[missile]['speed'],
+                                  acceleration=State.missile_types[missile]['acceleration'],
+                                  rotation_speed=State.missile_types[missile]['rotation_speed'],
+                                  hit_range=State.missile_types[missile]['hit_range'],
+                                  )
+                if direction:
+                    shot.look_dir = direction
+                else:
+                    shot.look_dir = self.look_dir
+                shot.rect.centerx = (self.rect.centerx
+                                     - skipped_len * np.cos(np.deg2rad(shot.look_dir
+                                                                       + 90)))
+                shot.rect.centery = (self.rect.centery
+                                     - skipped_len * np.sin(np.deg2rad(shot.look_dir
+                                                                       + 90)))
 
-        shot.speed = [State.missile_types[missile]['speed']
-                      * np.cos(np.deg2rad(self.look_dir - 90)),
-                      State.missile_types[missile]['speed']
-                      * np.sin(np.deg2rad(self.look_dir - 90))]
-        shot.rotate(0)
-        return shot
+                shot.speed = [State.missile_types[missile]['speed']
+                              * np.cos(np.deg2rad(self.look_dir - 90)),
+                              State.missile_types[missile]['speed']
+                              * np.sin(np.deg2rad(self.look_dir - 90))]
+                shot.rotate(0)
+                # delay between shots
+                time.sleep(0.2)
+        # fire missiles in thread so they can be fired with a delay
+        threading.Thread(target=_delayed_action).start()

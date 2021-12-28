@@ -159,6 +159,7 @@ missile_types = {
         'cooldown': 50,
         'acceleration': 0.2,
         'image': pygame.image.load(os.path.join('assets', 'projectiles', 'light_missile.png')),
+        'volley': 3,
     },
     'medium_missile': {
         'damage': 25,
@@ -169,6 +170,7 @@ missile_types = {
         'cooldown': 80,
         'acceleration': 0.15,
         'image': pygame.image.load(os.path.join('assets', 'projectiles', 'medium_missile.png')),
+        'volley': 1,
     },
     'heavy_missile': {
         'damage': 100,
@@ -179,6 +181,7 @@ missile_types = {
         'cooldown': 150,
         'acceleration': 0.15,
         'image': pygame.image.load(os.path.join('assets', 'projectiles', 'heavy_missile.png')),
+        'volley': 1,
     },
 }
 
