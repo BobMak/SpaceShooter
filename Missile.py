@@ -1,4 +1,3 @@
-import random
 import time
 
 from Mechanics import *
@@ -15,7 +14,7 @@ class Missile(Projectile):
                  damage=0,
                  acceleration=0,
                  hit_range=0,
-                 ):
+                 expl_params=None,):
         super().__init__(img, x, y,
                          distance=distance,
                          max_speed=max_speed,
@@ -27,6 +26,7 @@ class Missile(Projectile):
         self.d_speed =   acceleration
         self.max_speed = max_speed
         self.hit_range = hit_range
+        self.expl_params = expl_params
         self.hp =        damage
 
         self.mod_speed = 0
@@ -104,16 +104,15 @@ class Missile(Projectile):
 
     def blow_up(self):
         x = Zone(self.rect.x, self.rect.y, self.hit_range, self.hp, 2)
-
+        prm_hash = dict_hash(self.expl_params)
         if self.expAnimation:
             explAnimation = self.expAnimation
-        elif self.hit_range in State.buff_explosions:
-            explAnimation = random.choice(State.buff_explosions[self.hit_range])
+        elif prm_hash in State.buff_explosions:
+            explAnimation = random.choice(State.buff_explosions[prm_hash])
         else:
-            for _ in range(10):
+            while not prm_hash in State.buff_explosions:
                 time.sleep(0.1)
-                if self.hit_range in State.buff_explosions:
-                    explAnimation = random.choice(State.buff_explosions[self.hit_range])
+            explAnimation = random.choice(State.buff_explosions[prm_hash])
         Animation.FX_explosion(self.rect.centerx, self.rect.centery,
                        xpl=explAnimation, radius=(self.hit_range*3,self.hit_range*3), randdir=False)
         State.hit_waves.add(x)
@@ -137,7 +136,8 @@ class Missile(Projectile):
                                   acceleration=State.missile_types[missile]['acceleration'],
                                   rotation_speed=State.missile_types[missile]['rotation_speed'],
                                   hit_range=State.missile_types[missile]['hit_range'],
-                                  )
+                                  expl_params=State.missile_types[missile]['expl_params'],
+                               )
                 if direction:
                     shot.look_dir = direction
                 else:

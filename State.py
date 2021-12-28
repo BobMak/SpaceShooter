@@ -124,6 +124,13 @@ projectile_types = {
         'distance': 20,
         'cooldown': 10,
         'image': pygame.image.load(os.path.join('assets', 'projectiles','light_bolt.png')),
+        'expl_params': {
+            "diameter": 10,
+            "n_frames": 10,
+            "decay_rgb": (0, 7, 4),
+            "start_rgb": (235, 120, 130),
+            "spawn_points": 190
+        },
     },
     'big_bolt': {
         'damage': 40,
@@ -131,6 +138,13 @@ projectile_types = {
         'distance': 150,
         'cooldown': 20,
         'image': pygame.image.load(os.path.join('assets', 'projectiles', 'big_bolt.png')),
+        'expl_params': {
+            "diameter": 25,
+            "n_frames": 10,
+            "decay_rgb": (0, 7, 4),
+            "start_rgb": (235, 120, 130),
+            "spawn_points": 190
+        },
 
     },
     'medium_bolt': {
@@ -139,6 +153,13 @@ projectile_types = {
         'distance': 60,
         'cooldown': 30,
         'image': pygame.image.load(os.path.join('assets', 'projectiles', 'medium_bolt.png')),
+        'expl_params': {
+            "diameter": 20,
+            "n_frames": 15,
+            "decay_rgb": (18, 2, 4),
+            "start_rgb": (235, 50, 50),
+            "spawn_points": 200
+        },
     },
     'heavy_bolt': {
         'damage': 90,
@@ -146,6 +167,13 @@ projectile_types = {
         'distance': 100,
         'cooldown': 100,
         'image': pygame.image.load(os.path.join('assets', 'projectiles',  'heavy_bolt.png')),
+        'expl_params': {
+            "diameter": 20,
+            "n_frames": 15,
+            "decay_rgb": (0, 7, 4),
+            "start_rgb": (120, 220, 130),
+            "spawn_points": 90
+        },
     },
 }
 
@@ -160,6 +188,10 @@ missile_types = {
         'acceleration': 0.2,
         'image': pygame.image.load(os.path.join('assets', 'projectiles', 'light_missile.png')),
         'volley': 3,
+        'expl_params': {
+            "diameter": 30,
+            "n_frames": 20
+        }
     },
     'medium_missile': {
         'damage': 25,
@@ -171,6 +203,10 @@ missile_types = {
         'acceleration': 0.15,
         'image': pygame.image.load(os.path.join('assets', 'projectiles', 'medium_missile.png')),
         'volley': 1,
+        'expl_params': {
+            "diameter": 50,
+            "n_frames": 20
+        }
     },
     'heavy_missile': {
         'damage': 100,
@@ -182,20 +218,48 @@ missile_types = {
         'acceleration': 0.15,
         'image': pygame.image.load(os.path.join('assets', 'projectiles', 'heavy_missile.png')),
         'volley': 1,
+        'expl_params': {
+            "diameter": 80,
+            "n_frames": 30
+        }
     },
 }
 
-buff_explosions = {
-
-}
+buff_explosions = {}
 
 spec_cooldown = [30, 60, 120]
 
-asteroid_hps = [2, 3, 4, 5]
-asteroid_noclip_timers = [45, 30, 20, 10]
-asteroid_velocity_deviations = [1, 2, 3, 4]
-asteroid_densities = [(1,2), (2,2), (1,3), (2,3)]
+waves = {
+    0: {
+        'hps': 2,
+        'velocity_deviations': 1,
+        'noclip_timers': 45,
+        'densities': (1,2),
+        'number': 4,
+    },
+    1: {
+        'hps': 3,
+        'velocity_deviations': 2,
+        'noclip_timers': 30,
+        'densities': (2,2),
+        'number': 5,
+    },
+    2: {
+        'hps': 4,
+        'velocity_deviations': 3,
+        'noclip_timers': 20,
+        'densities': (1,3),
+        'number': 6,
+    },
+    3: {
+        'hps': 5,
+        'velocity_deviations': 4,
+        'noclip_timers': 10,
+        'densities': (2,3),
+        'number': 5,
+    },
 
+}
 
 # Standard save for a player. Should be replaced by a save if such is present in save.pkl
 save = {
@@ -212,15 +276,12 @@ save = {
 
 # Game parameters
 
-bound_break_vert = False
-bound_break_hor = False
 t = (True, True, True, True)
 score = 0
 FPS = 30
 
 # Level parameters:
-# Asteroids quantitiy, asteriods level
-levels = [[4, 0], [5, 1], [6, 2], [5, 3]]
+
 level = 0
 wave_spawning = False
 pl = None

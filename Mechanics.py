@@ -8,6 +8,7 @@ import numpy as np
 import Assets
 import State
 from Assets import *
+from Funcs import dict_hash
 
 
 class Vulnerable:
@@ -117,7 +118,6 @@ class FX_Glow(FX):
         self.speed = speed
         State.glow.add(self)
 
-    #draw
     def draw_rotating(self):
         """
         drawing funcition
@@ -485,31 +485,35 @@ class Animation(GObject, Moving):
 
     # this method shall be called when we know the properties of the required explosion
     @staticmethod
-    def prepareExplosions(type):
-        def _work(type):
-            if type not in State.buff_explosions:
-                State.buff_explosions[type] = []
+    def prepareExplosions(**params):
+        prm_hash = dict_hash(params)
+        def _work():
+            if prm_hash not in State.buff_explosions:
+                State.buff_explosions[prm_hash] = []
                 for i in range(5):
-                    animation = Animation.generateExplosionAnimation(type, type//3)
-                    State.buff_explosions[type].append(animation)
+                    animation = Animation.generateExplosionAnimation(**params)
+                    State.buff_explosions[prm_hash].append(animation)
 
-        threading.Thread(target=_work, args=(type,)).start()
+        threading.Thread(target=_work).start()
 
     @staticmethod
-    def generateExplosionAnimation(diameter: int, n_frames: int):
+    def generateExplosionAnimation(diameter=30, n_frames=30,
+                                   decay_rgb=(0, 6, 9),
+                                   start_rgb=(255, 255, 255),
+                                   spawn_points=230):
         """
         generates a set of explosion animations using cellular automata
         """
         animation = []
         img_buffer = np.zeros((diameter, diameter, 3), dtype=np.int16)
         # generate an initial circle in the center proporional to damage
-        img_buffer[int(diameter / 2), int(diameter / 2)] = (255, 255, 255)
+        img_buffer[int(diameter / 2), int(diameter / 2)] = start_rgb
         for i in range(int(3)):
             for j in range(int(3)):
-                img_buffer[int(diameter / 2) + i, int(diameter / 2) + j] = (255, 255, 255)
-                img_buffer[int(diameter / 2) + i, int(diameter / 2) - j] = (255, 255, 255)
-                img_buffer[int(diameter / 2) - i, int(diameter / 2) + j] = (255, 255, 255)
-                img_buffer[int(diameter / 2) - i, int(diameter / 2) - j] = (255, 255, 255)
+                img_buffer[int(diameter / 2) + i, int(diameter / 2) + j] = start_rgb
+                img_buffer[int(diameter / 2) + i, int(diameter / 2) - j] = start_rgb
+                img_buffer[int(diameter / 2) - i, int(diameter / 2) + j] = start_rgb
+                img_buffer[int(diameter / 2) - i, int(diameter / 2) - j] = start_rgb
 
         # rule set
         @numba.jit(nopython=True)
@@ -522,7 +526,7 @@ class Animation(GObject, Moving):
                 v = (255 + diameter) // diameter
                 _decay = random.randint(int(v), int(v) + 9)
                 # decay = random.randint(int(diameter/n_frames),int(diameter/n_frames + 10))
-                decay = np.array((_decay, _decay + 6, _decay + 9), dtype=np.int16)
+                decay = np.array((_decay + decay_rgb[0], _decay + decay_rgb[1], _decay + decay_rgb[2]), dtype=np.int16)
                 img_buffer[x, y] = img_buffer[x, y] - decay
             # when the value is 0, it will become 255 if it has 3 neighbors that are > 200
             else:
@@ -530,13 +534,13 @@ class Animation(GObject, Moving):
                 for i in range(-1, 2):
                     for j in range(-1, 2):
                         try:
-                            count += img_buffer[x + i, y + j, 0] > 230
+                            count += img_buffer[x + i, y + j, 0] > spawn_points
                         except:
                             pass
                 if count >= 3:
                     # the further from center, the less is the probabilit of being set to 255
                     if random.random() > (abs(x - diameter / 2) + abs(y - diameter / 2)) / diameter:
-                        img_buffer[x, y] = 255
+                        img_buffer[x, y] = start_rgb
 
         for i in range(diameter):
             # apply cellular automata
@@ -545,10 +549,10 @@ class Animation(GObject, Moving):
                     automata(x, y, img_buffer)
 
             # create animation frame
-            img_buffer[img_buffer < 0] = 0
+            img_buffer[img_buffer < 5] = 0
             surf = pygame.surfarray.make_surface(img_buffer)
             # stop early if all values are 1
-            if np.all(img_buffer == 1):
+            if np.all(img_buffer == 0):
                 break
             surf.set_colorkey((0, 0, 0), pygame.RLEACCEL)
             surf = pygame.transform.scale(surf, (int(diameter * 3), int(diameter * 3)))

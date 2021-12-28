@@ -1,21 +1,25 @@
 import copy
+import random
 
 import numpy as np
 
-from Mechanics import GObject, Moving, Vulnerable
+from Funcs import dict_hash
+from Mechanics import GObject, Moving, Vulnerable, Animation
 import State
 
 
 class Projectile(GObject, Moving, Vulnerable):
     def __init__(self, img, x, y, distance, width=None, height=None,
                  damage=None,
-                 max_speed=None):
+                 max_speed=None,
+                 expl_ref=None):
         super().__init__(img, x, y, width=width, height=height)
         Moving.__init__(self)
 
         Vulnerable.__init__(self, damage)
         self.speed_max = max_speed
         self.timer = distance
+        self.expl_ref = expl_ref
 
         # movable.add(self)
         State.projectiles.add(self)
@@ -28,6 +32,8 @@ class Projectile(GObject, Moving, Vulnerable):
         buff = copy.copy(obj.hp)
         obj.damage(self.hp)
         self.hp += -buff
+        expl_animation = random.choice(State.buff_explosions[self.expl_ref])
+        Animation.FX_explosion(self.rect.centerx, self.rect.centery, expl_animation, randdir=False)
         if self.hp < 0:
             self.kill()
             self.hp = 0
@@ -36,12 +42,14 @@ class Projectile(GObject, Moving, Vulnerable):
     @staticmethod
     def shot(self, direction, bolt):
         skipped_len = self.rect.height // 2
+        expl_ref = dict_hash(State.projectile_types[bolt]['expl_params'])
         shot = Projectile(State.projectile_types[bolt]['image'],
                           self.rect.centerx,
                           self.rect.centery,
                           damage=State.projectile_types[bolt]['damage'],
                           distance=State.projectile_types[bolt]['distance'],
                           max_speed=State.projectile_types[bolt]['speed'],
+                          expl_ref=expl_ref
                           )
         if direction:
             shot.look_dir = direction

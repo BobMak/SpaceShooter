@@ -1,8 +1,8 @@
-import copy
 from Assets import *
 import Funcs
 from Mechanics import Animation
 from Missile import Missile
+from Shield import Shield
 
 
 def listen_acceleration(player, keys):
@@ -65,7 +65,7 @@ def listen_shot_missile(player, keys):
 
 def listen_shield(player, keys):
     if keys[pygame.K_c] and player.locks[3] == False:
-        Funcs.shields(player)
+        Shield.shields(player)
     else:
         for x in player.shields:
             x.down()

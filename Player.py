@@ -39,7 +39,7 @@ class Player(Ship):
             pygame.time.set_timer(pygame.USEREVENT+2, 500)
         else:
             # graphics thread termination call
-            pygame.time.set_timer(pygame.USEREVENT+5, 10)
+            pygame.time.set_timer(pygame.USEREVENT+5, 1000)
             with open('save.pkl', 'wb') as f:
                 pickle.dump(State.save, f, pickle.HIGHEST_PROTOCOL)
 
@@ -96,8 +96,10 @@ class Player(Ship):
             ship.arr_input.append(Controls.controls[a])
 
         ship.addMissiles(State.ship_types[picked_ship]['missiles'])
-        mslType = State.ship_types[picked_ship]['missile']
-        Animation.prepareExplosions(State.missile_types[mslType]['hit_range'])
+        msl_type = State.ship_types[picked_ship]['missile']
+        Animation.prepareExplosions(**State.missile_types[msl_type]['expl_params'])
+        blt_type = State.ship_types[picked_ship]['bolt']
+        Animation.prepareExplosions(**State.projectile_types[blt_type]["expl_params"])
 
         return ship
 

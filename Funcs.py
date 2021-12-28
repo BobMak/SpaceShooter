@@ -1,9 +1,10 @@
+import hashlib
+import json
+
 import numpy as np
 import pygame
 
-import Assets
 import State
-from Shield import Shield
 
 
 def get_dist(dx, dy):
@@ -17,17 +18,6 @@ def angle_diff(a1, a2):
         return np.sign(a)*360 - a
     else:
         return a
-
-
-def shields(source):
-    if len(source.shields) == 0:
-        shld_obj = Shield(Assets.shield, source.rect.width+10,
-                                  source.rect.height+10, source.rect.left,
-                                  source.rect.top, source, 1)
-
-        shld_obj.rotate(source.look_dir)
-        source.sh_add(shld_obj)
-        State.effects.add(shld_obj)
 
 
 def blur(obj, speed):
@@ -80,6 +70,7 @@ def orbit_rotate(center, obj, d_ang, dist = 0, ang = -20):
     obj.rect.centerx = center.rect.centerx + dist*(np.sin(np.deg2rad(ang)))
     obj.rect.centery = center.rect.centery + dist*(np.cos(np.deg2rad(ang)))
 
+
 def orbit_eliptic(center, obj):
     """
     orbit_eliptic(center, obj)
@@ -116,22 +107,11 @@ def draw_triangle(player, color, dist_to_edg, width):
                         ((bufx1, bufy1), (bufx2, bufy2), (bufx3, bufy3)), width)
 
 
-def bound_collision(obj):
-    global bound_break_vert
-    global bound_break_gor
-
-    if obj.rect.left < 0 or obj.rect.right > Assets.WIDTH:
-
-        #if bound_break_gor == False:
-        obj.speed[0] = -obj.speed[0]
-        #   bound_break_gor = True
-    else:
-        bound_break_gor = False
-    if obj.rect.top < 0 or obj.rect.bottom > Assets.HEIGHT:
-       # control_keys[0:4] = False, False, False, False
-        #if bound_break_vert == False:
-        obj.speed[1] = -obj.speed[1]
-        #bound_break_vert = True
-    else:
-        bound_break_vert = False
-    return bound_break_gor, bound_break_vert
+def dict_hash(dictionary) -> str:
+    """MD5 hash of a dictionary."""
+    dhash = hashlib.md5()
+    # We need to sort arguments so {'a': 1, 'b': 2} is
+    # the same as {'b': 2, 'a': 1}
+    encoded = json.dumps(dictionary, sort_keys=True).encode()
+    dhash.update(encoded)
+    return dhash.hexdigest()

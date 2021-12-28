@@ -3,7 +3,7 @@ import pygame
 
 import State
 from Assets import particle, asteroid_imgs, bad_thing
-from Mechanics import GObject, Moving, Vulnerable, FX_Track
+from Mechanics import GObject, Moving, Vulnerable, FX_Track, Animation
 
 from Agressor import Agressor
 
@@ -75,10 +75,10 @@ class AdvAsteroid(Asteroid):
 
         super().__init__(asteroid_imgs[level-1], x, y, type, speed)
         self.level = level
-        self.hp = State.asteroid_hps[level-1] * self.type
-        self.noclip_timer = State.asteroid_noclip_timers[level-1]
-        self.density = State.asteroid_densities[level-1]
-        self.velo_deviation = State.asteroid_velocity_deviations[level-1]
+        self.hp = State.waves[level-1]["hps"] * self.type
+        self.noclip_timer = State.waves[level-1]["noclip_timers"]
+        self.density = State.waves[level-1]["densities"]
+        self.velo_deviation = State.waves[level-1]["velocity_deviations"]
 
     def damage(self, dmg, type=None, speed=None):
 
@@ -126,3 +126,6 @@ class AdvAsteroid(Asteroid):
                         pass
 
         self.kill()
+
+    def prep_animations(self):
+        pass

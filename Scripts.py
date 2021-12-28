@@ -7,7 +7,7 @@ import pygame as pg
 
 import Assets
 from Asteroids import AdvAsteroid
-from Mechanics import Moving, Animation
+from Mechanics import Moving
 from Player import Player
 import State
 from Funcs import orbit_eliptic, orbit_rotate
@@ -20,7 +20,7 @@ clock = pg.time.Clock()
 
 def spawn_wave():
     level = State.level
-    for i in range(State.levels[level][0]):
+    for _ in range(State.waves[level]["number"]):
         if random.choice([True, False]):
             proX = random.choice([random.randint(-20,0),
                                   random.randint(Assets.WIDTH, Assets.WIDTH+20)])
@@ -30,7 +30,7 @@ def spawn_wave():
             proY = random.choice([random.randint(-20,0),
                                   random.randint(Assets.HEIGHT, Assets.HEIGHT+20)])
 
-        x = AdvAsteroid(State.levels[level][1] + 1, proX, proY, 4, [0, 0])
+        x = AdvAsteroid(level+1, proX, proY, 4, [0, 0])
 
     State.level += 1
 
@@ -179,12 +179,9 @@ def main_loop(realGuy):
                     if y.damage(5):
                         break
             for i in State.projectiles:
-                if pg.sprite.collide_circle(y, i):
-                    Animation.FX_explosion(i.rect.centerx, i.rect.centery)
-                    i.damage(y)
+                if pg.sprite.collide_circle(y, i):                    i.damage(y)
             for i in State.missiles:
                 if pg.sprite.collide_circle(y, i):
-                    Animation.FX_explosion(i.rect.centerx, i.rect.centery)
                     i.blow_up()
             if y not in State.noclip_asteroids:
                 for pl in State.player_group:

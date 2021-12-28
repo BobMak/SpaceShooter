@@ -1,7 +1,6 @@
+import Assets
 import State
 from Mechanics import Animation
-
-import pygame.gfxdraw as gfx
 
 
 class Shield(Animation):
@@ -38,3 +37,14 @@ class Shield(Animation):
 
         if self.HP < 0:
             self.down()
+
+    @staticmethod
+    def shields(source):
+        if len(source.shields) == 0:
+            shld_obj = Shield(Assets.shield, source.rect.width + 10,
+                              source.rect.height + 10, source.rect.left,
+                              source.rect.top, source, 1)
+
+            shld_obj.rotate(source.look_dir)
+            source.sh_add(shld_obj)
+            State.effects.add(shld_obj)
