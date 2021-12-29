@@ -82,9 +82,9 @@ class B_New_Game(Button):
 
     def action(self):
         State.level = 0
-        realGuy = Player.ship_assign(State.picked_ship, State.start_lives)
+        State.pl = Player.ship_assign(State.picked_ship, State.start_lives)
 
-        Scripts.main_loop(realGuy)
+        Scripts.main_loop()
 
 
 class B_Stats(Button):

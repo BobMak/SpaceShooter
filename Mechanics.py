@@ -281,8 +281,6 @@ class GObject(pygame.sprite.Sprite):
 
         self.rotated_image = pygame.transform.rotate(self.image,
                                                     -self.look_dir)
-        self.rotated_image_alpha = pygame.transform.rotate(self.image_alpha,
-                                                          -self.look_dir)
 
     def get_aim_dir(self, aim):
         """

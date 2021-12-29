@@ -7,6 +7,7 @@ class Item(GObject):
     IMAGES = [
         State.missile_types['heavy_missile']['image'],
         live]
+
     def __init__(self, type, x, y):
         super().__init__(Item.IMAGES[type], x, y, width=None, height=None)
         State.pickupables.add(self)
@@ -30,9 +31,6 @@ class Item(GObject):
             self.radius_delta = -self.radius_delta
         FX_Glow(self.rect, 1, self.radius // 2, int(self.radius),
                 (self.color[0], self.color[1], self.color[2], int(self.brightness * 255)))
-
-    def draw_rotating(self):
-        super().draw_rotating()
 
 
 class MissileItem(Item):

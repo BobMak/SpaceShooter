@@ -6,7 +6,7 @@ class Bot(Ship):
 
     def __init__(self, image, x, y, picked_ship='tick'):
 
-        super().__init__(image, x, y, lives=1,
+        super().__init__(image, x, y,
                          bolt=State.ship_types[picked_ship]['bolt'],
                          missile=State.ship_types[picked_ship]['missile'],
                          hp=State.ship_types[picked_ship]['hull'],

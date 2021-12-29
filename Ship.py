@@ -1,3 +1,4 @@
+import Funcs
 from Funcs import blur
 from Mechanics import *
 
@@ -10,7 +11,7 @@ class Ship(GObject, Moving, Vulnerable):
 
     def __init__(self, image,
                  x, y,
-                 lives, hp,
+                 hp,
                  shield=0,
                  rotation_rate=3,
                  bolt='',
@@ -55,7 +56,6 @@ class Ship(GObject, Moving, Vulnerable):
         self.hp = copy.deepcopy(self.max_hp)
         self.shield_hp = copy.deepcopy(self.max_shield_hp)
         self.speed = [0,0]
-        self.lives = lives
         GObject.__init__(self, image, x, y, width=width, height=height)
         Moving.__init__(self)
         Vulnerable.__init__(self, hp)
@@ -84,6 +84,11 @@ class Ship(GObject, Moving, Vulnerable):
         self.timers = [self.timer_fire, self.timer_special,
                        self.timer_missile, self.timer_shield]
 
+        self.hull_group = pygame.sprite.Group()
+        for x in complex_sh:
+            b = Colliding(x[0], x[1], x[2], x[3], self)
+            self.hull_group.add(b)
+
         self.distance = 0
         self.orbit_ang = 0
 
@@ -91,14 +96,17 @@ class Ship(GObject, Moving, Vulnerable):
         self.missiles += number
 
     def destroy(self):
-
         self.kill()
         self.rotate(0)
         self.speed = [0,0]
+
         Animation.FX_explosion(self.rect.centerx, self.rect.centery)
 
         for x in self.shields:
             x.down()
+
+        for x in [*self.mounts, *self.shields, *self.hull_group]:
+            x.kill()
 
     def damage(self, dmg):
         self.hp += -max(0, dmg)
@@ -133,6 +141,20 @@ class Ship(GObject, Moving, Vulnerable):
             super()._accelerate(temp)
         else:
             self.acceleration_lock = True
+
+    def rotate(self, ang):
+        super().rotate(ang)
+        for x in self.turrets:
+            x.rotate(self.rotation_rate)
+            Funcs.orbit_rotate(self, x, -self.rotation_rate,
+                               x.distance, x.orbit_ang)
+
+        for x in self.shields:
+            x.rotate(self.rotation_rate)
+
+        for x in self.hull_group:
+            Funcs.orbit_rotate(self, x, -self.rotation_rate,
+                               x.distance, x.orbit_ang)
 
     def draw_rotating(self):
         super().draw_rotating()

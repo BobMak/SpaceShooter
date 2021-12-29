@@ -5,7 +5,7 @@ import os
 
 import pygame
 import pygame as pg
-from Assets import SIZE
+from Assets import WIDTH, HEIGHT
 
 #####################      Ships       ####################
 
@@ -38,7 +38,7 @@ ship_types = {
         'hull': 15,
         'shields': 5,
         'mass': 2,
-        'bolt': 'heavy_bolt',
+        'bolt': 'big_bolt',
         'missile': 'heavy_missile',
         'missiles': 5,
         'acceleration_tank': 8.0,
@@ -57,7 +57,7 @@ ship_types = {
         'hull': 7.5,
         'shields': 2.5,
         'mass': 1,
-        'bolt': 'light_bolt',
+        'bolt': 'medium_bolt',
         'missile': 'light_missile',
         'missiles': 10,
         'acceleration_tank': 16.0,
@@ -112,7 +112,6 @@ picked_ship = 'tick'
 EXPL = 9
 start_lives = 2
 
-INPUTS_PER_SECOND = 30
 FRAMES_PER_SECOND = 60
 LOGIC_PER_SECOND = 240
 
@@ -141,9 +140,9 @@ projectile_types = {
         'expl_params': {
             "diameter": 25,
             "n_frames": 10,
-            "decay_rgb": (0, 7, 4),
-            "start_rgb": (235, 120, 130),
-            "spawn_points": 190
+            "decay_rgb": (0, 10, 1),
+            "start_rgb": (90, 200, 130),
+            "spawn_points": 60
         },
 
     },
@@ -170,9 +169,9 @@ projectile_types = {
         'expl_params': {
             "diameter": 20,
             "n_frames": 15,
-            "decay_rgb": (0, 7, 4),
-            "start_rgb": (120, 220, 130),
-            "spawn_points": 90
+            "decay_rgb": (0, 2, 10),
+            "start_rgb": (40, 190, 90),
+            "spawn_points": 10
         },
     },
 }
@@ -286,7 +285,7 @@ level = 0
 wave_spawning = False
 pl = None
 
-screen = pg.display.set_mode((SIZE[0], SIZE[1]))
+screen = pg.display.set_mode((WIDTH, HEIGHT))
 graphics = None
 graphics_thread = None
 

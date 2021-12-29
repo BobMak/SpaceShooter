@@ -35,8 +35,7 @@ def spawn_wave():
     State.level += 1
 
 
-def main_loop(realGuy):
-    State.pl = realGuy
+def main_loop():
     for x, y in enumerate(State.pl.turrets):
         y.number = x
 
@@ -90,7 +89,7 @@ def main_loop(realGuy):
                 buff_sp.rect.centery = Assets.HEIGHT / 2
                 if len(pg.sprite.spritecollide(buff_sp, State.asteroids, 0)) == 0:
                     State.interface.empty()
-                    State.pl = Player.ship_assign(State.picked_ship, pl.lives)
+                    State.pl = Player.ship_assign(State.picked_ship, State.pl.lives)
                 # Do not spawn player if there are State.asteroids around, and wait 100 milliseconds instead
                 else:
                     pg.time.set_timer(pg.USEREVENT + 2, 100)
@@ -138,7 +137,7 @@ def main_loop(realGuy):
             pl.slow_down()
             pl.bound_pass()
 
-            for x in pl.player_hull_group:
+            for x in pl.hull_group:
                 orbit_rotate(x.source, x, 0, x.distance, x.angle)
                 x.bound_pass()
 
@@ -185,7 +184,7 @@ def main_loop(realGuy):
                     i.blow_up()
             if y not in State.noclip_asteroids:
                 for pl in State.player_group:
-                    for i in pl.player_hull_group:
+                    for i in pl.hull_group:
                         if pg.sprite.collide_circle(y, i):
                             pl.damage(y.hp)
                             if y.damage(2):

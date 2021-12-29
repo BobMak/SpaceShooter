@@ -6,33 +6,22 @@ import pygame.gfxdraw as gfx
 import Assets
 import Controls
 import State
-from Mechanics import Colliding, Animation
+from Mechanics import Animation
 from Ship import Ship
 
 
 class Player(Ship):
-    def __init__(self, img, x, y, **kwargs):
+    def __init__(self, img, x, y, lives, **kwargs):
         super().__init__(img, x, y, **kwargs)
         self.ships = []
-        self.player_hull_group = pygame.sprite.Group()
 
         self.add(State.player_group)
 
-        self.lives = kwargs["lives"]
-
-        for x in kwargs["complex_sh"]:
-            b = Colliding(x[0], x[1], x[2], x[3], self)
-            self.player_hull_group.add(b)
+        self.lives = lives
 
     def destroy(self):
         super().destroy()
 
-        for x in self.mounts:
-            x.kill()
-        for x in self.shields:
-            x.kill()
-        for x in self.player_hull_group:
-            x.kill()
         self.lives += -1
 
         if self.lives > -1:

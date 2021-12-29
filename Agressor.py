@@ -1,5 +1,3 @@
-import random
-
 import Items
 from Mechanics import *
 from Bot import Bot
