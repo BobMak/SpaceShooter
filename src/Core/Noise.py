@@ -2,6 +2,9 @@ from numba import jit, cuda, prange
 import pyglet as pg
 import numpy as np
 
+import matplotlib.pyplot as plt
+
+
 @jit(nopython=True, parallel=False)
 def smoothstep(x):
     return 3 * x ** 2 - 2 * x ** 3
@@ -15,8 +18,8 @@ def get_noise_layer(map, rate):
     """return an array of the same size as map.
     sample one value from the map every rate steps.
     Interpolate between picked values to get the same map size"""
-    noise_layer = np.zeros(map.shape)
-    ref = np.zeros(( map.shape[0] // rate +1, map.shape[1] // rate +1 ))
+    noise_layer = np.zeros(map.shape, dtype=np.float32)
+    ref = np.zeros(( map.shape[0] // rate +1, map.shape[1] // rate +1 ), dtype=np.float32)
     for y in prange(1, len(ref)):
         for x in prange(1, len(ref[0])):
             ref[y][x] = map[rate * y -1][rate * x -1]
@@ -39,26 +42,24 @@ def getNoise(map, li, persistance=0.5):
         out.append(get_noise_layer(map, l) * persistance**i )
     return sum(out)/len(li)
 
-# @jit(nopython=True, parallel=False)
+@jit(nopython=True, parallel=False)
 def getNoiseEven(map, depth, persistance=0.5):
-    out = []
-    for i in range(depth):
-        out.append(get_noise_layer(map, int(len(map)/(2+i))) * persistance ** i)
-    s = sum(out)
-    return s / s.max()
+    out = np.zeros(map.shape, dtype=np.float32)
+    for i in range(1, depth+1):
+        out += get_noise_layer(map, int(len(map)/(2+i))) * persistance ** i
+    s = out / out.max()
+    return s
 
 
-def getNoiseImage(size=200, rgb=[1,1,1,1], depth=10, persistance=0.9):
-    assert [True if 1 >= x >= 0 else False for x in rgb], "rgba values have to be within [0,1] range"
+def getNoiseImage(size=200, rgba=[1, 1, 1, 1], depth=10, persistance=0.9):
+    assert [True if 1 >= x >= 0 else False for x in rgba], "rgba values have to be within [0,1] range"
     pureNoise = np.random.rand(size, size)
     perlineNoise = getNoiseEven(pureNoise, depth, persistance)
-    mapData = []
+    mapData = np.zeros((size, size, 4), dtype=np.float32)
+    mapData[:, :] = np.expand_dims(perlineNoise, axis=2) * np.array(rgba) * 255
+    mapData = mapData.astype(np.uint8)
 
-    for y in range(len(perlineNoise)):
-        for x in range(len(perlineNoise[0])):
-            strgth = int(255 * perlineNoise[y][x])
-            mapData.extend([rgb[0] * strgth, rgb[1] * strgth, rgb[2] * strgth, rgb[3] * strgth])
-    map = pg.image.ImageData(size, size, "RGBA", b"".join([x.to_bytes(1, "big") for x in mapData]))
+    map = pg.image.ImageData(size, size, "RGBA", mapData.tobytes())
     return map
 
 

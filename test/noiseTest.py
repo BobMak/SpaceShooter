@@ -17,19 +17,25 @@ BLK = 20
 def update(x):
     global conwey, ang
     screen.clear()
-    ang += 1
-    if ang > 359:
-        ang = 0
-    box.rotation = ang
+    # ang += 1
+    conwey = Noise.getNoiseImage(rgba=[1, 0.9, 0.5, 0.2], size=400, persistance=0.9, depth=16)
+    conwey.anchor_x = 200
+    conwey.anchor_y = 200
+    box = pg.sprite.Sprite(conwey, x=200, y=200)
     box.draw()
+    # conwey = Noise.getNoiseImage(rgba=[0.1, 0.9, 0.1, 0.2], size=400, persistance=0.9, depth=32)
+    # conwey.anchor_x = 200
+    # conwey.anchor_y = 200
+    # box = pg.sprite.Sprite(conwey, x=200, y=200)
+    # box.draw()
 
 
 if __name__ == "__main__":
     pg.gl.glEnable(pg.gl.GL_BLEND)
     pg.gl.glBlendFunc(pg.gl.GL_SRC_ALPHA, pg.gl.GL_ONE_MINUS_SRC_ALPHA)
 
-    pg.clock.schedule_interval(update, 1 / 60.0)
-    conwey = Noise.getNoiseImage(size=400, persistance=0.5, depth=8)
+    pg.clock.schedule_interval(update, 1)
+    conwey = Noise.getNoiseImage(size=400, persistance=1, depth=32)
     conwey.anchor_x = 200
     conwey.anchor_y = 200
     box = pg.sprite.Sprite(conwey, x=200, y=200)
