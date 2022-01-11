@@ -1,5 +1,6 @@
 import hashlib
 import json
+import math
 
 import numpy as np
 import pygame
@@ -18,6 +19,12 @@ def angle_diff(a1, a2):
         return np.sign(a)*360 - a
     else:
         return a
+
+
+def get_angle(p1, p2):
+    x1, y1 = p1
+    x2, y2 = p2
+    return math.atan2(y2 - y1, x2 - x1) * 180 / math.pi
 
 
 def blur(obj, speed):

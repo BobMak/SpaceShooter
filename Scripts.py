@@ -178,7 +178,8 @@ def main_loop():
                     if y.damage(5):
                         break
             for i in State.projectiles:
-                if pg.sprite.collide_circle(y, i):                    i.damage(y)
+                if pg.sprite.collide_circle(y, i):
+                    i.damage(y)
             for i in State.missiles:
                 if pg.sprite.collide_circle(y, i):
                     i.blow_up()

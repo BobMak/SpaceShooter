@@ -1,10 +1,10 @@
 import Items
+from Funcs import get_angle
 from Mechanics import *
 from Bot import Bot
 
 
 class Agressor(Bot):
-
     def __init__(self, image, x, y, *kwargs):
         super().__init__(image, x, y, *kwargs)
         # Assign goal if
@@ -24,18 +24,14 @@ class Agressor(Bot):
             # If speed is small, turn in the direction of goal,
             # otherwise, in the direction allowing greater speed vecror change
             if speed_mod < 1:
-                t = self.look_dir - abs(self.get_aim_dir(self.goal))
+                t = self.look_dir - get_angle(self.rect.center, self.goal.rect.center)
             else:
                 ang = np.arctan(self.speed[0]/self.speed[1])
                 # Direction of motion
-                spe = GObject(blanc,
-                              int(self.rect.centerx+30*np.sin(ang)
-                                 *np.sign(self.speed[1])),
-                              int(self.rect.centery+30*np.cos(ang)
-                                 *np.sign(self.speed[1])))
+                spe = (self.rect.centerx+30*np.sin(ang)*np.sign(self.speed[1]),
+                       self.rect.centery+30*np.cos(ang)*np.sign(self.speed[1]))
 
-                true_ang = self.get_aim_dir(self.goal) - self.get_aim_dir(spe)
-                spe.kill()
+                true_ang = get_angle(self.rect.center, self.goal.rect.center) - get_angle(self.rect.center, spe)
                 if true_ang < -180 or true_ang > 180:
                     true_ang = -360*np.sign(true_ang) + true_ang
 
@@ -55,7 +51,7 @@ class Agressor(Bot):
                 self.rotate(-np.sign(t) * self.rotation_rate)
 
             if abs(t) < 90:
-                self.accelerate(self.acceleration)  # no don't track acceleration reserve
+                self.accelerate(self.acceleration)
 
             else:
                 self.accelerate(self.acceleration)
@@ -66,3 +62,6 @@ class Agressor(Bot):
     def destroy(self):
         super().kill()
         Items.MissileItem(self.rect.centerx, self.rect.centery, 1)
+
+    def __str__(self):
+        return "Agressor" + super().__str__()

@@ -46,13 +46,6 @@ class Moving:
                                 self.rect.width, self.rect.height)
 
     def slow_down(self):
-        # self.speed[0] += (self.env_deacceleration
-        #                   *abs(np.cos(np.deg2rad(self.look_dir-90.0)))
-        #                   *-np.sign(self.speed[0]))
-        #
-        # self.speed[1] += (self.env_deacceleration
-        #                   *abs(np.sin(np.deg2rad(self.look_dir-90.0)))
-        #                   *-np.sign(self.speed[1]))
         self.speed = (self.speed[0] + (self.env_deacceleration
                           *abs(np.cos(np.deg2rad(self.look_dir-90.0)))
                           *-np.sign(self.speed[0])),
