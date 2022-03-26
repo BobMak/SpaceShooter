@@ -119,7 +119,7 @@ LOGIC_PER_SECOND = 240
 projectile_types = {
     'light_bolt': {
         'damage': 6,
-        'speed': 20,
+        'velocity': 20,
         'distance': 20,
         'cooldown': 10,
         'image': pygame.image.load(os.path.join('assets', 'projectiles','light_bolt.png')),
@@ -133,7 +133,7 @@ projectile_types = {
     },
     'big_bolt': {
         'damage': 40,
-        'speed': 10,
+        'velocity': 10,
         'distance': 150,
         'cooldown': 20,
         'image': pygame.image.load(os.path.join('assets', 'projectiles', 'big_bolt.png')),
@@ -148,7 +148,7 @@ projectile_types = {
     },
     'medium_bolt': {
         'damage': 14,
-        'speed': 15,
+        'velocity': 15,
         'distance': 60,
         'cooldown': 30,
         'image': pygame.image.load(os.path.join('assets', 'projectiles', 'medium_bolt.png')),
@@ -162,7 +162,7 @@ projectile_types = {
     },
     'heavy_bolt': {
         'damage': 90,
-        'speed': 8,
+        'velocity': 8,
         'distance': 100,
         'cooldown': 100,
         'image': pygame.image.load(os.path.join('assets', 'projectiles',  'heavy_bolt.png')),
@@ -179,12 +179,12 @@ projectile_types = {
 missile_types = {
     'light_missile': {
         'damage': 10,
-        'speed': 5,
-        'rotation_speed': 10,
+        'velocity': 5,
+        'rotation_velocity': 10,
         'distance': 500,
         'hit_range': 20,
         'cooldown': 50,
-        'acceleration': 0.2,
+        'acceleration': 0.8,
         'image': pygame.image.load(os.path.join('assets', 'projectiles', 'light_missile.png')),
         'volley': 3,
         'expl_params': {
@@ -194,12 +194,12 @@ missile_types = {
     },
     'medium_missile': {
         'damage': 25,
-        'speed': 3,
-        'rotation_speed': 3,
+        'velocity': 3,
+        'rotation_velocity': 3,
         'distance': 500,
         'hit_range': 50,
         'cooldown': 80,
-        'acceleration': 0.15,
+        'acceleration': 1,
         'image': pygame.image.load(os.path.join('assets', 'projectiles', 'medium_missile.png')),
         'volley': 1,
         'expl_params': {
@@ -209,12 +209,12 @@ missile_types = {
     },
     'heavy_missile': {
         'damage': 100,
-        'speed': 2,
-        'rotation_speed': 2,
+        'velocity': 2,
+        'rotation_velocity': 2,
         'distance': 1000,
         'hit_range': 100,
         'cooldown': 150,
-        'acceleration': 0.15,
+        'acceleration': 0.2,
         'image': pygame.image.load(os.path.join('assets', 'projectiles', 'heavy_missile.png')),
         'volley': 1,
         'expl_params': {

@@ -57,7 +57,7 @@ class B_Start_Over(Button):
         State.t = (True, True, True, True)
 
         for object in State.player_group:
-            object.speed = [0,0]
+            object.v = [0, 0]
             object.kill()
         for object in State.movable:
             object.kill()
@@ -139,7 +139,7 @@ class B_Ship_Highlihgts(Button):
             State.ship_types[self.ship_number]['image'] = img
             pygame.image.save(img, os.path.join('assets','ships','generated.png'))
             abilities = ['left', 'right', 'up', 'down']
-            for x in ['shoot', 'shield', 'speed', 'health','missile']:
+            for x in ['shoot', 'shield', 'velocity', 'health','missile']:
                 if random.choice([True, False]):
                     abilities.append(x)
 

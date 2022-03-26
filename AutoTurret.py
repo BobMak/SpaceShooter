@@ -11,8 +11,8 @@ class AutoTurret(Turret):
                  width = 20, height = 20, restriction = None):
         """
         Turret shoting prjoectiles with predictions of aim's
-        position by its speed.
-        'prj_speed' defines speed of projectiles.
+        position by its velocity.
+        'prj_velocity' defines velocity of projectiles.
         'cooldown' - in seconds.
         'bolt_numer' - index of given bolt in bolts' lists
         """
@@ -22,7 +22,7 @@ class AutoTurret(Turret):
 
         self.bolt_id = bolt_id
         self.bolt_img = State.projectile_types[bolt_id]['image']
-        self.prj_speed = State.projectile_types[bolt_id]['speed']
+        self.prj_velocity = State.projectile_types[bolt_id]['velocity']
 
         self.predict_pos = GObject(ball_img, 1, 1, -50, 1)
         self.blocked = False
@@ -35,23 +35,23 @@ class AutoTurret(Turret):
     def get_predict_pos(self):
 
         self.predict_pos.rect = copy.copy(self.locked.rect)
-        length = np.sqrt((self.rect.x - self.locked.rect.x)**2
-                          + (self.rect.y - self.locked.rect.y)**2)
+        length = np.sqrt((self.pos[0] - self.locked.rect.x)**2
+                          + (self.pos[1] - self.locked.rect.y)**2)
 
         try:
-            if (self.prj_speed*np.cos(np.deg2rad(self.look_dir))) != -99:
-                self.predict_pos.rect.centerx += (round(self.locked.speed[0]
-                                                       *length/self.prj_speed)
-                                                        *(1/self.prj_speed + 1))
+            if (self.prj_velocity*np.cos(np.deg2rad(self.look_dir))) != -99:
+                self.predict_pos.rect.centerx += (round(self.locked.v[0]
+                                                       *length/self.prj_velocity)
+                                                        *(1/self.prj_velocity + 1))
 
         except:
             pass
 
         try:
-            if (self.prj_speed*np.sin(np.deg2rad(self.look_dir))) != -99:
-                self.predict_pos.rect.centery += (round(self.locked.speed[1]
-                                                       *length/self.prj_speed)
-                                                        *(1/self.prj_speed + 1))
+            if (self.prj_velocity*np.sin(np.deg2rad(self.look_dir))) != -99:
+                self.predict_pos.rect.centery += (round(self.locked.v[1]
+                                                       *length/self.prj_velocity)
+                                                        *(1/self.prj_velocity + 1))
 
         except:
             pass
@@ -88,7 +88,7 @@ class AutoTurret(Turret):
                   + abs(self.in_range[0].rect.y - self.mounted_on.rect.y))
 
             for x in self.in_range:
-                t = (abs(x.rect.x - self.rect.x) + abs(x.rect.y - self.rect.y))
+                t = (abs(x.pos[0] - self.pos[0]) + abs(self.pos[1] - self.pos[1]))
                 if t < dist:
                     dist = t
                     self.locked = x

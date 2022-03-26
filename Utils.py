@@ -27,17 +27,17 @@ def get_angle(p1, p2):
     return math.atan2(y2 - y1, x2 - x1) * 180 / math.pi
 
 
-def blur(obj, speed):
-    '''blur effect along the speed direction'''
+def blur(obj, velocity):
+    '''blur effect along the velocity direction'''
     rect = obj.rotated_image.get_rect()
     img = obj.rotated_image_alpha
 
-    for x in range(int(speed)//3):
-        rect.centerx = obj.rect.centerx + obj.speed[0]//(x+3)
-        rect.centery = obj.rect.centery + obj.speed[1]//(x+3)
+    for x in range(int(velocity)//3):
+        rect.centerx = obj.rect.centerx + obj.v[0] // (x + 3)
+        rect.centery = obj.rect.centery + obj.v[1] // (x + 3)
         State.screen.blit(img, rect)
-        rect.centerx = obj.rect.centerx - obj.speed[0]//(x+3)
-        rect.centery = obj.rect.centery - obj.speed[1]//(x+3)
+        rect.centerx = obj.rect.centerx - obj.v[0] // (x + 3)
+        rect.centery = obj.rect.centery - obj.v[1] // (x + 3)
         State.screen.blit(img, rect)
 
 
@@ -81,7 +81,7 @@ def orbit_rotate(center, obj, d_ang, dist = 0, ang = -20):
 def orbit_eliptic(center, obj):
     """
     orbit_eliptic(center, obj)
-    obj orbits center on median distance of 'm_dist' with angular speed d_ang.
+    obj orbits center on median distance of 'm_dist' with angular velocity d_ang.
     'orbit_coef' shows how many times in one full turn 'obj' reaches
     its perigee or apsis.
     'd_dist' is the differance between apsis/perigee and the median

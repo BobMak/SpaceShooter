@@ -11,3 +11,6 @@ class Zone(pygame.sprite.Sprite, Vulnerable):
         self.time_count = 0
         self.timer = time
         self.rect = pygame.Rect(x, y, 1, 1)
+        # to calculate repulsion force when calculating collisions
+        self.m = hp
+        self.v = (0, 0)

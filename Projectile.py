@@ -11,13 +11,15 @@ import State
 class Projectile(GObject, Moving, Vulnerable):
     def __init__(self, img, x, y, distance, width=None, height=None,
                  damage=None,
-                 max_speed=None,
-                 expl_ref=None):
+                 max_velocity=None,
+                 expl_ref=None,
+                 env_friction=0,
+                 mass=0.1):
         super().__init__(img, x, y, width=width, height=height)
-        Moving.__init__(self)
+        Moving.__init__(self, mass=mass, env_friction=env_friction)
 
         Vulnerable.__init__(self, damage)
-        self.speed_max = max_speed
+        self.velocity_max = max_velocity
         self.timer = distance
         self.expl_ref = expl_ref
 
@@ -48,7 +50,7 @@ class Projectile(GObject, Moving, Vulnerable):
                           self.rect.centery,
                           damage=State.projectile_types[bolt]['damage'],
                           distance=State.projectile_types[bolt]['distance'],
-                          max_speed=State.projectile_types[bolt]['speed'],
+                          max_velocity=State.projectile_types[bolt]['velocity'],
                           expl_ref=expl_ref
                           )
         if direction:
@@ -62,9 +64,9 @@ class Projectile(GObject, Moving, Vulnerable):
                              - skipped_len * np.sin(np.deg2rad(shot.look_dir
                                                                + 90)))
 
-        shot.speed = [State.projectile_types[bolt]['speed']
-                      * np.cos(np.deg2rad(self.look_dir - 90)),
-                      State.projectile_types[bolt]['speed']
-                      * np.sin(np.deg2rad(self.look_dir - 90))]
+        shot.v = [State.projectile_types[bolt]['velocity']
+                  * np.cos(np.deg2rad(self.look_dir - 90)),
+                  State.projectile_types[bolt]['velocity']
+                  * np.sin(np.deg2rad(self.look_dir - 90))]
         shot.rotate(0)
         return shot

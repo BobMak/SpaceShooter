@@ -13,7 +13,7 @@ class Mounted(GObject):
     orbit_ang = None
 
     # elliptic orbiting parameters
-    d_ang = 1   # unmounted orbiting speed
+    d_ang = 1   # unmounted orbiting velocity
     min_dist = 10
     max_dist = 5
     orbit_coef = 120  # Degrees before changing direction of distance movement
@@ -40,7 +40,7 @@ class Mounted(GObject):
         self.restriction = restriction
         self.mounted_on = mounted_on
         self.distance  = distance
-        self.speed = mounted_on.speed
+        self.v = mounted_on.v
         if look_dir == 0:
             self.orbit_ang = mounted_on.look_dir-180
         else:

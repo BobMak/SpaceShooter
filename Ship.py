@@ -20,7 +20,7 @@ class Ship(GObject, Moving, Vulnerable):
                  acceleration_burn_rate=0,
                  acceleration_reserve_regeneration=0,
                  deacceleration=0,
-                 env_deacceleration=0,
+                 env_friction=0,
                  acceleration=0,
                  complex_sh=(), width=None, height=None):
 
@@ -47,7 +47,7 @@ class Ship(GObject, Moving, Vulnerable):
         self.rotation_rate = rotation_rate
         self.acceleration = acceleration
         self.deacceleration = deacceleration
-        self.env_deacceleration = env_deacceleration
+        self.env_deacceleration = env_friction
         self.max_acceleration_reserve = max_acceleration_reserve
         self.acceleration_reserve_regeneration = acceleration_reserve_regeneration
         self.acceleration_burn_rate = acceleration_burn_rate
@@ -55,7 +55,7 @@ class Ship(GObject, Moving, Vulnerable):
         self.acceleration_reserve = copy.deepcopy(self.max_acceleration_reserve)
         self.hp = copy.deepcopy(self.max_hp)
         self.shield_hp = copy.deepcopy(self.max_shield_hp)
-        self.speed = [0,0]
+        self.v = [0,0]
         GObject.__init__(self, image, x, y, width=width, height=height)
         Moving.__init__(self)
         Vulnerable.__init__(self, hp)
@@ -98,7 +98,7 @@ class Ship(GObject, Moving, Vulnerable):
     def destroy(self):
         self.kill()
         self.rotate(0)
-        self.speed = [0,0]
+        self.v = [0,0]
 
         Animation.FX_explosion(self.rect.centerx, self.rect.centery)
 
@@ -108,10 +108,13 @@ class Ship(GObject, Moving, Vulnerable):
         for x in [*self.mounts, *self.shields, *self.hull_group]:
             x.kill()
 
-    def damage(self, dmg):
+    def damage(self, dmg, moving=None):
         self.hp += -max(0, dmg)
         if self.hp < 0:
             self.destroy()
+
+        if moving:
+            self.rigid_collision(moving)
 
     def m_add(self, mounted):
         self.mounts.append(mounted)
@@ -123,8 +126,8 @@ class Ship(GObject, Moving, Vulnerable):
         min_dist = State.asteroids.sprites[0]
 
         for i in State.asteroids:
-            dist = np.sqrt((self.rect.x - i.rect.x)**2
-                         + (self.rect.y - i.rect.y)**2)
+            dist = np.sqrt((self.pos[0] - i.pos[0])**2
+                         + (self.pos[1] - self.pos[1])**2)
             if dist < min_dist:
                 min_dist = dist
 
@@ -138,7 +141,7 @@ class Ship(GObject, Moving, Vulnerable):
     def accelerate(self, temp):
         if not self.acceleration_reserve < 0.4:
             self.acceleration_reserve = max(0.0, self.acceleration_reserve - self.acceleration_burn_rate)
-            super()._accelerate(temp)
+            super().accelerate_forward(temp)
         else:
             self.acceleration_lock = True
 
@@ -158,9 +161,9 @@ class Ship(GObject, Moving, Vulnerable):
 
     def draw_rotating(self):
         super().draw_rotating()
-        speed = np.sqrt(self.speed[0] ** 2 + self.speed[1] ** 2)
-        if speed > 8:
-            blur(self, speed)
+        velocity = np.sqrt(self.v[0] ** 2 + self.v[1] ** 2)
+        if velocity > 8:
+            blur(self, velocity)
         for x in self.shields:
             x.draw_rotating()
 

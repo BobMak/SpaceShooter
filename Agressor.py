@@ -15,21 +15,21 @@ class Agressor(Bot):
 
         State.asteroids.add(self)
         self.look_dir = random.randint(0, 358)
-        self.speed = [random.uniform(-3, 3), random.uniform(-3, 3)]
+        self.v = [random.uniform(-3, 3), random.uniform(-3, 3)]
 
     def rush(self):
         dist = self.get_distance(self.goal)
         if dist > self.close_range:
-            speed_mod = np.sqrt(self.speed[0]**2+self.speed[1]**2)
+            velocity_mod = np.sqrt(self.v[0]**2+self.v[1]**2)
             # If speed is small, turn in the direction of goal,
             # otherwise, in the direction allowing greater speed vecror change
-            if speed_mod < 1:
+            if velocity_mod < 1:
                 t = self.look_dir - get_angle(self.rect.center, self.goal.rect.center)
             else:
-                ang = np.arctan(self.speed[0]/self.speed[1])
+                ang = np.arctan(self.v[0]/self.v[1])
                 # Direction of motion
-                spe = (self.rect.centerx+30*np.sin(ang)*np.sign(self.speed[1]),
-                       self.rect.centery+30*np.cos(ang)*np.sign(self.speed[1]))
+                spe = (self.rect.centerx+30*np.sin(ang)*np.sign(self.v[1]),
+                       self.rect.centery+30*np.cos(ang)*np.sign(self.v[1]))
 
                 true_ang = get_angle(self.rect.center, self.goal.rect.center) - get_angle(self.rect.center, spe)
                 if true_ang < -180 or true_ang > 180:

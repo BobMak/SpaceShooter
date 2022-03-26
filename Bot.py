@@ -18,7 +18,7 @@ class Bot(Ship):
                          acceleration_reserve_regeneration=State.ship_types[picked_ship][
                              'acceleration_reserve_regeneration'],
                          deacceleration=State.ship_types[picked_ship]['deacceleration'],
-                         env_deacceleration=State.ship_types[picked_ship]['env_deacceleration'],
+                         env_friction=State.ship_types[picked_ship]['env_deacceleration'],
                          )
         State.script_mob_group.add(self)
         self.close_range = 20
@@ -48,18 +48,18 @@ class Bot(Ship):
         dist = self.get_distance(self.goal)
 
         if dist > self.close_range:
-            speed_mod = np.sqrt(self.speed[0]**2+self.speed[1]**2)
+            velocity_mod = np.sqrt(self.velocity[0]**2+self.velocity[1]**2)
             # If speed is small, turn in the direction of goal,
             # otherwise, in the direction allowing greater speed vecror change
-            if speed_mod < 1:
+            if velocity_mod < 1:
                 t = self.look_dir - abs(self.get_aim_dir(self.goal))
             else:
-                ang = np.arctan(self.speed[0]/self.speed[1])
+                ang = np.arctan(self.v[0]/self.v[1])
                 spe = GObject(blanc,
                               int(self.rect.centerx+30*np.sin(ang)
-                                *np.sign(self.speed[1])),
+                                *np.sign(self.v[1])),
                               int(self.rect.centery+30*np.cos(ang)
-                                *np.sign(self.speed[1])))
+                                *np.sign(self.v[1])))
 
                 true_ang = self.get_aim_dir(self.goal) - self.get_aim_dir(spe)
                 spe.kill()
@@ -82,20 +82,20 @@ class Bot(Ship):
                 self.rotate(-np.sign(t) * self.ROTATION)
 
             if abs(t) < 90:
-                if speed_mod < ((self.DEACCELERATION+self.ENV_DEACCELERATION)
-                                 *(dist/max(speed_mod,0.001)) + self.ENV_DEACCELERATION):
-                    self._accelerate(self.ACCELERATION)
+                if velocity_mod < ((self.DEACCELERATION+self.ENV_DEACCELERATION)
+                                 *(dist/max(velocity_mod,0.001)) + self.ENV_DEACCELERATION):
+                    self.accelerate_forward(self.ACCELERATION)
 
-                elif speed_mod>1 and abs(true_ang) < 30:
-                    self._accelerate(-self.DEACCELERATION)
+                elif velocity_mod>1 and abs(true_ang) < 30:
+                    self.accelerate_forward(-self.DEACCELERATION)
 
             else:
-                if speed_mod < ((self.DEACCELERATION+self.ENV_DEACCELERATION)
-                                 *(dist/speed_mod) + self.ENV_DEACCELERATION):
-                    self._accelerate(-self.DEACCELERATION)
+                if velocity_mod < ((self.DEACCELERATION+self.ENV_DEACCELERATION)
+                                 *(dist/velocity_mod) + self.ENV_DEACCELERATION):
+                    self.accelerate_forward(-self.DEACCELERATION)
 
-                elif speed_mod>1 and true_ang < 30:
-                    self._accelerate(self.ACCELERATION)
+                elif velocity_mod>1 and true_ang < 30:
+                    self.accelerate_forward(self.ACCELERATION)
 
         else:
             self.to_do_list.remove(self.go)

@@ -9,27 +9,30 @@ class Missile(Projectile):
     # how often aim-updaing function to run
     def __init__(self, img, x, y,
                  distance=0,
-                 rotation_speed=0.0,
-                 max_speed=0,
+                 rotation_velocity=0.0,
+                 max_velocity=0,
                  damage=0,
-                 acceleration=0,
+                 thrust=0,
                  hit_range=0,
-                 expl_params=None,):
+                 expl_params=None,
+                 mass=0.1):
         super().__init__(img, x, y,
                          distance=distance,
-                         max_speed=max_speed,
+                         max_velocity=max_velocity,
                          damage=damage,
+                         mass=mass,
+                         env_friction=0.1
                          )
         self.compute_tempo = 5
         self.compute_count = 0
-        self.d_ang =     rotation_speed
-        self.d_speed =   acceleration
-        self.max_speed = max_speed
+        self.d_ang =        rotation_velocity
+        self.thrust =       thrust
+        self.max_velocity = max_velocity
         self.hit_range = hit_range
         self.expl_params = expl_params
         self.hp =        damage
 
-        self.mod_speed = 0
+        self.mod_velocity = 0
         self.dist_prev = 500
         self.dist = None
         State.missiles.add(self)
@@ -62,15 +65,15 @@ class Missile(Projectile):
         r = copy.copy(self.rect)
         # create engine particles
         FX_Track(particle, r, 40, look_dir=random.randint(0,358),
-                        fading=(20,16), enlarging=(20,16),
-                        color=(200,200,200,random.randint(40,130)),
-                        speed=[random.uniform(-0.5,0.5), random.uniform(-0.5,0.5)])
+                 fading=(20,16), enlarging=(20,16),
+                 color=(200,200,200,random.randint(40,130)),
+                 velocity=[random.uniform(-0.5, 0.5), random.uniform(-0.5, 0.5)])
 
         brightness = max(0.0, random.gauss(0.5, 0.2))
         FX_Glow(r, 1, int(20 * brightness), int(20 * brightness), (255, 200, 125, int(brightness * 10)))
 
         self.rotate_to_aim()
-        self.mod_speed += self.d_speed
+        self.mod_velocity += self.thrust
 
         # If missile is close enough to aim but fails to hit it (starts to get
         # further from aim), missile will detonate.
@@ -80,15 +83,8 @@ class Missile(Projectile):
             return
         self.dist_prev = self.dist
 
-        a1 = self.speed[0] + self.d_speed*np.cos(np.deg2rad(self.look_dir-90))
-        if a1 >= self.max_speed or a1 <= -self.max_speed:
-            a1 = self.max_speed*np.cos(np.deg2rad(self.look_dir-90))
-
-        a2 = self.speed[1] + self.d_speed*np.sin(np.deg2rad(self.look_dir-90))
-        if a2 >= self.max_speed or a2 <= -self.max_speed:
-            a2 = self.max_speed*np.sin(np.deg2rad(self.look_dir-90))
-
-        self.speed = (a1, a2)
+        if np.sqrt(self.v[0]**2 + self.v[1]**2) < self.max_velocity:
+            self.accelerate_forward(self.thrust)
 
     def update(self):
 
@@ -103,7 +99,7 @@ class Missile(Projectile):
             self.aim = self.lock_closest()
 
     def blow_up(self):
-        x = Zone(self.rect.x, self.rect.y, self.hit_range, self.hp, 2)
+        x = Zone(self.pos[0], self.pos[1], self.hit_range, self.hp, 2)
         prm_hash = dict_hash(self.expl_params)
         if self.expAnimation:
             explAnimation = self.expAnimation
@@ -128,15 +124,15 @@ class Missile(Projectile):
                 if self.hp <= 0:
                     return
                 shot = Missile(State.missile_types[missile]['image'],
-                                  self.rect.centerx,
-                                  self.rect.centery,
-                                  damage=State.missile_types[missile]['damage'],
-                                  distance=State.missile_types[missile]['distance'],
-                                  max_speed=State.missile_types[missile]['speed'],
-                                  acceleration=State.missile_types[missile]['acceleration'],
-                                  rotation_speed=State.missile_types[missile]['rotation_speed'],
-                                  hit_range=State.missile_types[missile]['hit_range'],
-                                  expl_params=State.missile_types[missile]['expl_params'],
+                               self.rect.centerx,
+                               self.rect.centery,
+                               damage=State.missile_types[missile]['damage'],
+                               distance=State.missile_types[missile]['distance'],
+                               max_velocity=State.missile_types[missile]['velocity'],
+                               thrust=State.missile_types[missile]['acceleration'],
+                               rotation_velocity=State.missile_types[missile]['rotation_velocity'],
+                               hit_range=State.missile_types[missile]['hit_range'],
+                               expl_params=State.missile_types[missile]['expl_params'],
                                )
                 if direction:
                     shot.look_dir = direction
@@ -149,10 +145,10 @@ class Missile(Projectile):
                                      - skipped_len * np.sin(np.deg2rad(shot.look_dir
                                                                        + 90)))
 
-                shot.speed = [State.missile_types[missile]['speed']
-                              * np.cos(np.deg2rad(self.look_dir - 90)),
-                              State.missile_types[missile]['speed']
-                              * np.sin(np.deg2rad(self.look_dir - 90))]
+                shot.v = [State.missile_types[missile]['velocity']
+                                 * np.cos(np.deg2rad(self.look_dir - 90)),
+                                 State.missile_types[missile]['velocity']
+                                 * np.sin(np.deg2rad(self.look_dir - 90))]
                 shot.rotate(0)
                 # delay between shots
                 time.sleep(0.2)

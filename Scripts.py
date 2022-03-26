@@ -130,11 +130,8 @@ def main_loop():
             except:
                 pass
 
-            m.slow_down()
-
         for pl in State.player_group:
 
-            pl.slow_down()
             pl.bound_pass()
 
             for x in pl.hull_group:
@@ -158,11 +155,10 @@ def main_loop():
         for z in State.missiles:
             z.bound_pass()
             z.update()
-            z.rect.move(z.speed)
+            z.rect.move(z.v)
 
         for x in State.mob_group:
             x.bound_pass()
-            x.slow_down()
 
         ##########      Logic       #########
 
@@ -170,12 +166,12 @@ def main_loop():
             for x in State.hit_waves:
                 if pg.sprite.collide_circle(x, y):
                     x.damage(y.hp)
-                    if y.damage(x.hp):
+                    if y.damage(x.hp, moving=x):
                         break
             for x in pl.shields:
                 if pg.sprite.collide_circle(y, x):
                     x.damage(4)
-                    if y.damage(5):
+                    if y.damage(5, moving=x):
                         break
             for i in State.projectiles:
                 if pg.sprite.collide_circle(y, i):
@@ -188,13 +184,13 @@ def main_loop():
                     for i in pl.hull_group:
                         if pg.sprite.collide_circle(y, i):
                             pl.damage(y.hp)
-                            if y.damage(2):
+                            if y.damage(2, moving=pl):
                                 break
 
         for pl in State.player_group:
             pl.update()
             for i in pl.shields:
-                i.rect.move(i.speed)
+                i.rect.move(i.v)
 
             for x in pl.turrets:
                 x.auto_fire()

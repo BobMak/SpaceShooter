@@ -27,49 +27,96 @@ class Moving:
     Inherited by all classes that can move by themselves.
     """
     def __init__(self,
-                 env_deacceleration=0.1,
-                 speed=(0.0, 0.0),
+                 env_friction=0.1,
+                 velocity=(0.0, 0.0),
+                 angular_velocity=0.0,
+                 acceleration=(0.0, 0.0),
+                 angular_acceleration=0.0,
+                 mass=1.0,
                  look_dir=0.0,
+                 rect=pygame.Rect(0, 0, 1, 1),
                  ):
-        self.env_deacceleration = env_deacceleration
+        if not self.rect:
+            self.rect = rect
+        self.env_deacceleration = env_friction / mass
         self.look_dir = look_dir
-        self.speed = speed
-        self.position = [self.rect.x, self.rect.y]
+        self.m = mass
+        self.v = velocity
+        self.av = angular_velocity
+        self.a = acceleration
+        self.aa = angular_acceleration
+        # non-elastic collision
+        self.COLLISION_ELASTICITY = 0.5
+        # float representation of the position, since rect.x and rect.y are ints
+        # we will lose a lot of precision when moving if we just update ints
+        self.pos = (self.rect.x, self.rect.y)
         State.movable.add(self)
 
     def modify_position(self):
-        "modifyes position with respect to <1 values of acceleration"
-        self.position[0] += self.speed[0]
-        self.position[1] += self.speed[1]
+        self.pos = (self.pos[0] + self.v[0], self.pos[1] + self.v[1])
+        self.rect.x = int(self.pos[0])
+        self.rect.y = int(self.pos[1])
 
-        self.rect = pygame.Rect(self.position[0], self.position[1],
-                                self.rect.width, self.rect.height)
+        self.v = (self.v[0] + self.a[0], self.v[1] + self.a[1])
 
-    def slow_down(self):
-        self.speed = (self.speed[0] + (self.env_deacceleration
-                          *abs(np.cos(np.deg2rad(self.look_dir-90.0)))
-                          *-np.sign(self.speed[0])),
-                      self.speed[1] + (self.env_deacceleration
-                          *abs(np.sin(np.deg2rad(self.look_dir-90.0)))
-                          *-np.sign(self.speed[1])))
+        # apply friction force to slow down
+        velocity_angle = np.arctan2(self.v[1], self.v[0])
+        velocity_length = np.sqrt(self.v[0] ** 2 + self.v[1] ** 2)
+        # self.v = (self.v[0] ,
+        #           self.v[1] )
+        if self.v[0] != 0 or self.v[1] != 0:
+            self.a = (
+                - self.env_deacceleration * np.cos(velocity_angle) * velocity_length,
+                - self.env_deacceleration * np.sin(velocity_angle) * velocity_length
+            )
+        else:
+            self.a = (0, 0)
 
-    def _accelerate(self, temp):
-        self.speed = (self.speed[0] + temp*np.cos(np.deg2rad(self.look_dir-90.0)),
-                      self.speed[1] + temp*np.sin(np.deg2rad(self.look_dir-90.0)))
+        self.look_dir += self.av
+        self.av += self.aa
+
+    def slow_down_angular(self):
+        if self.av != 0:
+            self.av = self.av * 0.9
+
+    def accelerate_forward(self, F):
+        # F = ma
+        a = F/self.m
+        self.a = (self.a[0] + a * np.cos(np.deg2rad(self.look_dir - 90)), self.a[1] + a * np.sin(np.deg2rad(self.look_dir - 90)))
 
     def bound_pass(self):
-        if (self.position[0] < -self.rect.width
-                or self.position[0] > WIDTH):
+        if (self.pos[0] < -self.rect.width
+                or self.pos[0] > WIDTH):
             # self.rect = self.rect.move((-(Assets.WIDTH + self.rect.width) * np.sign(self.rect.centerx)), 0)
             # self.rect.centerx += -(width + self.rect.width) * np.sign(self.rect.centerx)
-            self.position[0] += -(WIDTH + self.rect.width) * np.sign(self.rect.x)
+            self.pos = (self.pos[0] -(WIDTH + self.rect.width) * np.sign(self.pos[0]), self.pos[1])
             # except: pass
 
-        if (self.position[1] < -self.rect.height
-                or self.position[1] > HEIGHT):
+        if (self.pos[1] < -self.rect.height
+                or self.pos[1] > HEIGHT):
             # self.rect = self.rect.move(0, (-(height + self.rect.width) * np.sign(self.rect.centery)))
-            self.position[1] += -(HEIGHT + self.rect.height) * np.sign(self.rect.y)
-            # except: pass
+            self.pos = (self.pos[0], self.pos[1] -(HEIGHT + self.rect.height) * np.sign(self.pos[1]))
+
+    def velocity_direction(self):
+        return np.arctan2(self.v[1], self.v[0])
+
+    def rigid_collision(self, other):
+        """
+        Calculate the velocity change due to non-elastic collision between two objects.
+        """
+        # calculate the relative velocity
+        relative_velocity = (self.v[0] - other.v[0], self.v[1] - other.v[1])
+        # calculate the relative velocity in the direction of the collision
+        relative_velocity_normal = (relative_velocity[0] * np.cos(self.velocity_direction()) + relative_velocity[1] * np.sin(self.velocity_direction()),
+                                    -relative_velocity[0] * np.sin(self.velocity_direction()) + relative_velocity[1] * np.cos(self.velocity_direction()))
+        # calculate the impulse scalar
+        impulse_scalar = -(1 + self.COLLISION_ELASTICITY) * (relative_velocity_normal[0] * self.m + relative_velocity_normal[1] * other.m) / (self.m + other.m)
+        # calculate the impulse vector
+        impulse_vector = (impulse_scalar * relative_velocity_normal[0], impulse_scalar * relative_velocity_normal[1])
+        # apply the impulse
+        self.v = (self.v[0] + impulse_vector[0] / self.m, self.v[1] + impulse_vector[1] / self.m)
+        if isinstance(other, Moving):
+            other.v = (other.v[0] - impulse_vector[0] / other.m, other.v[1] - impulse_vector[1] / other.m)
 
     @staticmethod
     def move_movable():
@@ -100,15 +147,15 @@ class FX(pygame.sprite.Sprite, Moving):
 
 class FX_Glow(FX):
     """
-    FX_Glow(rect, duration, radius, length, color, speed=(0,0))
+    FX_Glow(rect, duration, radius, length, color, velocity=(0,0))
     """
-    def __init__(self, rect, duration, radius, length, color, speed=(0,0)):
+    def __init__(self, rect, duration, radius, length, color, velocity=[0, 0]):
 
         FX.__init__(self, rect, duration)
         self.radius = radius
         self.color = color
         self.length = length
-        self.speed = speed
+        self.v = velocity
         State.glow.add(self)
 
     def draw_rotating(self):
@@ -134,15 +181,15 @@ class FX_Track(FX):
     the effect is rotated per y frames.
     :color - set the color for effect image.
     :look_dir - initial angle (degrees)
-    :speed - speed (vector [dx, dy])
+    :velocity - velocity (vector [dx, dy])
 
     Tracks take significantly more computations if y is lower
     and duration time is higher.
     '''
 
     def __init__(self, image, rect, duration,
-                fading=None, enlarging=None, color=None,
-                look_dir=None, speed=None):
+                 fading=None, enlarging=None, color=None,
+                 look_dir=None, velocity=None):
         '''density - [0-1]'''
         FX.__init__(self, rect, duration)
 
@@ -182,8 +229,8 @@ class FX_Track(FX):
             self.enlarging_tempo = enlarging[1]
             self.updates.append(self.enlarge)
 
-        if speed != None:
-            self.speed = speed
+        if velocity != None:
+            self.v = velocity
 
         State.effects.add(self)
 
@@ -310,8 +357,8 @@ class GObject(pygame.sprite.Sprite):
     def get_distance(self, obj):
         """returns distance to object x"""
 
-        return np.sqrt((self.rect.x - obj.rect.x)**2
-                        + (self.rect.y - obj.rect.y)**2)
+        return np.sqrt((self.pos[0] - obj.rect.x)**2
+                        + (self.pos[1] - obj.rect.y)**2)
 
     def get_real_distance(self, obj):
         """get_real_distance(obj)
@@ -381,7 +428,7 @@ class Colliding(pygame.sprite.Sprite, Moving):
                                + np.deg2rad(np.sin(angle)) * distance),
                                  width, height)
 
-        self.speed = source.speed
+        self.v = source.v
         self.angle = angle
         self.source = source
         self.distance = distance
@@ -580,6 +627,6 @@ class Animation(GObject, Moving):
                            )
         object.look_dir = source.look_dir
         object.rotate(0)
-        object.speed = source.speed
+        object.v = source.v
 
         State.effects.add(object)

@@ -11,7 +11,7 @@ class Shield(Animation):
         self.source = source
         self.look_dir = 0
         self.rotate(0)
-        self.speed = source.speed
+        self.v = source.v
         self.type = type
         self.HP = source.shield_hp
 

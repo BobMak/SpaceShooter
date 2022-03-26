@@ -63,22 +63,22 @@ class Player(Ship):
         of ship'''
 
         ship = Player(State.ship_types[picked_ship]["image"],
-                    Assets.HEIGHT // 2, Assets.HEIGHT // 2,
-                    complex_sh=State.ship_types[picked_ship]['hit_box'],
-                    lives=lives,
-                    bolt=State.ship_types[picked_ship]['bolt'],
-                    missile=State.ship_types[picked_ship]['missile'],
-                    hp=State.ship_types[picked_ship]['hull'],
-                    shield=State.ship_types[picked_ship]['shields'],
-                    rotation_rate=State.ship_types[picked_ship]['rotation_rate'],
-                    acceleration=State.ship_types[picked_ship]['acceleration'],
-                    max_acceleration_reserve=State.ship_types[picked_ship]['acceleration_tank'],
-                    acceleration_burn_rate=State.ship_types[picked_ship]['acceleration_burn_rate'],
-                    acceleration_reserve_regeneration=State.ship_types[picked_ship][
+                      Assets.HEIGHT // 2, Assets.HEIGHT // 2,
+                      complex_sh=State.ship_types[picked_ship]['hit_box'],
+                      lives=lives,
+                      bolt=State.ship_types[picked_ship]['bolt'],
+                      missile=State.ship_types[picked_ship]['missile'],
+                      hp=State.ship_types[picked_ship]['hull'],
+                      shield=State.ship_types[picked_ship]['shields'],
+                      rotation_rate=State.ship_types[picked_ship]['rotation_rate'],
+                      acceleration=State.ship_types[picked_ship]['acceleration'],
+                      max_acceleration_reserve=State.ship_types[picked_ship]['acceleration_tank'],
+                      acceleration_burn_rate=State.ship_types[picked_ship]['acceleration_burn_rate'],
+                      acceleration_reserve_regeneration=State.ship_types[picked_ship][
                         'acceleration_reserve_regeneration'],
-                    deacceleration=State.ship_types[picked_ship]['deacceleration'],
-                    env_deacceleration=State.ship_types[picked_ship]['env_deacceleration'],
-                    width=None, height=None)
+                      deacceleration=State.ship_types[picked_ship]['deacceleration'],
+                      env_friction=State.ship_types[picked_ship]['env_deacceleration'],
+                      width=None, height=None)
         ship.rotate(0)
 
         for a in State.ship_types[picked_ship]['controls']:
