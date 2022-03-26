@@ -31,12 +31,15 @@ class Shield(Animation):
         self.source.locks[3] = True
         self.kill()
 
-    def damage(self, dmg):
+    def damage(self, dmg, moving=None):
         global shield_lock
         self.HP += -max(0, dmg)
 
         if self.HP < 0:
             self.down()
+
+        if moving:
+            self.source.rigid_collision(moving)
 
     @staticmethod
     def shields(source):

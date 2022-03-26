@@ -44,7 +44,8 @@ class Ship(GObject, Moving, Vulnerable):
 
         self.max_hp = hp
         self.max_shield_hp = shield
-        self.rotation_rate = rotation_rate
+        self.rotation_rate = rotation_rate / 100
+        self.rotation_rate_max = rotation_rate
         self.acceleration = acceleration
         self.deacceleration = deacceleration
         self.env_deacceleration = env_friction
@@ -147,16 +148,17 @@ class Ship(GObject, Moving, Vulnerable):
 
     def rotate(self, ang):
         super().rotate(ang)
+        self.rotation_rate = np.min([self.rotation_rate_max, self.rotation_rate + self.rotation_rate_max/30])
         for x in self.turrets:
             x.rotate(self.rotation_rate)
-            Utils.orbit_rotate(self, x, -self.rotation_rate,
+            Utils.orbit_rotate(self, x, -self.rotation_rate*np.sign(ang),
                                x.distance, x.orbit_ang)
 
         for x in self.shields:
-            x.rotate(self.rotation_rate)
+            x.rotate(self.rotation_rate*np.sign(ang))
 
         for x in self.hull_group:
-            Utils.orbit_rotate(self, x, -self.rotation_rate,
+            Utils.orbit_rotate(self, x, -self.rotation_rate*np.sign(ang),
                                x.distance, x.orbit_ang)
 
     def draw_rotating(self):

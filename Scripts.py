@@ -142,8 +142,7 @@ def main_loop():
                 x.bound_pass()
 
             for x in pl.shields:
-                x.rect.centerx = x.source.rect.centerx
-                x.rect.centery = x.source.rect.centery
+                x.update()
 
             for x in pl.orbiting:
                 x.bound_pass()
@@ -170,7 +169,7 @@ def main_loop():
                         break
             for x in pl.shields:
                 if pg.sprite.collide_circle(y, x):
-                    x.damage(4)
+                    x.damage(4, moving=y)
                     if y.damage(5, moving=x):
                         break
             for i in State.projectiles:

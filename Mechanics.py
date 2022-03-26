@@ -107,8 +107,8 @@ class Moving:
         # calculate the relative velocity
         relative_velocity = (self.v[0] - other.v[0], self.v[1] - other.v[1])
         # calculate the relative velocity in the direction of the collision
-        relative_velocity_normal = (relative_velocity[0] * np.cos(self.velocity_direction()) + relative_velocity[1] * np.sin(self.velocity_direction()),
-                                    -relative_velocity[0] * np.sin(self.velocity_direction()) + relative_velocity[1] * np.cos(self.velocity_direction()))
+        relative_velocity_normal = (relative_velocity[0] * np.cos(self.velocity_direction()+np.pi/2) + relative_velocity[1] * np.sin(self.velocity_direction()+np.pi/2),
+                                    -relative_velocity[0] * np.sin(self.velocity_direction()+np.pi/2) + relative_velocity[1] * np.cos(self.velocity_direction())+np.pi/2)
         # calculate the impulse scalar
         impulse_scalar = -(1 + self.COLLISION_ELASTICITY) * (relative_velocity_normal[0] * self.m + relative_velocity_normal[1] * other.m) / (self.m + other.m)
         # calculate the impulse vector
