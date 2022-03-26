@@ -3,7 +3,7 @@ import random
 
 import numpy as np
 
-from Funcs import dict_hash
+from Utils import dict_hash
 from Mechanics import GObject, Moving, Vulnerable, Animation
 import State
 

@@ -8,7 +8,7 @@ import numpy as np
 import Assets
 import State
 from Assets import *
-from Funcs import dict_hash
+from Utils import dict_hash
 
 
 class Vulnerable:

@@ -10,7 +10,7 @@ from Asteroids import AdvAsteroid
 from Mechanics import Moving
 from Player import Player
 import State
-from Funcs import orbit_eliptic, orbit_rotate
+from Utils import orbit_eliptic, orbit_rotate
 
 import Buttons as bt
 from Assets import *

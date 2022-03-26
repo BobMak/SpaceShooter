@@ -1,7 +1,7 @@
 from Mechanics import *
 from Projectile import Projectile
 from Turret import Turret
-import Funcs
+import Utils
 
 
 class AutoTurret(Turret):

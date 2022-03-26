@@ -1,5 +1,5 @@
 import Items
-from Funcs import get_angle
+from Utils import get_angle
 from Mechanics import *
 from Bot import Bot
 

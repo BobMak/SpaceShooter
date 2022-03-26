@@ -1,5 +1,5 @@
-import Funcs
-from Funcs import blur
+import Utils
+from Utils import blur
 from Mechanics import *
 
 from Projectile import Projectile
@@ -146,14 +146,14 @@ class Ship(GObject, Moving, Vulnerable):
         super().rotate(ang)
         for x in self.turrets:
             x.rotate(self.rotation_rate)
-            Funcs.orbit_rotate(self, x, -self.rotation_rate,
+            Utils.orbit_rotate(self, x, -self.rotation_rate,
                                x.distance, x.orbit_ang)
 
         for x in self.shields:
             x.rotate(self.rotation_rate)
 
         for x in self.hull_group:
-            Funcs.orbit_rotate(self, x, -self.rotation_rate,
+            Utils.orbit_rotate(self, x, -self.rotation_rate,
                                x.distance, x.orbit_ang)
 
     def draw_rotating(self):
