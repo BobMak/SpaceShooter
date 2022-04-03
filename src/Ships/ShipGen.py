@@ -6,10 +6,6 @@ to generate ships
 import pygame.surfarray
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-import torchvision.utils as vutils
-import time
 
 from Ships.draw_model import DRAWModel
 
