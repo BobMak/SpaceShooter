@@ -148,6 +148,7 @@ class Moving:
         for object in State.movable:
             # modify position to avoid loss of <1 values when moving
             object.modify_position()
+            object.bound_pass()
 
 
 class FX(pygame.sprite.Sprite, Moving):
