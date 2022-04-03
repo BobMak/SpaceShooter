@@ -4,8 +4,8 @@ import random
 import numpy as np
 
 from Utils import dict_hash
-from Mechanics import GObject, Moving, Vulnerable, Animation
-import State
+from Core.Mechanics import GObject, Vulnerable, Animation
+import Core.State as State
 
 
 class Projectile(GObject, Vulnerable):

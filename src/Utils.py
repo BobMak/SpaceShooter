@@ -5,7 +5,7 @@ import math
 import numpy as np
 import pygame
 
-import State
+from Core import State
 
 
 def get_dist(dx, dy):

@@ -1,10 +1,9 @@
 # add previous directory to path
-import sys
 import pygame
 
-from ShipGen import Generator
+from Ships.ShipGen import Generator
 # import State
-# from Assets import ship_2
+# from Core.Assets import ship_2
 
 if __name__ == '__main__':
     pygame.init()

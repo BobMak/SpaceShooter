@@ -1,8 +1,7 @@
 import Utils
-from Utils import blur
-from Mechanics import *
+from Core.Mechanics import *
 
-from Projectile import Projectile
+from Core.Projectile import Projectile
 
 
 class Ship(GObject, Vulnerable):
@@ -168,14 +167,14 @@ class Ship(GObject, Vulnerable):
         super().apply_force_angular(self.rotation_rate*sign)
         for x in self.turrets:
             x.apply_force_angular(self.rotation_rate)
-            Utils.orbit_rotate(self, x, -self.rotation_rate*sign,
+            Utils.orbit_rotate(self, x, -self.rotation_rate * sign,
                                x.distance, x.orbit_ang)
 
         for x in self.shields:
             x.apply_force_angular(self.rotation_rate*sign)
 
         for x in self.hull_group:
-            Utils.orbit_rotate(self, x, -self.rotation_rate*sign,
+            Utils.orbit_rotate(self, x, -self.rotation_rate * sign,
                                x.distance, x.orbit_ang)
 
     def stabilize(self):

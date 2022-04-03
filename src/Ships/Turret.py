@@ -1,5 +1,5 @@
-from Mechanics import *
-from Mounted import Mounted
+from Core.Mechanics import *
+from Core.Mounted import Mounted
 
 
 class Turret(Mounted):

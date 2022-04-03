@@ -1,7 +1,7 @@
-import Items
+from Core import Items
 from Utils import get_angle
-from Mechanics import *
-from Bot import Bot
+from Core.Mechanics import *
+from Entities.Bot import Bot
 
 
 class Agressor(Bot):

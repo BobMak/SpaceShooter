@@ -3,11 +3,10 @@ import random
 
 import pygame as pg
 
-from Assets import *
-import State
-import Scripts
-from Player import Player
-from ShipGen import Generator
+from Core.Assets import *
+from Core import Scripts, State
+from Entities.Player import Player
+from Ships.ShipGen import Generator
 
 
 class Button(pygame.sprite.Sprite):
@@ -137,7 +136,7 @@ class B_Ship_Highlihgts(Button):
             img = g.generateShipSurf()
             # save img as generated.png
             State.ship_types[self.ship_number]['image'] = img
-            pygame.image.save(img, os.path.join('assets','ships','generated.png'))
+            pygame.image.save(img, os.path.join('assets', 'ships', 'generated.png'))
             abilities = ['left', 'right', 'up', 'down']
             for x in ['shoot', 'shield', 'velocity', 'health','missile']:
                 if random.choice([True, False]):

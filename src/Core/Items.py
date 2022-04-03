@@ -1,6 +1,6 @@
-from Mechanics import GObject, FX_Glow
-from Assets import live
-import State
+from Core.Mechanics import GObject, FX_Glow
+from Core.Assets import live
+import Core.State as State
 
 
 class Item(GObject):

@@ -1,5 +1,5 @@
-from Mechanics import *
-from Ship import Ship
+from Core.Mechanics import *
+from Ships.Ship import Ship
 
 
 class Bot(Ship):

@@ -1,4 +1,4 @@
-from Mechanics import *
+from Core.Mechanics import *
 
 
 class Mounted(GObject):

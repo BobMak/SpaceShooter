@@ -1,13 +1,11 @@
 import random
-import time
 
 import pygame
 
-import Scripts
-import State
-from Agressor import Agressor
-from Assets import bad_thing
-from Player import Player
+from Core import Scripts, State
+from Entities.Agressor import Agressor
+from Core.Assets import bad_thing
+from Entities.Player import Player
 
 
 if __name__ == '__main__':

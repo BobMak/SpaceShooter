@@ -5,7 +5,7 @@ import os
 
 import pygame
 import pygame as pg
-from Assets import WIDTH, HEIGHT
+from Core.Assets import WIDTH, HEIGHT
 
 #####################      Ships       ####################
 
@@ -122,7 +122,7 @@ projectile_types = {
         'velocity': 20,
         'distance': 20,
         'cooldown': 10,
-        'image': pygame.image.load(os.path.join('assets', 'projectiles','light_bolt.png')),
+        'image': pygame.image.load(os.path.join('assets', 'projectiles', 'light_bolt.png')),
         'expl_params': {
             "diameter": 10,
             "n_frames": 10,
@@ -165,7 +165,7 @@ projectile_types = {
         'velocity': 8,
         'distance': 100,
         'cooldown': 100,
-        'image': pygame.image.load(os.path.join('assets', 'projectiles',  'heavy_bolt.png')),
+        'image': pygame.image.load(os.path.join('assets', 'projectiles', 'heavy_bolt.png')),
         'expl_params': {
             "diameter": 20,
             "n_frames": 15,
