@@ -1,8 +1,8 @@
 import time
 
-from Mechanics import *
-from Zone import Zone
-from Projectile import Projectile
+from Core.Mechanics import *
+from Core.Zone import Zone
+from Core.Projectile import Projectile
 
 
 class Missile(Projectile):
@@ -48,10 +48,8 @@ class Missile(Projectile):
         x = (self.look_dir - aim_dir)
 
         if abs(x) > 180:
-            print(self, 'rotating right')
             self.apply_force_angular(self.d_ang*np.sign(x))
         else:
-            print(self, 'rotating left')
             self.apply_force_angular(-self.d_ang*np.sign(x))
 
     def lock_closest(self):
@@ -148,9 +146,9 @@ class Missile(Projectile):
                                                                        + 90)))
 
                 shot.v = [State.missile_types[missile]['velocity']
-                                 * np.cos(np.deg2rad(self.look_dir - 90)),
-                                 State.missile_types[missile]['velocity']
-                                 * np.sin(np.deg2rad(self.look_dir - 90))]
+                          * np.cos(np.deg2rad(self.look_dir - 90)),
+                          State.missile_types[missile]['velocity']
+                          * np.sin(np.deg2rad(self.look_dir - 90))]
                 # delay between shots
                 time.sleep(0.2)
         # fire missiles in thread so they can be fired with a delay

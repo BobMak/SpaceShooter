@@ -5,9 +5,9 @@ import threading
 import numba
 import numpy as np
 
-import Assets
-import State
-from Assets import *
+import Core.Assets as Assets
+import Core.State as State
+from Core.Assets import *
 from Utils import dict_hash
 
 
@@ -190,7 +190,7 @@ class FX_Glow(FX):
         """
         for x in range(self.length):
             pygame.gfxdraw.filled_circle(State.screen, self.rect.centerx,
-                                         self.rect.centery, self.radius+x,
+                                         self.rect.centery, self.radius + x,
                                          self.color)
 
 
@@ -636,11 +636,11 @@ class Animation(GObject, Moving):
     def FX_engine_mark(source):
         object = Animation(Assets.engi, 10, 10,
                            source.rect.centerx
-                           + source.rect.height//2
+                           + source.rect.height // 2
                            * np.cos(np.deg2rad(source.look_dir + 90))
                            ,
                            source.rect.centery
-                           + source.rect.height//2
+                           + source.rect.height // 2
                            * np.sin(np.deg2rad(source.look_dir + 90))
                            )
         object.look_dir = source.look_dir

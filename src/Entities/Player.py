@@ -3,11 +3,9 @@ import pickle
 import pygame
 import pygame.gfxdraw as gfx
 
-import Assets
-import Controls
-import State
-from Mechanics import Animation
-from Ship import Ship
+from Core import Controls, Assets, State
+from Core.Mechanics import Animation
+from Ships.Ship import Ship
 
 
 class Player(Ship):
@@ -29,7 +27,7 @@ class Player(Ship):
         else:
             # graphics thread termination call
             pygame.time.set_timer(pygame.USEREVENT+5, 1000)
-            with open('save.pkl', 'wb') as f:
+            with open('../../save.pkl', 'wb') as f:
                 pickle.dump(State.save, f, pickle.HIGHEST_PROTOCOL)
 
             pygame.time.set_timer(pygame.USEREVENT + 4, 1000)

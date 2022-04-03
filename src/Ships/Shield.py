@@ -1,6 +1,5 @@
-import Assets
-import State
-from Mechanics import Animation
+from Core import Assets, State
+from Core.Mechanics import Animation
 
 
 class Shield(Animation):

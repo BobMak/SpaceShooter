@@ -1,7 +1,7 @@
-from Assets import *
-from Mechanics import Animation
-from Missile import Missile
-from Shield import Shield
+from Core.Assets import *
+from Core.Mechanics import Animation
+from Core.Missile import Missile
+from Ships.Shield import Shield
 
 
 def listen_acceleration(player, keys):

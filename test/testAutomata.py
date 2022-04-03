@@ -1,8 +1,6 @@
-import time
-
 import pygame
 
-from Mechanics import Animation
+from Core.Mechanics import Animation
 
 
 if __name__ == '__main__':

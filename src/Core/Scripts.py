@@ -5,15 +5,15 @@ import time
 
 import pygame as pg
 
-import Assets
-from Asteroids import AdvAsteroid
-from Mechanics import Moving
-from Player import Player
-import State
+import Core.Assets as Assets
+from Core.Asteroids import AdvAsteroid
+from Core.Mechanics import Moving
+from Entities.Player import Player
+import Core.State as State
 from Utils import orbit_eliptic, orbit_rotate
 
-import Buttons as bt
-from Assets import *
+from UI import Buttons as bt
+from Core.Assets import *
 
 clock = pg.time.Clock()
 
@@ -23,12 +23,12 @@ def spawn_wave():
     for _ in range(State.waves[level]["number"]):
         if random.choice([True, False]):
             proX = random.choice([random.randint(-20,0),
-                                  random.randint(Assets.WIDTH, Assets.WIDTH+20)])
-            proY = random.randint(-20, Assets.HEIGHT+20)
+                                  random.randint(Assets.WIDTH, Assets.WIDTH + 20)])
+            proY = random.randint(-20, Assets.HEIGHT + 20)
         else:
-            proX = random.randint(-20, Assets.WIDTH+20)
+            proX = random.randint(-20, Assets.WIDTH + 20)
             proY = random.choice([random.randint(-20,0),
-                                  random.randint(Assets.HEIGHT, Assets.HEIGHT+20)])
+                                  random.randint(Assets.HEIGHT, Assets.HEIGHT + 20)])
 
         x = AdvAsteroid(level+1, proX, proY, 4, [0, 0])
 
@@ -251,9 +251,9 @@ class Graphics:
             pg.display.flip()
             clock.tick(State.FRAMES_PER_SECOND)
 
-            if State.state=='paused':
+            if State.state== 'paused':
                 pause_menu()
-            if State.state=='game_over':
+            if State.state== 'game_over':
                 death_menu()
             if State.state == 'exit':
                 self.alive = False
@@ -272,7 +272,7 @@ def pause_menu():
     menu[0].select()
     State.screen.blit(menu_BG, (0, 0))  # Draw a background
 
-    while State.state=='paused':
+    while State.state== 'paused':
 
         screen_draw()
 
@@ -328,8 +328,8 @@ def pause_menu():
 
 def death_menu():
     temporary_bg = State.screen.copy()
-    b_exit = bt.B_Exit((Assets.WIDTH//2 - 50, 320, 100, 30))
-    b_startover = bt.B_Start_Over((Assets.WIDTH//2 - 50, 200, 100, 30))
+    b_exit = bt.B_Exit((Assets.WIDTH // 2 - 50, 320, 100, 30))
+    b_startover = bt.B_Start_Over((Assets.WIDTH // 2 - 50, 200, 100, 30))
     menu = [b_startover, b_exit]
     selection = 0
     menu[0].select()
@@ -398,7 +398,7 @@ def player_set():
     W = State.screen.get_width()
     H = State.screen.get_height()
     shiphighlights = []
-    sh_width_padding = W // (len(State.ship_types.keys())+1)
+    sh_width_padding = W // (len(State.ship_types.keys()) + 1)
     sh_width = 20
     for i, shipname in enumerate(State.ship_types.keys()):
         shiphighlights.append(bt.B_Ship_Highlihgts(

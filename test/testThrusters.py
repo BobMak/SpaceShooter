@@ -1,15 +1,11 @@
-import random
 import threading
 import time
 
 import numpy as np
 import pygame
 
-import Scripts
-import State
-from Agressor import Agressor
-from Assets import bad_thing
-from Player import Player
+from Core import Scripts, State
+from Entities.Player import Player
 
 
 def thrusters():

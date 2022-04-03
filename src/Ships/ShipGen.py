@@ -11,7 +11,7 @@ import matplotlib.animation as animation
 import torchvision.utils as vutils
 import time
 
-from draw_model import DRAWModel
+from Ships.draw_model import DRAWModel
 
 
 import numpy

@@ -1,4 +1,4 @@
-from Mechanics import *
+from Core.Mechanics import *
 
 
 class Zone(pygame.sprite.Sprite, Vulnerable):
