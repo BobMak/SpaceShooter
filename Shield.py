@@ -9,8 +9,6 @@ class Shield(Animation):
     def __init__(self, images_arr, width, height, x, y, source, type = 0):
         super().__init__(images_arr, width, height, x, y, type)
         self.source = source
-        self.look_dir = 0
-        self.rotate(0)
         self.v = source.v
         self.type = type
         self.HP = source.shield_hp
@@ -48,6 +46,6 @@ class Shield(Animation):
                               source.rect.height + 10, source.rect.left,
                               source.rect.top, source, 1)
 
-            shld_obj.rotate(source.look_dir)
+            # shld_obj.rotate(source.look_dir)
             source.sh_add(shld_obj)
             State.effects.add(shld_obj)

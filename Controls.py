@@ -17,14 +17,14 @@ def listen_reverse(player, keys):
 
 def listen_right(player, keys):
     if keys[pygame.K_RIGHT]:
-        player.rotate(player.rotation_rate)
+        player.rotate(1)
     elif not keys[pygame.K_LEFT]:
         player.rotation_rate = 0
 
 
 def listen_left(player, keys):
     if keys[pygame.K_LEFT]:
-        player.rotate(-player.rotation_rate)
+        player.rotate(-1)
     elif not keys[pygame.K_RIGHT]:
         player.rotation_rate = 0
 

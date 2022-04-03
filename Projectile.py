@@ -8,15 +8,14 @@ from Mechanics import GObject, Moving, Vulnerable, Animation
 import State
 
 
-class Projectile(GObject, Moving, Vulnerable):
+class Projectile(GObject, Vulnerable):
     def __init__(self, img, x, y, distance, width=None, height=None,
                  damage=None,
                  max_velocity=None,
                  expl_ref=None,
                  env_friction=0,
                  mass=0.1):
-        super().__init__(img, x, y, width=width, height=height)
-        Moving.__init__(self, mass=mass, env_friction=env_friction)
+        super().__init__(img, x, y, width=width, height=height, mass=mass, env_friction=env_friction)
 
         Vulnerable.__init__(self, damage)
         self.velocity_max = max_velocity
@@ -68,5 +67,4 @@ class Projectile(GObject, Moving, Vulnerable):
                   * np.cos(np.deg2rad(self.look_dir - 90)),
                   State.projectile_types[bolt]['velocity']
                   * np.sin(np.deg2rad(self.look_dir - 90))]
-        shot.rotate(0)
         return shot

@@ -8,7 +8,7 @@ from Mechanics import GObject, Moving, Vulnerable, FX_Track, Animation
 from Agressor import Agressor
 
 
-class Asteroid(GObject, Moving, Vulnerable):
+class Asteroid(GObject, Vulnerable):
     noclip_count =0
     noclip_timer = 30
     velo_deviation = 1
@@ -16,10 +16,14 @@ class Asteroid(GObject, Moving, Vulnerable):
 
     def __init__(self, image, x, y, type, velocity):
 
-        super().__init__(pygame.transform.scale(image, (10*type, 10*type)),
-                        x, y, width=type*10, height=type*10)
+        super().__init__(
+            pygame.transform.scale(image, (10*type, 10*type)),
+            x, y, width=type*10, height=type*10,
+            mass=type*5,
+            env_friction=0.0001,
+            angular_velocity=random.uniform(-0.5, 0.5),
+        )
 
-        Moving.__init__(self, mass=type*5,env_friction=0.0001)
         Vulnerable.__init__(self, 1)
 
         self.type = type
@@ -32,9 +36,7 @@ class Asteroid(GObject, Moving, Vulnerable):
         self.look_dir = (random.random() - 0.5) * 360
         self.hp = self.type * 2
 
-        # movable.add(self)
         State.asteroids.add(self)
-        self.rotate(0)
 
     def crash(self):
         if self.type >2:

@@ -48,7 +48,7 @@ class Agressor(Bot):
             if abs(t) > self.rotation_rate:
                 if t < -180 or t > 180:
                     t = -t
-                self.rotate(-np.sign(t) * self.rotation_rate)
+                self.apply_force_angular(-np.sign(t) * self.rotation_rate)
 
             if abs(t) < 90:
                 self.accelerate(self.acceleration)
