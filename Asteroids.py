@@ -32,9 +32,7 @@ class Asteroid(GObject, Moving, Vulnerable):
         self.look_dir = (random.random() - 0.5) * 360
         self.hp = self.type * 2
 
-        # movable.add(self)
         State.asteroids.add(self)
-        self.rotate(0)
 
     def crash(self):
         if self.type >2:

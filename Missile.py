@@ -9,21 +9,21 @@ class Missile(Projectile):
     # how often aim-updaing function to run
     def __init__(self, img, x, y,
                  distance=0,
-                 rotation_velocity=0.0,
-                 max_velocity=0,
+                 rotation_velocity=1.0,
+                 max_velocity=3.0,
                  damage=0,
-                 thrust=0,
+                 thrust=1.0,
                  hit_range=0,
                  expl_params=None,
-                 mass=0.1):
+                 mass=1):
         super().__init__(img, x, y,
                          distance=distance,
                          max_velocity=max_velocity,
                          damage=damage,
                          mass=mass,
-                         env_friction=0.1
+                         env_friction=0.3
                          )
-        self.compute_tempo = 5
+        self.compute_period = 5
         self.compute_count = 0
         self.d_ang =        rotation_velocity
         self.thrust =       thrust
@@ -48,18 +48,20 @@ class Missile(Projectile):
         x = (self.look_dir - aim_dir)
 
         if abs(x) > 180:
-             self.rotate(self.d_ang*np.sign(x))
+            print(self, 'rotating right')
+            self.apply_force_angular(self.d_ang*np.sign(x))
         else:
-            self.rotate(-self.d_ang*np.sign(x))
+            print(self, 'rotating left')
+            self.apply_force_angular(-self.d_ang*np.sign(x))
 
     def lock_closest(self):
-        arr = []
+        mindist = 1e10
+        aim = None
         for x in State.asteroids:
-            arr.append(self.get_distance(x))
-        if len(arr) > 0:
-            return State.asteroids.sprites()[arr.index(min(arr))]
-        else:
-            return None
+            if self.get_distance(x) < mindist:
+                mindist = self.get_distance(x)
+                aim = x
+        return aim
 
     def pursue(self):
         r = copy.copy(self.rect)
@@ -83,18 +85,18 @@ class Missile(Projectile):
             return
         self.dist_prev = self.dist
 
-        if np.sqrt(self.v[0]**2 + self.v[1]**2) < self.max_velocity:
-            self.accelerate_forward(self.thrust)
+        # if np.sqrt(self.v[0]**2 + self.v[1]**2) < self.max_velocity:
+        self.accelerate_forward(self.thrust)
 
     def update(self):
 
-        if self.aim in State.asteroids:
+        if self.aim:
             self.pursue()
         else:
             self.aim = self.lock_closest()
 
         self.compute_count += 1
-        if self.compute_count > self.compute_tempo:
+        if self.compute_count > self.compute_period:
             self.compute_count = 0
             self.aim = self.lock_closest()
 
@@ -149,7 +151,6 @@ class Missile(Projectile):
                                  * np.cos(np.deg2rad(self.look_dir - 90)),
                                  State.missile_types[missile]['velocity']
                                  * np.sin(np.deg2rad(self.look_dir - 90))]
-                shot.rotate(0)
                 # delay between shots
                 time.sleep(0.2)
         # fire missiles in thread so they can be fired with a delay

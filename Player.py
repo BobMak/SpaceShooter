@@ -78,8 +78,8 @@ class Player(Ship):
                         'acceleration_reserve_regeneration'],
                       deacceleration=State.ship_types[picked_ship]['deacceleration'],
                       env_friction=State.ship_types[picked_ship]['env_deacceleration'],
-                      width=None, height=None)
-        ship.rotate(0)
+                      width=None, height=None,
+                      mass=State.ship_types[picked_ship]['mass'])
 
         for a in State.ship_types[picked_ship]['controls']:
             ship.arr_input.append(Controls.controls[a])

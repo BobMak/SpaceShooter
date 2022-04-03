@@ -5,7 +5,7 @@ from Mechanics import *
 from Projectile import Projectile
 
 
-class Ship(GObject, Moving, Vulnerable):
+class Ship(GObject, Vulnerable):
     '''Player(image, x, y, lives, bolt=0,
               complex_sh=-1, width=None, height=None)'''
 
@@ -22,7 +22,10 @@ class Ship(GObject, Moving, Vulnerable):
                  deacceleration=0,
                  env_friction=0,
                  acceleration=0,
-                 complex_sh=(), width=None, height=None):
+                 complex_sh=(),
+                 width=None,
+                 height=None,
+                 mass=1):
 
         self.bolt = bolt
         self.missile = missile
@@ -57,8 +60,11 @@ class Ship(GObject, Moving, Vulnerable):
         self.hp = copy.deepcopy(self.max_hp)
         self.shield_hp = copy.deepcopy(self.max_shield_hp)
         self.v = [0,0]
-        GObject.__init__(self, image, x, y, width=width, height=height)
-        Moving.__init__(self)
+        GObject.__init__(
+            self, image, x, y, width=width, height=height,
+            env_friction=env_friction,
+            mass=mass,
+        )
         Vulnerable.__init__(self, hp)
 
         self.bolt = bolt
@@ -93,12 +99,16 @@ class Ship(GObject, Moving, Vulnerable):
         self.distance = 0
         self.orbit_ang = 0
 
+        # control flags. Determine if the automatic rotation and acceleration
+        # stabilizers should be applied.
+        self.target_rotation = self.look_dir
+        self.isrotating = False
+
     def addMissiles(self, number):
         self.missiles += number
 
     def destroy(self):
         self.kill()
-        self.rotate(0)
         self.v = [0,0]
 
         Animation.FX_explosion(self.rect.centerx, self.rect.centery)
@@ -139,43 +149,61 @@ class Ship(GObject, Moving, Vulnerable):
             self.locks[0] = True
             Projectile.shot(self, self.look_dir, self.bolt)
 
-    def accelerate(self, temp):
+    def accelerate(self, temp, manual=True):
+        if manual:
+            self.isaccelerating = True
         if not self.acceleration_reserve < 0.4:
             self.acceleration_reserve = max(0.0, self.acceleration_reserve - self.acceleration_burn_rate)
             super().accelerate_forward(temp)
         else:
             self.acceleration_lock = True
 
-    def rotate(self, ang):
-        super().rotate(ang)
+    def rotate(self, ang, manual=True):
+        # super().rotate(ang)
+        if manual:
+            self.isrotating = True
+            self.target_rotation = self.look_dir
         self.rotation_rate = np.min([self.rotation_rate_max, self.rotation_rate + self.rotation_rate_max/30])
+        sign = np.sign(ang)
+        super().apply_force_angular(self.rotation_rate*sign)
         for x in self.turrets:
-            x.rotate(self.rotation_rate)
-            Utils.orbit_rotate(self, x, -self.rotation_rate*np.sign(ang),
+            x.apply_force_angular(self.rotation_rate)
+            Utils.orbit_rotate(self, x, -self.rotation_rate*sign,
                                x.distance, x.orbit_ang)
 
         for x in self.shields:
-            x.rotate(self.rotation_rate*np.sign(ang))
+            x.apply_force_angular(self.rotation_rate*sign)
 
         for x in self.hull_group:
-            Utils.orbit_rotate(self, x, -self.rotation_rate*np.sign(ang),
+            Utils.orbit_rotate(self, x, -self.rotation_rate*sign,
                                x.distance, x.orbit_ang)
+
+    def stabilize(self):
+        """if the user is not rotating, the ship should stick to the current
+        rotation angle and position"""
+        if not self.isrotating and self.av != 0:
+            print('stabilizing rotation')
+            diff_ang = self.target_rotation - self.look_dir
+            diff_avel = self.av
+            super().apply_force_angular(
+                + diff_ang * self.rotation_rate_max / 10
+                - diff_avel * self.rotation_rate_max
+            )
 
     def draw_rotating(self):
         super().draw_rotating()
-        velocity = np.sqrt(self.v[0] ** 2 + self.v[1] ** 2)
-        if velocity > 8:
-            blur(self, velocity)
         for x in self.shields:
             x.draw_rotating()
 
     def update(self):
         self.acceleration_reserve = min(self.max_acceleration_reserve,
                                         self.acceleration_reserve_regeneration + self.acceleration_reserve)
-
+        self.stabilize()
         for n in range(len(self.locks)):
             if self.locks[n]:
                 self.counts[n] += 1
                 if self.timers[n] < self.counts[n]:
                     self.counts[n] = 0
                     self.locks[n] = False
+
+        self.isrotating = False

@@ -29,24 +29,28 @@ class Moving:
     def __init__(self,
                  env_friction=0.1,
                  velocity=(0.0, 0.0),
+                 max_velocity=10.0,
                  angular_velocity=0.0,
+                 max_angular_velocity=3.0,
                  acceleration=(0.0, 0.0),
                  angular_acceleration=0.0,
                  mass=1.0,
                  look_dir=0.0,
                  rect=pygame.Rect(0, 0, 1, 1),
                  ):
-        if not self.rect:
+        if "rect" not in self.__dict__:
             self.rect = rect
         self.env_deacceleration = env_friction / mass
         self.look_dir = look_dir
         self.m = mass
         self.v = velocity
+        self.mv = max_velocity
         self.av = angular_velocity
+        self.mav = max_angular_velocity
         self.a = acceleration
         self.aa = angular_acceleration
         # non-elastic collision
-        self.COLLISION_ELASTICITY = 0.5
+        self.COLLISION_ELASTICITY = -0.2
         # float representation of the position, since rect.x and rect.y are ints
         # we will lose a lot of precision when moving if we just update ints
         self.pos = (self.rect.x, self.rect.y)
@@ -57,32 +61,53 @@ class Moving:
         self.rect.x = int(self.pos[0])
         self.rect.y = int(self.pos[1])
 
-        self.v = (self.v[0] + self.a[0], self.v[1] + self.a[1])
+        self.v = (
+            np.clip(self.v[0] + self.a[0], a_min=-self.mv, a_max=self.mv),
+            np.clip(self.v[1] + self.a[1], a_min=-self.mv, a_max=self.mv)
+        )
 
         # apply friction force to slow down
         velocity_angle = np.arctan2(self.v[1], self.v[0])
         velocity_length = np.sqrt(self.v[0] ** 2 + self.v[1] ** 2)
         # self.v = (self.v[0] ,
         #           self.v[1] )
-        if self.v[0] != 0 or self.v[1] != 0:
-            self.a = (
-                - self.env_deacceleration * np.cos(velocity_angle) * velocity_length,
-                - self.env_deacceleration * np.sin(velocity_angle) * velocity_length
-            )
-        else:
-            self.a = (0, 0)
+        # if self.v[0] != 0 or self.v[1] != 0:
+        #     self.a = (
+        #         - self.env_deacceleration * np.cos(velocity_angle) * velocity_length,
+        #         - self.env_deacceleration * np.sin(velocity_angle) * velocity_length
+        #     )
+        # else:
+        self.a = (0, 0)
 
-        self.look_dir += self.av
-        self.av += self.aa
-
-    def slow_down_angular(self):
+        # angular velocity
+        self.av = np.clip( self.av + self.aa, a_min=-self.mav, a_max=self.mav)
+        self._rotate(self.av)
+        # print("current angle", self.look_dir, "angular velocity", self.av, "angular acceleration", self.aa)
         if self.av != 0:
-            self.av = self.av * 0.9
+            self.aa = -self.env_deacceleration * np.sign(self.av)
+        else:
+            self.aa = 0
+
+    def _rotate(self, angle):
+        # Ensure that look_dir is in range [0 - 360)
+        if self.look_dir > 359:
+            self.look_dir += angle - 360
+        elif self.look_dir < 0:
+            self.look_dir += 360 + angle
+        else:
+            self.look_dir += angle
 
     def accelerate_forward(self, F):
         # F = ma
         a = F/self.m
         self.a = (self.a[0] + a * np.cos(np.deg2rad(self.look_dir - 90)), self.a[1] + a * np.sin(np.deg2rad(self.look_dir - 90)))
+
+    def apply_force_linear(self, F, angle):
+        a = F/self.m
+        self.a = (self.a[0] + a * np.cos(np.deg2rad(angle)), self.a[1] + a * np.sin(np.deg2rad(angle)))
+
+    def apply_force_angular(self, F, angle=0, radius=1):
+        self.aa += F*np.cos(angle)*radius/self.m
 
     def bound_pass(self):
         if (self.pos[0] < -self.rect.width
@@ -270,13 +295,12 @@ class FX_Track(FX):
         State.screen.blit(self.rotated_image, rect)
 
 
-class GObject(pygame.sprite.Sprite):
+class GObject(pygame.sprite.Sprite, Moving):
     '''GObject(image, x, y, width=None, height=None)'''
 
-    def __init__(self, image, x, y, width=None, height=None):
+    def __init__(self, image, x, y, width=None, height=None, **kwargs):
         pygame.sprite.Sprite.__init__(self)
 
-        self.look_dir = 0.0
         self.rotated_image = 0
         self.rotated_rect = 0
         self.radius = None
@@ -308,19 +332,13 @@ class GObject(pygame.sprite.Sprite):
 
         self.rect.centerx = x
         self.rect.centery = y
-        self.radius = self.rect.width
+        self.radius = self.rect.width/2
 
-    def rotate(self, dir):
-        # Ensure that look_dir is in range [0 - 360)
-        if self.look_dir > 359:
-            self.look_dir += dir - 360
-        elif self.look_dir < 0:
-            self.look_dir += 360 + dir
-        else:
-            self.look_dir += dir
-
-        self.rotated_image = pygame.transform.rotate(self.image,
-                                                    -self.look_dir)
+        Moving.__init__(
+            self,
+            **kwargs,
+            rect=self.rect,
+        )
 
     def get_aim_dir(self, aim):
         """
@@ -407,6 +425,8 @@ class GObject(pygame.sprite.Sprite):
         return self.get_aim_dir(aim)
 
     def draw_rotating(self):
+        self.rotated_image = pygame.transform.rotate(self.image,
+                                                     -self.look_dir)
         rect = self.rotated_image.get_rect()
         rect.center = (self.rect.center)
         State.screen.blit(self.rotated_image, rect)
@@ -466,12 +486,10 @@ class Animation(GObject, Moving):
         else:
             self.look_dir = -90
         self.frames = len(images_arr)
-        self.rotate(0)
         self.type = type
         self.delay = delay
         self.hold_frame = hold_f
         self.finit = finit
-        # movable.add(self)
 
     def hold(self):
         if self.frames_count == self.hold_frame:
@@ -505,7 +523,6 @@ class Animation(GObject, Moving):
     def update(self):
 
         self.image = self.images_arr[self.frames_count]
-        self.rotate(0)
 
         if self.type == 0:
             self.standard()
@@ -626,7 +643,6 @@ class Animation(GObject, Moving):
                            * np.sin(np.deg2rad(source.look_dir + 90))
                            )
         object.look_dir = source.look_dir
-        object.rotate(0)
         object.v = source.v
 
         State.effects.add(object)
