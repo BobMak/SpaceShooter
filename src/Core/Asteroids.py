@@ -14,7 +14,7 @@ class Asteroid(GObject, Vulnerable):
     velo_deviation = 1
     density = (1,2)
 
-    def __init__(self, image, x, y, type, velocity):
+    def __init__(self, image, x, y, type, velocity, state=None):
 
         super().__init__(
             pygame.transform.scale(image, (10*type, 10*type)),
@@ -22,12 +22,14 @@ class Asteroid(GObject, Vulnerable):
             mass=type*5,
             env_friction=0.0001,
             angular_velocity=random.uniform(-0.5, 0.5),
+            state=state
         )
 
         Vulnerable.__init__(self, 1)
 
+        self.state = state
         self.type = type
-        State.asteroids.add(self)
+        self.state.asteroids.add(self)
         self.image = pygame.transform.scale(image, (10*type, 10*type))
         self.v = [velocity[0] + random.uniform(-self.velo_deviation,
                                                       self.velo_deviation),
@@ -36,7 +38,7 @@ class Asteroid(GObject, Vulnerable):
         self.look_dir = (random.random() - 0.5) * 360
         self.hp = self.type * 2
 
-        State.asteroids.add(self)
+        self.state.asteroids.add(self)
 
     def crash(self):
         if self.type >2:
@@ -45,14 +47,15 @@ class Asteroid(GObject, Vulnerable):
                          look_dir=(random.randint(0,350)),
                          velocity=[self.v[0] + random.uniform(-1, 1),
                                    self.v[1] + random.uniform(-1, 1)],
-                         color=(120,100,100,150))
+                         color=(120,100,100,150),
+                         state=self.state)
 
         if self.type > 1:
             arr = []
             for i in range(random.choice(self.density)):
 
                 i = Asteroid(self.image,
-                             self.rect.centerx, self.rect.centery, self.type - 1, self.v)
+                             self.rect.centerx, self.rect.centery, self.type - 1, self.v, state=self.state)
 
                 arr.append(i)
 
@@ -68,14 +71,14 @@ class Asteroid(GObject, Vulnerable):
         self.noclip_count += 1
         if self.noclip_count > self.noclip_timer:
             self.noclip_count = 0
-            State.noclip_asteroids.remove(self)
+            self.state.noclip_asteroids.remove(self)
 
 
 class AdvAsteroid(Asteroid):
 
-    def __init__(self, level, x, y, type, velocity):
+    def __init__(self, level, x, y, type, velocity, state=None):
 
-        super().__init__(asteroid_imgs[level-1], x, y, type, velocity)
+        super().__init__(asteroid_imgs[level-1], x, y, type, velocity, state=state)
         self.level = level
         self.hp = State.waves[level - 1]["hps"] * self.type
         self.noclip_timer = State.waves[level - 1]["noclip_timers"]
@@ -86,8 +89,8 @@ class AdvAsteroid(Asteroid):
 
         self.hp += -max(0, dmg)
 
-        rect = pygame.Rect(self.pos[0], self.pos[1],
-                           self.type*10+10, self.type*10+10)
+        # rect = pygame.Rect(self.pos[0], self.pos[1],
+        #                    self.type*10+10, self.type*10+10)
 
         if type != None:
             self.v = [self.v[0] + velocity[0] * ((type + 1) / (self.type + 1)),
@@ -108,19 +111,20 @@ class AdvAsteroid(Asteroid):
                          look_dir=(random.randint(0,350)),
                          velocity=[self.v[0] + random.uniform(-1, 1),
                                    self.v[1] + random.uniform(-1, 1)],
-                         color=(random.randint(90,200),100,100,150))
+                         color=(random.randint(90,200),100,100,150),
+                         state=self.state)
 
         if self.type > 1:
             arr = []
             for i in range(random.choice(self.density)):
 
                 x = AdvAsteroid(self.level, self.rect.centerx,
-                                self.rect.centery, self.type - 1, self.v)
+                                self.rect.centery, self.type - 1, self.v, state=self.state)
                 arr.append(i)
 
                 if random.choice((0,0,0,0,0,0,0,0,1)):
-                    c = Agressor(bad_thing, self.rect.centerx, self.rect.centery)
-                    c.remove(State.player_group)
+                    c = Agressor(bad_thing, self.rect.centerx, self.rect.centery, state=self.state)
+                    c.remove(self.state.player_group)
                     try:
                         c.rush()
                     except:

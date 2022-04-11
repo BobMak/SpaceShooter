@@ -37,6 +37,7 @@ class Moving:
                  mass=1.0,
                  look_dir=0.0,
                  rect=pygame.Rect(0, 0, 1, 1),
+                 state=None
                  ):
         if "rect" not in self.__dict__:
             self.rect = rect
@@ -54,7 +55,8 @@ class Moving:
         # float representation of the position, since rect.x and rect.y are ints
         # we will lose a lot of precision when moving if we just update ints
         self.pos = (self.rect.x, self.rect.y)
-        State.movable.add(self)
+        self.state = state
+        self.state.movable.add(self)
 
     def modify_position(self):
         self.pos = (self.pos[0] + self.v[0], self.pos[1] + self.v[1])
@@ -144,8 +146,8 @@ class Moving:
             other.v = (other.v[0] - impulse_vector[0] / other.m, other.v[1] - impulse_vector[1] / other.m)
 
     @staticmethod
-    def move_movable():
-        for object in State.movable:
+    def move_movable(state):
+        for object in state.movable:
             # modify position to avoid loss of <1 values when moving
             object.modify_position()
             object.bound_pass()
@@ -153,18 +155,19 @@ class Moving:
 
 class FX(pygame.sprite.Sprite, Moving):
 
-    def __init__(self, rect, duration):
+    def __init__(self, rect, duration, state=None):
 
         pygame.sprite.Sprite.__init__(self)
 
         self.timer = duration
         self.time_count = 0
         self.rect = rect
+        self.state = state
 
         # Requires rect to already be there
-        Moving.__init__(self)
+        Moving.__init__(self, state=state)
 
-        State.time_dependent.add(self)
+        state.time_dependent.add(self)
 
     # this stub is required to be able to use the class in the sprite group
     def draw_rotating(self):
@@ -175,21 +178,21 @@ class FX_Glow(FX):
     """
     FX_Glow(rect, duration, radius, length, color, velocity=(0,0))
     """
-    def __init__(self, rect, duration, radius, length, color, velocity=[0, 0]):
+    def __init__(self, rect, duration, radius, length, color, velocity=[0, 0], **kwargs):
 
-        FX.__init__(self, rect, duration)
+        FX.__init__(self, rect, duration, **kwargs)
         self.radius = radius
         self.color = color
         self.length = length
         self.v = velocity
-        State.glow.add(self)
+        self.state.glow.add(self)
 
     def draw_rotating(self):
         """
         drawing funcition
         """
         for x in range(self.length):
-            pygame.gfxdraw.filled_circle(State.screen, self.rect.centerx,
+            pygame.gfxdraw.filled_circle(self.state.screen, self.rect.centerx,
                                          self.rect.centery, self.radius + x,
                                          self.color)
 
@@ -215,9 +218,9 @@ class FX_Track(FX):
 
     def __init__(self, image, rect, duration,
                  fading=None, enlarging=None, color=None,
-                 look_dir=None, velocity=None):
+                 look_dir=None, velocity=None, state=None):
         '''density - [0-1]'''
-        FX.__init__(self, rect, duration)
+        FX.__init__(self, rect, duration, state=state)
 
         self.updates = []
         self.fading_count = 0
@@ -258,7 +261,7 @@ class FX_Track(FX):
         if velocity != None:
             self.v = velocity
 
-        State.effects.add(self)
+        self.state.effects.add(self)
 
     def enlarge(self):
         self.enlarging_count += 1
@@ -293,15 +296,15 @@ class FX_Track(FX):
     def draw_rotating(self):
         rect = self.rotated_image.get_rect()
         rect.center = (self.rect.center)
-        State.screen.blit(self.rotated_image, rect)
+        self.state.screen.blit(self.rotated_image, rect)
 
 
 class GObject(pygame.sprite.Sprite, Moving):
     '''GObject(image, x, y, width=None, height=None)'''
 
-    def __init__(self, image, x, y, width=None, height=None, **kwargs):
+    def __init__(self, image, x, y, width=None, height=None, state=None, **kwargs):
         pygame.sprite.Sprite.__init__(self)
-
+        self.state = state
         self.rotated_image = 0
         self.rotated_rect = 0
         self.radius = None
@@ -339,6 +342,7 @@ class GObject(pygame.sprite.Sprite, Moving):
             self,
             **kwargs,
             rect=self.rect,
+            state=self.state,
         )
 
     def get_aim_dir(self, aim):
@@ -430,7 +434,7 @@ class GObject(pygame.sprite.Sprite, Moving):
                                                      -self.look_dir)
         rect = self.rotated_image.get_rect()
         rect.center = (self.rect.center)
-        State.screen.blit(self.rotated_image, rect)
+        self.state.screen.blit(self.rotated_image, rect)
 
 
 class Colliding(pygame.sprite.Sprite, Moving):
@@ -455,10 +459,10 @@ class Colliding(pygame.sprite.Sprite, Moving):
         self.distance = distance
         self.orbit_ang = angle
 
-        Moving.__init__(self)
+        Moving.__init__(self, state=source.state)
 
 
-class Animation(GObject, Moving):
+class Animation(GObject):
     '''
     Animation(images_arr, width, height, x, y,
               rand = False, finit = True, type = 0,
@@ -476,9 +480,8 @@ class Animation(GObject, Moving):
     '''
 
     def __init__(self, images_arr, width, height, x, y, rand=False, finit=True,
-                type=0, hold_f=None, delay=0):
-        super().__init__(images_arr[0], x, y, width=width, height=height)
-        Moving.__init__(self)
+                type=0, hold_f=None, delay=0, state=None):
+        super().__init__(images_arr[0], x, y, width=width, height=height, state=state)
         self.frames_count = 0
         self.delay_count = 0
         self.images_arr = images_arr
@@ -541,14 +544,14 @@ class Animation(GObject, Moving):
 
     # this method shall be called when we know the properties of the required explosion
     @staticmethod
-    def prepareExplosions(**params):
+    def prepareExplosions(params, state):
         prm_hash = dict_hash(params)
         def _work():
-            if prm_hash not in State.buff_explosions:
-                State.buff_explosions[prm_hash] = []
+            if prm_hash not in state.buff_explosions:
+                state.buff_explosions[prm_hash] = []
                 for i in range(5):
                     animation = Animation.generateExplosionAnimation(**params)
-                    State.buff_explosions[prm_hash].append(animation)
+                    state.buff_explosions[prm_hash].append(animation)
 
         threading.Thread(target=_work).start()
 
@@ -556,7 +559,7 @@ class Animation(GObject, Moving):
     def generateExplosionAnimation(diameter=30, n_frames=30,
                                    decay_rgb=(0, 6, 9),
                                    start_rgb=(255, 255, 255),
-                                   spawn_points=230):
+                                   spawn_points=230,):
         """
         generates a set of explosion animations using cellular automata
         """
@@ -625,25 +628,26 @@ class Animation(GObject, Moving):
         return final
 
     @staticmethod
-    def FX_explosion(x, y, xpl=Assets.expl, radius=(30, 30), randdir=True):
-        obj = Animation(xpl, radius[0], radius[1], x, y, randdir)
+    def FX_explosion(x, y, xpl=Assets.expl, radius=(30, 30), randdir=True, state=None):
+        obj = Animation(xpl, radius[0], radius[1], x, y, randdir, state=state)
         obj.rect.centerx += - 20
         obj.rect.centery += - 20
-        State.effects.add(obj)
+        state.effects.add(obj)
         return obj
 
     @staticmethod
     def FX_engine_mark(source):
-        object = Animation(Assets.engi, 10, 10,
-                           source.rect.centerx
-                           + source.rect.height // 2
-                           * np.cos(np.deg2rad(source.look_dir + 90))
-                           ,
-                           source.rect.centery
-                           + source.rect.height // 2
-                           * np.sin(np.deg2rad(source.look_dir + 90))
-                           )
+        object = Animation(
+            Assets.engi, 10, 10,
+            source.rect.centerx
+               + source.rect.height // 2
+               * np.cos(np.deg2rad(source.look_dir + 90)),
+            source.rect.centery
+               + source.rect.height // 2
+               * np.sin(np.deg2rad(source.look_dir + 90)),
+            state=source.state
+        )
         object.look_dir = source.look_dir
         object.v = source.v
 
-        State.effects.add(object)
+        source.state.effects.add(object)

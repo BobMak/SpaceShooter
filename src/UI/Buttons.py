@@ -14,8 +14,9 @@ class Button(pygame.sprite.Sprite):
     text = '---'
     font = 0
 
-    def __init__(self, rect):
+    def __init__(self, rect, state):
         pygame.sprite.Sprite.__init__(self)
+        self.state = state
         self.image = pygame.transform.scale(menu_button, [rect[2], rect[3]])
         self.rect = self.image.get_rect()
         self.rect.left = rect[0]
@@ -36,62 +37,66 @@ class Button(pygame.sprite.Sprite):
 class B_Continue(Button):
     '1'
 
-    def __init__(self, rect):
-        super().__init__(rect)
+    def __init__(self, rect, state):
+        super().__init__(rect, state)
         self.text = 'Continue'
 
     def action(self):
-        State.t = (True, True, True, True)
-        State.state = "game_start"
+        self.state.t = (True, True, True, True)
+        self.state.state = "game_start"
 
 
 class B_Start_Over(Button):
     '2'
-    def __init__(self, rect):
-        super().__init__(rect)
+    def __init__(self, rect, state):
+        super().__init__(rect, state)
         self.text = 'Start Over'
 
     def action(self):
         # global t
-        State.t = (True, True, True, True)
+        self.state.t = (True, True, True, True)
 
-        for object in State.player_group:
+        for object in self.state.player_group:
             object.v = [0, 0]
             object.kill()
-        for object in State.movable:
+        for object in self.state.movable:
             object.kill()
-        for object in State.interface:
+        for object in self.state.interface:
             object.kill()
 
-        State.pl = Player.ship_assign(State.picked_ship, State.start_lives)
+        Player.ship_assign(
+            self.state.picked_ship,
+            self.state.start_lives,
+            self.state
+        )
 
-        State.save['level'] = 0
-        State.level = 0
+        self.state.save['level'] = 0
+        self.state.level = 0
 
-        Scripts.spawn_wave()
-        State.state = 'game_started'
+        Scripts.spawn_wave(self.state)
+        self.state.state = 'game_started'
         # Scripts.main_loop(State.pl)
 
 
 class B_New_Game(Button):
     '3'
-    def __init__(self, rect):
-        super().__init__(rect)
+    def __init__(self, rect, state):
+        super().__init__(rect, state)
         self.text = 'New Game'
 
     def action(self):
-        State.level = 0
-        State.pl = Player.ship_assign(State.picked_ship, State.start_lives)
+        self.state.level = 0
+        Player.ship_assign(self.state.picked_ship, self.state.start_lives, self.state)
 
-        Scripts.main_loop()
+        Scripts.main_loop(self.state)
 
 
 class B_Stats(Button):
     '4'
-    def __init__(self, rect):
-        super().__init__(rect)
+    def __init__(self, rect, state):
+        super().__init__(rect, state)
         with open('save.pkl', 'rb') as f:
-            pickle.dump(State.save, f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self.state.save, f, pickle.HIGHEST_PROTOCOL)
 
     def action(self):
         pass
@@ -99,22 +104,22 @@ class B_Stats(Button):
 
 class B_Exit(Button):
     '5'
-    def __init__(self, rect):
-        super().__init__(rect)
+    def __init__(self, rect, state):
+        super().__init__(rect, state)
         self.text = 'Exit'
 
     def action(self):
-        State.paused = False
+        self.state.paused = False
         pg.event.post(pg.event.Event(pg.QUIT, {'QUIT': True}))
         pg.quit()
-        State.state = "quit"
+        self.state.state = "quit"
 
 
 class B_Ship_Highlihgts(Button):
     '6'
-    def __init__(self, rect, ship_number):
+    def __init__(self, rect, ship_number, state):
 
-        super().__init__(rect)
+        super().__init__(rect, state)
         self.ship_number = ship_number
         self.text = State.ship_types[ship_number]['controls_text']
 
@@ -130,7 +135,7 @@ class B_Ship_Highlihgts(Button):
                                           self.ship_img_pos[1]))
 
     def action(self):
-        State.picked_ship = self.ship_number
+        self.state.picked_ship = self.ship_number
         if self.ship_number == 'generated':
             g = Generator()
             img = g.generateShipSurf()

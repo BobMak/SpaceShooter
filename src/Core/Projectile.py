@@ -14,8 +14,8 @@ class Projectile(GObject, Vulnerable):
                  max_velocity=None,
                  expl_ref=None,
                  env_friction=0,
-                 mass=0.1):
-        super().__init__(img, x, y, width=width, height=height, mass=mass, env_friction=env_friction)
+                 mass=0.1, **kwargs):
+        super().__init__(img, x, y, width=width, height=height, mass=mass, env_friction=env_friction, **kwargs)
 
         Vulnerable.__init__(self, damage)
         self.velocity_max = max_velocity
@@ -23,8 +23,8 @@ class Projectile(GObject, Vulnerable):
         self.expl_ref = expl_ref
 
         # movable.add(self)
-        State.projectiles.add(self)
-        State.time_dependent.add(self)
+        self.state.projectiles.add(self)
+        self.state.time_dependent.add(self)
 
     def remove(self):
         self.kill()
@@ -33,8 +33,8 @@ class Projectile(GObject, Vulnerable):
         buff = copy.copy(obj.hp)
         obj.damage(self.hp)
         self.hp += -buff
-        expl_animation = random.choice(State.buff_explosions[self.expl_ref])
-        Animation.FX_explosion(self.rect.centerx, self.rect.centery, expl_animation, randdir=False)
+        expl_animation = random.choice(self.state.buff_explosions[self.expl_ref])
+        Animation.FX_explosion(self.rect.centerx, self.rect.centery, expl_animation, randdir=False, state=self.state)
         if self.hp < 0:
             self.kill()
             self.hp = 0
@@ -50,7 +50,8 @@ class Projectile(GObject, Vulnerable):
                           damage=State.projectile_types[bolt]['damage'],
                           distance=State.projectile_types[bolt]['distance'],
                           max_velocity=State.projectile_types[bolt]['velocity'],
-                          expl_ref=expl_ref
+                          expl_ref=expl_ref,
+                          state=self.state
                           )
         if direction:
             shot.look_dir = direction

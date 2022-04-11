@@ -5,8 +5,8 @@ from Core.Mechanics import Animation
 class Shield(Animation):
 
     source = 0
-    def __init__(self, images_arr, width, height, x, y, source, type = 0):
-        super().__init__(images_arr, width, height, x, y, type)
+    def __init__(self, images_arr, width, height, x, y, source, type=0, state=None):
+        super().__init__(images_arr, width, height, x, y, type, state=state)
         self.source = source
         self.v = source.v
         self.type = type
@@ -43,8 +43,9 @@ class Shield(Animation):
         if len(source.shields) == 0:
             shld_obj = Shield(Assets.shield, source.rect.width + 10,
                               source.rect.height + 10, source.rect.left,
-                              source.rect.top, source, 1)
+                              source.rect.top, source, 1,
+                              state=source.state)
 
             # shld_obj.rotate(source.look_dir)
             source.sh_add(shld_obj)
-            State.effects.add(shld_obj)
+            source.state.effects.add(shld_obj)

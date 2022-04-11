@@ -4,7 +4,7 @@ from Ships.Ship import Ship
 
 class Bot(Ship):
 
-    def __init__(self, image, x, y, picked_ship='tick'):
+    def __init__(self, image, x, y, picked_ship='tick', state=None):
 
         super().__init__(image, x, y,
                          bolt=State.ship_types[picked_ship]['bolt'],
@@ -19,8 +19,9 @@ class Bot(Ship):
                              'acceleration_reserve_regeneration'],
                          deacceleration=State.ship_types[picked_ship]['deacceleration'],
                          env_friction=State.ship_types[picked_ship]['env_deacceleration'],
+                         state=state
                          )
-        State.script_mob_group.add(self)
+        state.script_mob_group.add(self)
         self.close_range = 20
         self.goal = None
         self.to_do_list = []

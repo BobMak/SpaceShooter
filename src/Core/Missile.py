@@ -15,14 +15,15 @@ class Missile(Projectile):
                  thrust=1.0,
                  hit_range=0,
                  expl_params=None,
-                 mass=1):
+                 mass=1,
+                 state=None):
         super().__init__(img, x, y,
                          distance=distance,
                          max_velocity=max_velocity,
                          damage=damage,
                          mass=mass,
-                         env_friction=0.3
-                         )
+                         env_friction=0.3,
+                         state=state)
         self.compute_period = 5
         self.compute_count = 0
         self.d_ang =        rotation_velocity
@@ -35,8 +36,8 @@ class Missile(Projectile):
         self.mod_velocity = 0
         self.dist_prev = 500
         self.dist = None
-        State.missiles.add(self)
-        State.projectiles.remove(self)
+        self.state.missiles.add(self)
+        self.state.projectiles.remove(self)
 
         self.aim = self.lock_closest()
         self.expAnimation = None
@@ -55,7 +56,7 @@ class Missile(Projectile):
     def lock_closest(self):
         mindist = 1e10
         aim = None
-        for x in State.asteroids:
+        for x in self.state.asteroids:
             if self.get_distance(x) < mindist:
                 mindist = self.get_distance(x)
                 aim = x
@@ -67,10 +68,15 @@ class Missile(Projectile):
         FX_Track(particle, r, 40, look_dir=random.randint(0,358),
                  fading=(20,16), enlarging=(20,16),
                  color=(200,200,200,random.randint(40,130)),
-                 velocity=[random.uniform(-0.5, 0.5), random.uniform(-0.5, 0.5)])
+                 velocity=[random.uniform(-0.5, 0.5), random.uniform(-0.5, 0.5)],
+                 state=self.state)
 
         brightness = max(0.0, random.gauss(0.5, 0.2))
-        FX_Glow(r, 1, int(20 * brightness), int(20 * brightness), (255, 200, 125, int(brightness * 10)))
+        FX_Glow(r, 1,
+                int(20 * brightness),
+                int(20 * brightness),
+                (255, 200, 125, int(brightness * 10)),
+                state=self.state)
 
         self.rotate_to_aim()
         self.mod_velocity += self.thrust
@@ -103,16 +109,16 @@ class Missile(Projectile):
         prm_hash = dict_hash(self.expl_params)
         if self.expAnimation:
             explAnimation = self.expAnimation
-        elif prm_hash in State.buff_explosions:
-            explAnimation = random.choice(State.buff_explosions[prm_hash])
+        elif prm_hash in self.state.buff_explosions:
+            explAnimation = random.choice(self.state.buff_explosions[prm_hash])
         else:
-            while not prm_hash in State.buff_explosions:
+            while not prm_hash in self.state.buff_explosions:
                 time.sleep(0.1)
-            explAnimation = random.choice(State.buff_explosions[prm_hash])
+            explAnimation = random.choice(self.state.buff_explosions[prm_hash])
         Animation.FX_explosion(self.rect.centerx, self.rect.centery,
-                       xpl=explAnimation, radius=(self.hit_range*3,self.hit_range*3), randdir=False)
-        State.hit_waves.add(x)
-        State.time_dependent.add(x)
+                       xpl=explAnimation, radius=(self.hit_range*3,self.hit_range*3), randdir=False, state=self.state)
+        self.state.hit_waves.add(x)
+        self.state.time_dependent.add(x)
         self.kill()
 
     @staticmethod
@@ -133,6 +139,7 @@ class Missile(Projectile):
                                rotation_velocity=State.missile_types[missile]['rotation_velocity'],
                                hit_range=State.missile_types[missile]['hit_range'],
                                expl_params=State.missile_types[missile]['expl_params'],
+                               state=self.state,
                                )
                 if direction:
                     shot.look_dir = direction

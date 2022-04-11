@@ -6,12 +6,14 @@ import pickle
 from Core.Scripts import player_set
 from Core import State
 
-pygame.init()
 
-try:
-    with open('../save.pkl', 'rb') as f:
-        State.save = pickle.load(f)
-except:
-    print('No save file found.')
+if __name__ == '__main__':
+    pygame.init()
+    state = State.State()
+    try:
+        with open('../save.pkl', 'rb') as f:
+            state.save = pickle.load(f)
+    except:
+        print('No save file found.')
 
-player_set()
+    player_set(state)

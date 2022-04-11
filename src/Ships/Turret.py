@@ -8,7 +8,7 @@ class Turret(Mounted):
               width = 20, height = 20,
               restriction = None, bg = bg_ball)
     """
-    interesting = [State.asteroids]
+    interesting = [state.asteroids]
     in_range = []
 
     def __init__(self, image, radius, mounted_on,

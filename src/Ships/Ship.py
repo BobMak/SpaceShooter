@@ -24,7 +24,8 @@ class Ship(GObject, Vulnerable):
                  complex_sh=(),
                  width=None,
                  height=None,
-                 mass=1):
+                 mass=1,
+                 state=None):
 
         self.bolt = bolt
         self.missile = missile
@@ -63,6 +64,7 @@ class Ship(GObject, Vulnerable):
             self, image, x, y, width=width, height=height,
             env_friction=env_friction,
             mass=mass,
+            state=state
         )
         Vulnerable.__init__(self, hp)
 
@@ -73,7 +75,7 @@ class Ship(GObject, Vulnerable):
         self.timer_fire = State.projectile_types[bolt]['cooldown']
 
         self.time_count_special = 0
-        self.timer_special = State.spec_cooldown[0]
+        self.timer_special = state.spec_cooldown[0]
 
         self.time_count_missile = 0
         self.timer_missile = State.missile_types[missile]['cooldown']
@@ -110,7 +112,7 @@ class Ship(GObject, Vulnerable):
         self.kill()
         self.v = [0,0]
 
-        Animation.FX_explosion(self.rect.centerx, self.rect.centery)
+        Animation.FX_explosion(self.rect.centerx, self.rect.centery, state=self.state)
 
         for x in self.shields:
             x.down()
@@ -133,9 +135,9 @@ class Ship(GObject, Vulnerable):
         self.shields.add(shield)
 
     def scan(self):
-        min_dist = State.asteroids.sprites[0]
+        min_dist = self.state.asteroids.sprites[0]
 
-        for i in State.asteroids:
+        for i in self.state.asteroids:
             dist = np.sqrt((self.pos[0] - i.pos[0])**2
                          + (self.pos[1] - self.pos[1])**2)
             if dist < min_dist:

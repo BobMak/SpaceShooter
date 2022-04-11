@@ -2,12 +2,17 @@
 This file contains game state and all relevant variables
 """
 import os
+import pickle
+import threading
 
 import pygame
 import pygame as pg
-from Core.Assets import WIDTH, HEIGHT
+
+from Core import Assets
+from Core.Assets import WIDTH, HEIGHT, menu_button
 
 #####################      Ships       ####################
+from Entities.Player import Player
 
 ship_types = {
     'tick': {
@@ -106,14 +111,6 @@ ship_types = {
         'hit_box': [[32,32,0,0]],
     }
 }
-
-
-picked_ship = 'tick'
-EXPL = 9
-start_lives = 2
-
-FRAMES_PER_SECOND = 60
-LOGIC_PER_SECOND = 240
 
 
 projectile_types = {
@@ -224,10 +221,6 @@ missile_types = {
     },
 }
 
-buff_explosions = {}
-
-spec_cooldown = [30, 60, 120]
-
 waves = {
     0: {
         'hps': 2,
@@ -255,71 +248,163 @@ waves = {
         'velocity_deviations': 4,
         'noclip_timers': 10,
         'densities': (2,3),
-        'number': 5,
+        'number': 10,
     },
 
 }
 
-# Standard save for a player. Should be replaced by a save if such is present in save.pkl
-save = {
-    'score': 0,
-    'level': 0,
-    'ship': {
-        'picked_ship': '',
-        'abilities': [],
-    },
-}
 
 # GAME STATE
 # Should be accessed through designated getters and setters
+class State:
+    def __init__(self, width=1280, height=720):
+        self.buff_explosions = {}
+        self.picked_ship = 'tick'
+        self.EXPL = 9
+        self.start_lives = 2
 
-# Game parameters
+        self.FRAMES_PER_SECOND = 60
+        self.LOGIC_PER_SECOND = 240
 
-t = (True, True, True, True)
-score = 0
-FPS = 30
+        self.spec_cooldown = [30, 60, 120]
+        # Standard save for a player. Should be replaced by a save if such is present in save.pkl
+        self.save = {
+            'score': 0,
+            'level': 0,
+            'ship': {
+                'picked_ship': '',
+                'abilities': [],
+            },
+        }
 
-# Level parameters:
+        self.clock = pg.time.Clock()
 
-level = 0
-wave_spawning = False
-pl = None
+        # Game parameters
 
-screen = pg.display.set_mode((WIDTH, HEIGHT))
-graphics = None
-graphics_thread = None
+        self.t = (True, True, True, True)
+        self.score = 0
+        self.FPS = 30
 
-# Game is paused or not
-state = 'game_started'
-# 'paused'
-# 'game_over'
-# 'game_won'
-# 'player_selection'
-# 'game_started'
-# 'game_playing'
-# 'exit'
+        # Level parameters:
 
+        self.level = 0
+        self.wave_spawning = False
+        self.pl = None
 
-# Collection of all current objects
-all_objects = []
+        self.W = width
+        self.H = height
 
-movable = pg.sprite.Group()
+        self.screen = pg.display.set_mode((self.W, self.H))
+        self.graphics = None
+        self.graphics_thread = None
+        # Collection of all current objects
+        self.all_objects = []
 
-asteroids = pg.sprite.Group()
-noclip_asteroids = pg.sprite.Group()
-outside_asteroids = pg.sprite.Group()
-projectiles = pg.sprite.Group()
-mob_goal = pg.sprite.Group()
+        self.state = 'game_started'
 
-missiles = pg.sprite.Group()
-hit_waves = pg.sprite.Group()
-time_dependent = pg.sprite.Group()
+        self.movable = pg.sprite.Group()
 
-player_group = pg.sprite.Group()
-mob_group = pg.sprite.Group()
-script_mob_group = pg.sprite.Group()
+        self.asteroids = pg.sprite.Group()
+        self.noclip_asteroids = pg.sprite.Group()
+        self.outside_asteroids = pg.sprite.Group()
+        self.projectiles = pg.sprite.Group()
+        self.mob_goal = pg.sprite.Group()
 
-glow = pg.sprite.Group()
-effects = pg.sprite.Group()
-interface = pg.sprite.Group()
-pickupables = pg.sprite.Group()
+        self.missiles = pg.sprite.Group()
+        self.hit_waves = pg.sprite.Group()
+        self.time_dependent = pg.sprite.Group()
+
+        self.player_group = pg.sprite.Group()
+        self.mob_group = pg.sprite.Group()
+        self.script_mob_group = pg.sprite.Group()
+
+        self.glow = pg.sprite.Group()
+        self.effects = pg.sprite.Group()
+        self.interface = pg.sprite.Group()
+        self.pickupables = pg.sprite.Group()
+
+    def game_over(state):
+        state.state = "game_over"
+        with open('save.pkl', 'wb') as f:
+            pickle.dump(state.save, f, pickle.HIGHEST_PROTOCOL)
+
+    def spawn_player(state):
+        buff_sp = pg.sprite.Sprite()
+        buff_sp.rect = menu_button.get_rect()
+        buff_sp.rect.width = 100
+        buff_sp.rect.height = 100
+        buff_sp.rect.centerx = state.W / 2
+        buff_sp.rect.centery = state.H / 2
+        if len(pg.sprite.spritecollide(buff_sp, state.asteroids, 0)) == 0:
+            state.interface.empty()
+            Player.ship_assign(
+                state.picked_ship,
+                state.pl.lives, state,
+                x=buff_sp.rect.centerx,
+                y=buff_sp.rect.centery,
+            )
+        # Do not spawn player if there are State.asteroids around, and wait 100 milliseconds instead
+        else:
+            threading.Timer(0.5, state.spawn_player).start()
+
+    def reset(self):
+        # Standard save for a player. Should be replaced by a save if such is present in save.pkl
+        self.save = {
+            'score': 0,
+            'level': 0,
+            'ship': {
+                'picked_ship': '',
+                'abilities': [],
+            },
+        }
+
+        self.clock = pg.time.Clock()
+
+        # Game parameters
+
+        self.t = (True, True, True, True)
+        self.score = 0
+        self.FPS = 30
+
+        # Level parameters:
+
+        self.level = 0
+        self.wave_spawning = False
+        self.pl = None
+        # Game is paused or not
+        self.state = 'game_started'
+        # 'paused'
+        # 'game_over'
+        # 'game_won'
+        # 'player_selection'
+        # 'game_started'
+        # 'game_playing'
+        # 'exit'
+        # reset
+
+        self.screen = pg.display.set_mode((self.W, self.H))
+        self.graphics = None
+        self.graphics_thread = None
+        # Collection of all current objects
+        self.all_objects = []
+
+        self.movable = pg.sprite.Group()
+
+        self.asteroids = pg.sprite.Group()
+        self.noclip_asteroids = pg.sprite.Group()
+        self.outside_asteroids = pg.sprite.Group()
+        self.projectiles = pg.sprite.Group()
+        self.mob_goal = pg.sprite.Group()
+
+        self.missiles = pg.sprite.Group()
+        self.hit_waves = pg.sprite.Group()
+        self.time_dependent = pg.sprite.Group()
+
+        self.player_group = pg.sprite.Group()
+        self.mob_group = pg.sprite.Group()
+        self.script_mob_group = pg.sprite.Group()
+
+        self.glow = pg.sprite.Group()
+        self.effects = pg.sprite.Group()
+        self.interface = pg.sprite.Group()
+        self.pickupables = pg.sprite.Group()

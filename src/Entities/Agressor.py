@@ -5,17 +5,18 @@ from Entities.Bot import Bot
 
 
 class Agressor(Bot):
-    def __init__(self, image, x, y, *kwargs):
-        super().__init__(image, x, y, *kwargs)
+    def __init__(self, image, x, y, state=None, **kwargs):
+        super().__init__(image, x, y, state=state, **kwargs)
         # Assign goal if
         try:
-            self.assign_goal(State.player_group.sprites()[0])
+            self.assign_goal(state.player_group.sprites()[0])
         except:
             pass
 
-        State.asteroids.add(self)
+        state.asteroids.add(self)
         self.look_dir = random.randint(0, 358)
         self.v = [random.uniform(-3, 3), random.uniform(-3, 3)]
+        self.type = 2
 
     def rush(self):
         dist = self.get_distance(self.goal)
@@ -61,7 +62,7 @@ class Agressor(Bot):
 
     def destroy(self):
         super().kill()
-        Items.MissileItem(self.rect.centerx, self.rect.centery, 1)
+        Items.MissileItem(self.rect.centerx, self.rect.centery, 1, state=self.state)
 
     def __str__(self):
         return "Agressor" + super().__str__()
