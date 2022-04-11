@@ -30,7 +30,7 @@ def spawn_wave(state):
             proY = random.choice([random.randint(-20,0),
                                   random.randint(Assets.HEIGHT, Assets.HEIGHT + 20)])
 
-        x = AdvAsteroid(level+1, proX, proY, 4, [0, 0], state=state)
+        AdvAsteroid(level+1, proX, proY, 4, [0, 0], state=state)
 
     state.level += 1
     state.wave_spawning = False

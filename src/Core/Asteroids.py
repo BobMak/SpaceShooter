@@ -5,7 +5,7 @@ import Core.State as State
 from Core.Assets import particle, asteroid_imgs, bad_thing
 from Core.Mechanics import GObject, Vulnerable, FX_Track
 
-from Entities.Agressor import Agressor
+from Entities.Chaser import Chaser
 
 
 class Asteroid(GObject, Vulnerable):
@@ -123,7 +123,7 @@ class AdvAsteroid(Asteroid):
                 arr.append(i)
 
                 if random.choice((0,0,0,0,0,0,0,0,1)):
-                    c = Agressor(bad_thing, self.rect.centerx, self.rect.centery, state=self.state)
+                    c = Chaser(bad_thing, self.rect.centerx, self.rect.centery, state=self.state)
                     c.remove(self.state.player_group)
                     try:
                         c.rush()
