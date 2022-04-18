@@ -255,12 +255,17 @@ class Graphics:
 
 def pause_menu(state):
     print(state.t)
+    W = state.W
+    H = state.H
+    bW = 200
+    bH = 30
+    bHd = 50
 
     temporary_bg = state.screen.copy()
     # Define button positions
-    b_continue = bt.B_Continue((200, 200, 100, 30), state)
-    b_startover = bt.B_Start_Over((200, 250, 100, 30), state)
-    b_exit = bt.B_Exit((200, 300, 100, 30), state)
+    b_continue =  bt.B_Continue(  (W//2 - bW//2, H//3, bW, bH), state)
+    b_startover = bt.B_Start_Over((W//2 - bW//2, H//3 + bHd, bW, bH), state)
+    b_exit =      bt.B_Exit(      (W//2 - bW//2, H//3 + 2*bHd, bW, bH), state)
     menu = [b_continue, b_startover, b_exit]
     selection = 0
     menu[0].select()
@@ -413,13 +418,7 @@ def player_set(state):
 
     menu_run = True
 
-    # draw buttons
-
-    for x in menu:
-        for y in x:
-            state.screen.blit(y.image, y.rect)
-            state.screen.blit(pg.font.Font.render(menu[0][ship_selected].font, y.text, 0, WHITE),
-                              pg.Rect(300, 200, 5, 5))
+    # draw buttons and ship abilities
 
     while (menu_run):
 
@@ -431,10 +430,11 @@ def player_set(state):
         for x in menu[1]:
             state.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
 
-        state.screen.blit(pg.font.Font.render(menu[0][ship_selected].font,
-                                              menu[0][ship_selected].text,
-                                              0, WHITE),
-                          pg.Rect(300, 200, 5, 5))
+        for i, line in enumerate(menu[0][ship_selected].text.split('\n')):
+            state.screen.blit(pg.font.Font.render(menu[0][ship_selected].font,
+                                                  line,
+                                                  0, WHITE),
+                              pg.Rect(W//2 -50, H//2 + i*20 - 50, 5, 5))
 
         pg.display.flip()
 

@@ -6,7 +6,7 @@ from Entities.Bot import Bot
 
 class Chaser(Bot):
     def __init__(self, image, x, y, state=None, **kwargs):
-        """will chase """
+        """will chase the player"""
         super().__init__(image, x, y, state=state, **kwargs)
         # Assign goal if
         self.pickTarget()
