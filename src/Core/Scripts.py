@@ -17,10 +17,10 @@ from UI import Buttons as bt
 from Core.Assets import *
 
 
-def spawn_wave(state):
-    print('spawned')
-    level = state.level
-    for _ in range(State.waves[level]["number"]):
+def spawn_wave(state, wave_config=None):
+    if wave_config is None:
+        wave_config = State.waves[state.config]
+    for _ in range(wave_config["number"]):
         if random.choice([True, False]):
             proX = random.choice([random.randint(-20,0),
                                   random.randint(Assets.WIDTH, Assets.WIDTH + 20)])
@@ -30,7 +30,7 @@ def spawn_wave(state):
             proY = random.choice([random.randint(-20,0),
                                   random.randint(Assets.HEIGHT, Assets.HEIGHT + 20)])
 
-        AdvAsteroid(level+1, proX, proY, 4, [0, 0], state=state)
+        AdvAsteroid(wave_config, proX, proY, 4, (0.0, 0.0), state=state, init_speed=wave_config['init_speed'])
 
     state.level += 1
     state.wave_spawning = False
@@ -94,17 +94,6 @@ def step(state, events=True):
             if event.type == pg.USEREVENT + 1:
                 state.t = (True, True, True, True)
                 pg.time.set_timer(pg.USEREVENT + 1, 0)
-
-            # # Spawn wave
-            # if event.type == pg.USEREVENT + 3:
-            #     spawn_wave(state)
-            #     state.wave_spawning = False
-            #     pg.time.set_timer(pg.USEREVENT + 3, 0)
-
-            # handle game over
-            # if event.type == pg.USEREVENT + 4:
-            #     state.state = "game_over"
-            #     pg.time.set_timer(pg.USEREVENT + 4, 0)
 
     # Updates to object groups
     #

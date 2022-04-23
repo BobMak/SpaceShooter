@@ -44,7 +44,7 @@ class Missile(Projectile):
 
     def rotate_to_aim(self):
 
-        aim_dir = self.get_aim_dir(self.aim)
+        aim_dir = self.get_angle_to(self.aim)
 
         x = (self.look_dir - aim_dir)
 

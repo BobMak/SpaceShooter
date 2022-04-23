@@ -44,9 +44,9 @@ class Chaser(Bot):
                     true_ang = -360*np.sign(true_ang) + true_ang
 
                 if true_ang < -90 or true_ang > 90:
-                    t = self.get_aim_dir(self.target)
+                    t = self.get_angle_to(self.target)
                 else:
-                    t = self.get_aim_dir(self.target) + true_ang
+                    t = self.get_angle_to(self.target) + true_ang
 
                 # true_ang = self.get_aim_dir(self.goal) - true_ang
                 t = self.look_dir - t

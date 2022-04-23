@@ -345,37 +345,36 @@ class GObject(pygame.sprite.Sprite, Moving):
             state=self.state,
         )
 
-    def get_aim_dir(self, aim):
+    def get_angle_to(self, aim):
         """
-        Returns the angle specifying direction to 'aim' object
+        Returns the absolute angle to 'aim' object in range from 0 to 360,
+        where 0 or 360 is the x=0, y=1 direction
         """
         dx = self.rect.centerx - aim.rect.centerx
         dy = self.rect.centery - aim.rect.centery
 
-        if dx > 0 and dy < 0:
-            aim_dir = abs(np.rad2deg(np.arctan(dx/dy)))
-        elif dx < 0 and dy < 0:
-            aim_dir = abs(np.rad2deg(np.arctan(dy/dx)))
-        elif dx > 0 and dy > 0:
-            aim_dir = abs(np.rad2deg(np.arctan(dy/dx)))
-        elif dx < 0 and dy > 0:
-            aim_dir = abs(np.rad2deg(np.arctan(dx/dy)))
-        else:
-            aim_dir = 0
+        angle = np.arctan2(dy, dx) + np.pi/2
 
-        if dx < 0 and dy > 0:
-            pass
+        if angle < 0:
+            angle += 2*np.pi
 
-        elif dx < 0 and dy < 0:
-            aim_dir += 90
+        angle = np.rad2deg(angle)
 
-        elif dx > 0 and dy < 0:
-            aim_dir += 180
+        return angle
 
-        elif dx > 0 and dy > 0:
-            aim_dir += 270
+    def get_relative_angle(self, target):
+        """get a relative angle to target with respect to the direction of self
+        :param target: target object
+        :return: angle in degrees, in range from -180 to 180
+        """
+        abs_target_ang= self.get_angle_to(target)
+        dif = abs_target_ang - self.look_dir
+        if dif > 180:
+            dif -= 360
+        elif dif < -180:
+            dif += 360
+        return dif
 
-        return aim_dir
 
     def get_distance(self, obj):
         """returns distance to object x"""
@@ -389,7 +388,8 @@ class GObject(pygame.sprite.Sprite, Moving):
         to linked bounds of the map, comparing distance
         on screen to distances to 8 projections of aim on sides
         and corners of map"""
-        all_directions_distances = []
+        min_distance = 1e10
+        min_angle = 0
         for x in range(-1, 2):
             for y in range(-1, 2):
                 a = (self.rect.centerx
@@ -397,9 +397,11 @@ class GObject(pygame.sprite.Sprite, Moving):
                 b = (self.rect.centery
                     - (obj.rect.centery + y*(HEIGHT+obj.rect.height)))
                 dist = np.sqrt(a**2 + b**2)
-                all_directions_distances.append(dist)
+                if dist < min_distance:
+                    min_distance = dist
+                    min_angle = self.get_relative_angle(obj) +180
 
-        return min(all_directions_distances)
+        return min_distance, min_angle
 
     def get_closest_aim_dir(self, aim):
         """
@@ -427,7 +429,7 @@ class GObject(pygame.sprite.Sprite, Moving):
         a = aim.rect.centerx + x*(WIDTH + aim.rect.width)
         b = aim.rect.centery + y*(HEIGHT + aim.rect.height)
         aim = GObject(blanc, a, b)
-        return self.get_aim_dir(aim)
+        return self.get_angle_to(aim)
 
     def draw_rotating(self):
         self.rotated_image = pygame.transform.rotate(self.image,
@@ -435,6 +437,10 @@ class GObject(pygame.sprite.Sprite, Moving):
         rect = self.rotated_image.get_rect()
         rect.center = (self.rect.center)
         self.state.screen.blit(self.rotated_image, rect)
+
+    @staticmethod
+    def make_blank_obj(state, x=0, y=0):
+        return GObject(Assets.blanc, x, y, state=state)
 
 
 class Colliding(pygame.sprite.Sprite, Moving):

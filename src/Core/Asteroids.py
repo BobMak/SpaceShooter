@@ -14,7 +14,7 @@ class Asteroid(GObject, Vulnerable):
     velo_deviation = 1
     density = (1,2)
 
-    def __init__(self, image, x, y, type, velocity, state=None):
+    def __init__(self, image, x, y, type, v, state=None, velo_deviation=1.0, init_speed=1.0):
 
         super().__init__(
             pygame.transform.scale(image, (10*type, 10*type)),
@@ -22,7 +22,7 @@ class Asteroid(GObject, Vulnerable):
             mass=type*5,
             env_friction=0.0001,
             angular_velocity=random.uniform(-0.5, 0.5),
-            state=state
+            state=state,
         )
 
         Vulnerable.__init__(self, 1)
@@ -30,11 +30,12 @@ class Asteroid(GObject, Vulnerable):
         self.state = state
         self.type = type
         self.state.asteroids.add(self)
+        self.velo_deviation = velo_deviation
         self.image = pygame.transform.scale(image, (10*type, 10*type))
-        self.v = [velocity[0] + random.uniform(-self.velo_deviation,
-                                                      self.velo_deviation),
-                         velocity[1] + random.uniform(-self.velo_deviation,
-                                                   self.velo_deviation)]
+        self.v = [v[0] + init_speed * random.uniform(-self.velo_deviation,
+                                                  self.velo_deviation),
+                  v[1] + init_speed * random.uniform(-self.velo_deviation,
+                                                  self.velo_deviation)]
         self.look_dir = (random.random() - 0.5) * 360
         self.hp = self.type * 2
 
@@ -55,7 +56,7 @@ class Asteroid(GObject, Vulnerable):
             for i in range(random.choice(self.density)):
 
                 i = Asteroid(self.image,
-                             self.rect.centerx, self.rect.centery, self.type - 1, self.v, state=self.state)
+                             self.rect.centerx, self.rect.centery, self.type - 1, self.v, state=self.state, velo_deviation=self.velo_deviation)
 
                 arr.append(i)
 
@@ -76,14 +77,20 @@ class Asteroid(GObject, Vulnerable):
 
 class AdvAsteroid(Asteroid):
 
-    def __init__(self, level, x, y, type, velocity, state=None):
-
-        super().__init__(asteroid_imgs[level-1], x, y, type, velocity, state=state)
-        self.level = level
-        self.hp = State.waves[level - 1]["hps"] * self.type
-        self.noclip_timer = State.waves[level - 1]["noclip_timers"]
-        self.density = State.waves[level - 1]["densities"]
-        self.velo_deviation = State.waves[level - 1]["velocity_deviations"]
+    def __init__(self, config, x, y, type, v, state=None, init_speed=1.0):
+        super().__init__(
+            asteroid_imgs[config['img_n']],
+            x, y,
+            type,
+            v,
+            state=state,
+            velo_deviation=config["velocity_deviations"],
+            init_speed=init_speed
+        )
+        self.config = config
+        self.hp = config["hps"] * self.type
+        self.noclip_timer = config["noclip_timers"]
+        self.density = config["densities"]
 
     def damage(self, dmg, type=None, velocity=None, moving=None):
 
@@ -118,8 +125,14 @@ class AdvAsteroid(Asteroid):
             arr = []
             for i in range(random.choice(self.density)):
 
-                x = AdvAsteroid(self.level, self.rect.centerx,
-                                self.rect.centery, self.type - 1, self.v, state=self.state)
+                x = AdvAsteroid(self.config,
+                                self.rect.centerx,
+                                self.rect.centery,
+                                self.type - 1,
+                                self.v,
+                                state=self.state,
+                                init_speed=self.config["init_speed"]
+                )
                 arr.append(i)
 
                 if random.choice((0,0,0,0,0,0,0,0,1)):

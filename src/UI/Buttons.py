@@ -71,7 +71,7 @@ class B_Start_Over(Button):
         )
 
         self.state.save['level'] = 0
-        self.state.level = 0
+        self.state.config = 0
 
         Scripts.spawn_wave(self.state)
         self.state.state = 'game_started'
@@ -85,7 +85,7 @@ class B_New_Game(Button):
         self.text = 'New Game'
 
     def action(self):
-        self.state.level = 0
+        self.state.config = 0
         Player.ship_assign(self.state.picked_ship, self.state.start_lives, self.state)
 
         Scripts.main_loop(self.state)

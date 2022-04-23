@@ -228,6 +228,8 @@ waves = {
         'noclip_timers': 45,
         'densities': (1,2),
         'number': 4,
+        'init_speed': 1.0,
+        'img_n': 0,
     },
     1: {
         'hps': 3,
@@ -235,6 +237,8 @@ waves = {
         'noclip_timers': 30,
         'densities': (2,2),
         'number': 5,
+        'init_speed': 1.0,
+        'img_n': 1,
     },
     2: {
         'hps': 4,
@@ -242,6 +246,8 @@ waves = {
         'noclip_timers': 20,
         'densities': (1,3),
         'number': 6,
+        'init_speed': 1.0,
+        'img_n': 2,
     },
     3: {
         'hps': 5,
@@ -249,6 +255,8 @@ waves = {
         'noclip_timers': 10,
         'densities': (2,3),
         'number': 10,
+        'init_speed': 1.0,
+        'img_n': 3,
     },
 
 }

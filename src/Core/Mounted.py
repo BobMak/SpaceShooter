@@ -47,7 +47,7 @@ class Mounted(GObject):
             self.orbit_ang = mounted_on.look_dir+look_dir
 
     def aim(self, aim):
-        x = (self.look_dir - self.get_aim_dir(aim))
+        x = (self.look_dir - self.get_angle_to(aim))
         if x < 5 and x > -5:
             return True
         elif abs(x) > 180:

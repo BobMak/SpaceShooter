@@ -1,10 +1,10 @@
-import time
-
 import gym
 import numpy as np
 import pygame as pg
+import wandb
 
 import Core.State as State
+from Core.Mechanics import GObject
 from Core.Scripts import step, spawn_wave, screen_draw
 from Entities.Player import Player
 
@@ -34,56 +34,60 @@ class SpaceShooter(gym.Env):
         self.lidar_resolution = 16
         # Define the observation space
         self.observation_space = gym.spaces.Box(
-            low=0.0, high=1.0, shape=(self.lidar_resolution*2 + 1,), dtype=np.float32
+            low=0.0, high=1.0, shape=(self.lidar_resolution + 5,), dtype=np.float32
         )
 
         self.pg_initialized = False
         self.env_steps = 0
 
         self.reset()
+        self.usewandb = False
+        self.rollout_reward = 0
+        self.rollout_count = 0
+        self.rollout_length = 1000
+
+    def setUseWandBParams(self, usewandb, rollout_length):
+        self.usewandb = usewandb
+        self.rollout_length = rollout_length
 
     def reset(self):
         """
         Reset the environment
         """
+        wave_config = {
+            'hps': 5,
+            'velocity_deviations': 1.0,
+            'noclip_timers': 10,
+            'densities': (2,3),
+            'number': 10,
+            'init_speed': 5.0,
+            'img_n': 3
+        }
+
         self.env_steps = 0
         # Reset the environment
-        self.state = np.zeros(self.lidar_resolution*2 + 1)
+        self.state = np.zeros(sum(self.observation_space.shape))
         self.game_state.reset()
         Player.ship_assign(self.game_state.picked_ship, 1, self.game_state)
         self.game_state.pl.rect.center = (
             self.game_state.W // 2 + np.random.randint(-200, 200),
             self.game_state.H // 2 + np.random.randint(-200, 200))
 
-        self.game_state.level = 3
-        spawn_wave(self.game_state)
+        spawn_wave(self.game_state, wave_config=wave_config)
 
+        self.rollout_reward = 0
         # Return the initial observation
         return self.state
 
     def lidar_scan(self):
         # find asteroid distances
         for asteroid in self.game_state.asteroids:
-            abs_angle = self.game_state.pl.get_aim_dir(asteroid)
-            rel_angle = abs_angle - self.game_state.pl.look_dir
-            lidar_i = int(rel_angle / 360 * 16)
-            dist = self.game_state.pl.get_real_distance(asteroid)
+            dist, angle = self.game_state.pl.get_real_distance(asteroid)
+            # rel_angle = abs_angle - self.game_state.pl.look_dir
+            lidar_i = int(self.lidar_resolution*angle / 360)
             lidar_scan = 1 if dist < 1 else 1 / dist
             if self.state[lidar_i] < lidar_scan:
                 self.state[lidar_i] = lidar_scan
-
-        # find speed in each direction
-        speed = np.sqrt(self.game_state.pl.v[0] ** 2 + self.game_state.pl.v[1] ** 2)
-        abs_vel_angle = np.arctan2(self.game_state.pl.v[1], self.game_state.pl.v[0])
-        rel_vel_angle = abs_vel_angle - self.game_state.pl.look_dir
-
-        angle = -180
-        angle_step = 360 / self.lidar_resolution
-        for i in range(self.lidar_resolution, self.lidar_resolution*2):
-            lidar_i_angle = int(self.lidar_resolution * (180 + rel_vel_angle) / 360)
-            angle_diff = rel_vel_angle + angle
-            self.state[lidar_i_angle] = speed * np.cos(angle_diff)
-            angle += angle_step
 
     def step(self, action):
         """
@@ -107,18 +111,34 @@ class SpaceShooter(gym.Env):
 
         # environment
         step(self.game_state)
+
+        # get the new observation
+        self.state = np.zeros(sum(self.observation_space.shape))
         self.lidar_scan()
-        self.state[-1] = self.game_state.pl.av  # angular velocity
+        # angular velocity
+        self.state[-1] = self.game_state.pl.av
+        # egocentric velocity
+        vel1 = self.game_state.pl.v[0] * np.cos(np.deg2rad(self.game_state.pl.look_dir-90))
+
+        if np.sign(vel1) > 0:
+            self.state[-2] = vel1
+        else:
+            self.state[-3] = vel1
+        vel2 = self.game_state.pl.v[1] * np.sin(np.deg2rad(self.game_state.pl.look_dir-90))
+        if np.sign(vel2) > 0:
+            self.state[-4] = vel2
+        else:
+            self.state[-5] = vel2
 
         if self.game_state.pl.lives == 0:
             game_over = True
             reward += -1000
 
         # calculate reward based on distance to all asteroids and their size
-        for asteroid in self.game_state.asteroids:
-            dist = self.game_state.pl.get_distance(asteroid)
-            r = 1 if dist < 1 else 1 / dist
-            reward -= r * asteroid.type
+        # for asteroid in self.game_state.asteroids:
+        #     dist = self.game_state.pl.get_distance(asteroid)
+        #     r = 1 if dist < 1 else 1 / dist
+        #     reward -= r * asteroid.type
 
         # reward for shooting asteroids
         for y in self.game_state.asteroids:
@@ -126,8 +146,19 @@ class SpaceShooter(gym.Env):
                 if pg.sprite.collide_circle(y, i):
                     reward += 100
 
+        # reward moving faster
+        speed = np.sqrt(self.game_state.pl.v[0]**2 + self.game_state.pl.v[1]**2)
+        reward += speed * 0.1
+
         # Return the observation, reward, and done flag
         self.game_state.clock.tick(self.game_state.LOGIC_PER_SECOND)
+        self.rollout_reward += reward
+
+        self.rollout_count+= 1
+        if self.rollout_count == self.rollout_length:
+            wandb.log({"rewards": self.rollout_reward})
+            self.rollout_count = 0
+            self.rollout_reward = 0
 
         return self.state, reward, game_over, {}
 
@@ -138,12 +169,22 @@ class SpaceShooter(gym.Env):
         if mode == "human":
             if not self.pg_initialized:
                 # Initialize the environment
-                t_start = time.time()
                 pg.init()
-
-                print("re-init took:", time.time() - t_start)
                 self.pg_initialized = True
             screen_draw(self.game_state)
+
+            # draw the lidar lines from the player
+            for i in range(self.lidar_resolution):
+                lidar_dist = 1000
+                angle = self.game_state.pl.look_dir + i * 360 / self.lidar_resolution - 90
+                x = self.game_state.pl.rect.center[0] + lidar_dist * np.cos(np.deg2rad(angle))
+                y = self.game_state.pl.rect.center[1] + lidar_dist * np.sin(np.deg2rad(angle))
+                # lines with greater value are brighter
+                clr = (np.clip(255 * self.state[i]*65535, a_min=0, a_max=255).item(),
+                       np.clip(255 * self.state[i]*255, a_min=0, a_max=255).item(),
+                       np.clip(255 * self.state[i], a_min=0, a_max=255).item())
+                pg.draw.line(self.game_state.screen, clr, self.game_state.pl.rect.center, (x, y), 1)
+
             pg.display.flip()
             pg.display.update()
 
