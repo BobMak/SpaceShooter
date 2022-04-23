@@ -10,3 +10,11 @@ You will need to install pygame library to run the project:
     
 run:   
 `python src/Main.py`
+
+
+# tools
+
+Streamlit is used for a animation generating cellular-automata tool.      
+`streamlit run src/Tools/CAAnimationEditor.py`   
+
+

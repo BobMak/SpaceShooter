@@ -1,7 +1,9 @@
 pygame~=2.0.1
 numba~=0.53.0
 numpy~=1.21.2
-torch~=1.10.2
-torchvision~=0.8.2
+torch
+torchvision
 gym~=0.21.0
 matplotlib~=3.4.3
+stable-baselines3[extra]
+streamlit

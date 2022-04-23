@@ -565,9 +565,13 @@ class Animation(GObject):
     def generateExplosionAnimation(diameter=30, n_frames=30,
                                    decay_rgb=(0, 6, 9),
                                    start_rgb=(255, 255, 255),
-                                   spawn_points=230,):
+                                   spawn_threshold=230,
+                                   spawn_threshold_count=3,
+                                   numpy_out=False
+                                   ):
         """
         generates a set of explosion animations using cellular automata
+        :param spawn_threshold: the sum of
         """
         animation = []
         img_buffer = np.zeros((diameter, diameter, 3), dtype=np.int16)
@@ -599,10 +603,10 @@ class Animation(GObject):
                 for i in range(-1, 2):
                     for j in range(-1, 2):
                         try:
-                            count += img_buffer[x + i, y + j, 0] > spawn_points
+                            count += img_buffer[x + i, y + j, 0] > spawn_threshold
                         except:
                             pass
-                if count >= 3:
+                if count >= spawn_threshold_count:
                     # the further from center, the less is the probabilit of being set to 255
                     if random.random() > (abs(x - diameter / 2) + abs(y - diameter / 2)) / diameter:
                         img_buffer[x, y] = start_rgb
@@ -615,10 +619,17 @@ class Animation(GObject):
 
             # create animation frame
             img_buffer[img_buffer < 5] = 0
-            surf = pygame.surfarray.make_surface(img_buffer)
+
             # stop early if all values are 1
             if np.all(img_buffer == 0):
                 break
+
+            if numpy_out:
+                animation.append(np.copy(img_buffer))
+                continue
+
+            surf = pygame.surfarray.make_surface(img_buffer)
+
             surf.set_colorkey((0, 0, 0), pygame.RLEACCEL)
             surf = pygame.transform.scale(surf, (int(diameter * 3), int(diameter * 3)))
             animation.append(surf)
