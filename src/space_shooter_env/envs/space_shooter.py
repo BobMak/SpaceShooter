@@ -152,13 +152,14 @@ class SpaceShooter(gym.Env):
 
         # Return the observation, reward, and done flag
         self.game_state.clock.tick(self.game_state.LOGIC_PER_SECOND)
-        self.rollout_reward += reward
 
-        self.rollout_count+= 1
-        if self.rollout_count == self.rollout_length:
-            wandb.log({"rewards": self.rollout_reward})
-            self.rollout_count = 0
-            self.rollout_reward = 0
+        if self.usewandb:
+            self.rollout_reward += reward
+            self.rollout_count+= 1
+            if self.rollout_count == self.rollout_length:
+                wandb.log({"rewards": self.rollout_reward})
+                self.rollout_count = 0
+                self.rollout_reward = 0
 
         return self.state, reward, game_over, {}
 

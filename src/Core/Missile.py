@@ -44,9 +44,7 @@ class Missile(Projectile):
 
     def rotate_to_aim(self):
 
-        aim_dir = self.get_angle_to(self.aim)
-
-        x = (self.look_dir - aim_dir)
+        x = self.get_relative_angle(self.aim)
 
         if abs(x) > 180:
             self.apply_force_angular(self.d_ang*np.sign(x))

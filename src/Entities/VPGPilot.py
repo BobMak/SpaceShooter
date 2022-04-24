@@ -107,13 +107,20 @@ def sweep(count=10):
 def evaulate(load=False):
     env = gym.make("SpaceShooter-v0")
     print("evaluating...")
+    actor_cirtic = {
+        'pi': [10, 10],
+        'vf': [10, 10]
+    }
+    n_epochs = 8
+    batch_size = 8192
     model = PPO(
         "MlpPolicy",
         env, verbose=1,
         clip_range=0.2,
-        n_steps=8192,
-        n_epochs=5,
-        batch_size=512,
+        n_steps=n_epochs * batch_size,
+        batch_size=batch_size,
+        n_epochs=n_epochs,
+        policy_kwargs={"net_arch": [12, 12, actor_cirtic]},
     )
     if load:
         model = PPO.load("ppo_pilot")
@@ -131,6 +138,6 @@ def evaulate(load=False):
 
 
 if __name__ == '__main__':
-    # train_ppo()
+    train_ppo()
     # evaulate(load=True)
-    sweep(100)
+    # sweep(100)

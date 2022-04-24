@@ -32,7 +32,7 @@ class Chaser(Bot):
             # If speed is small, turn in the direction of goal,
             # otherwise, in the direction allowing greater speed vecror change
             if velocity_mod < 1:
-                t = self.look_dir - get_angle(self.rect.center, self.target.rect.center)
+                t = self.get_relative_angle(self.target)
             else:
                 ang = np.arctan(self.v[0]/self.v[1])
                 # Direction of motion
@@ -56,9 +56,9 @@ class Chaser(Bot):
             if abs(t) > self.rotation_rate:
                 if t < -180 or t > 180:
                     t = -t
-                self.rotate(-t)
+                self.rotate(t)
 
-            if abs(t) < 90:
+            if abs(t) > 90:
                 self.accelerate(self.acceleration)
             else:
                 self.accelerate(-self.acceleration)

@@ -333,6 +333,7 @@ class State:
 
     def game_over(state):
         state.state = "game_over"
+        state.level = 0
         with open('save.pkl', 'wb') as f:
             pickle.dump(state.save, f, pickle.HIGHEST_PROTOCOL)
 

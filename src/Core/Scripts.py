@@ -19,7 +19,7 @@ from Core.Assets import *
 
 def spawn_wave(state, wave_config=None):
     if wave_config is None:
-        wave_config = State.waves[state.config]
+        wave_config = State.waves[state.level]
     for _ in range(wave_config["number"]):
         if random.choice([True, False]):
             proX = random.choice([random.randint(-20,0),
