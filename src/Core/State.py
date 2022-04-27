@@ -266,6 +266,7 @@ waves = {
 # Should be accessed through designated getters and setters
 class State:
     def __init__(self, width=1280, height=720):
+        self.cache_dir = os.path.join('cache')
         self.buff_explosions = {}
         self.picked_ship = 'tick'
         self.EXPL = 9

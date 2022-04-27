@@ -14,7 +14,6 @@ import space_shooter_env
 class WandbCallback(BaseCallback):
     def __init__(self):
         super(WandbCallback, self).__init__()
-        self.rewards = 0
         self.steps = 0
 
     def _on_step(self):
@@ -22,21 +21,23 @@ class WandbCallback(BaseCallback):
         if self.steps % 1000 == 0:
             print("step: ", self.steps)
             # wandb.log({"rewards": self.rewards})
-            self.rewards = 0
 
 def train_ppo():
     env = gym.make("SpaceShooter-v0")
+    batch_size = 14000
+    mini_batch_size = 3000
+    n_epochs = 80
     model = PPO(
         "MlpPolicy",
         env, verbose=1,
-        clip_range=0.2,
-        n_steps=8192,
-        n_epochs=20,
-        batch_size=512,
+        clip_range=0.02,
+        n_steps=batch_size,
+        n_epochs=n_epochs,
+        batch_size=mini_batch_size,
         learning_rate=1e-3,
-        policy_kwargs={"net_arch": [16, 10, {'pi': [5], 'vf': [16]}]},
+        policy_kwargs={"net_arch": [32, 32, 32, {'pi': [20], 'vf': [5]}]},
     )
-    model.learn(total_timesteps=100000)
+    model.learn(total_timesteps=batch_size*n_epochs)  # total_timesteps=100000
     # model.learn(total_timesteps=1048576, callback=MyCallback())
     model.save("ppo_pilot")
 
@@ -58,14 +59,13 @@ def train_ppo_wandb():
             "MlpPolicy",
             env, verbose=1,
             clip_range=config.clip_ratio,
-            n_steps=config.n_epochs * config.batch_size,
+            n_steps=config.batch_size,
             n_epochs=config.n_epochs,
-            batch_size=config.batch_size,
+            batch_size=max(1024, 1+config.batch_size // 4),
             learning_rate=1e-3,
             policy_kwargs={"net_arch": [*hidden_layers, actor_cirtic]},
         )
         model.learn(total_timesteps=config.n_epochs * config.batch_size, callback=WandbCallback())
-        wandb.log({"rewards": 0.0})
         # model.learn(total_timesteps=1048576, callback=MyCallback())
         model.save("ppo_pilot")
 
@@ -88,15 +88,15 @@ def sweep(count=10):
             'n_epochs': {'values': [30, 40, 50, 80]},
             'n_common_layers': {'values': [1, 2, 3]},
             'n_actor_layers': {'values': [1, 2, 3]},
-            'n_critic_layers': {'values': [1, 2, 3]},
+            'n_critic_layers': {'values': [1]},
             'hidden_size_common': {
                 'distribution': 'q_log_uniform',
                 'q': 1.0,
                 'min': math.log(4),
                 'max': math.log(128)
             },
-            'hidden_size_actor': {'values': [5, 10, 15]},
-            'hidden_size_critic': {'values': [5, 10, 15]},
+            'hidden_size_actor': {'values': [10, 15, 20, 25]},
+            'hidden_size_critic': {'values': [5, 10]},
             'clip_ratio': {'values': [0.02, 0.06, 0.1, 0.2, 0.3, 0.4]}
         }
     }
@@ -117,10 +117,10 @@ def evaulate(load=False):
         "MlpPolicy",
         env, verbose=1,
         clip_range=0.2,
-        n_steps=n_epochs * batch_size,
+        n_steps=batch_size,
         batch_size=batch_size,
         n_epochs=n_epochs,
-        policy_kwargs={"net_arch": [12, 12, actor_cirtic]},
+        policy_kwargs={"net_arch": [28, 20, actor_cirtic]},
     )
     if load:
         model = PPO.load("ppo_pilot")
@@ -138,6 +138,6 @@ def evaulate(load=False):
 
 
 if __name__ == '__main__':
-    train_ppo()
-    # evaulate(load=True)
+    # train_ppo()
+    evaulate(load=True)
     # sweep(100)

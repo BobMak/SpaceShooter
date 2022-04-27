@@ -14,7 +14,7 @@ import numpy
 import pygame.pixelcopy
 
 
-def make_surface_rgba(array):
+def npToRGBASurface(array):
     """Returns a surface made from a [w, h, 4] numpy array with per-pixel alpha
     """
     shape = array.shape
@@ -53,7 +53,7 @@ class Generator:
 
         z = x[-1].cpu().numpy().transpose(2, 1, 0)
         z = z * 255 / z.max()
-        surf = make_surface_rgba(z.astype(np.uint8))
+        surf = npToRGBASurface(z.astype(np.uint8))
         # black close to black to alpha
         # surf.set_colorkey((0, 0, 0))
         # surf.set_colorkey((1, 1, 1))

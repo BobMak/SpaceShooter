@@ -1,5 +1,6 @@
 import pickle
 import random
+import traceback
 
 import pygame as pg
 
@@ -137,29 +138,33 @@ class B_Ship_Highlihgts(Button):
     def action(self):
         self.state.picked_ship = self.ship_number
         if self.ship_number == 'generated':
-            g = Generator()
-            img = g.generateShipSurf()
-            # save img as generated.png
-            State.ship_types[self.ship_number]['image'] = img
-            pygame.image.save(img, os.path.join('assets', 'ships', 'generated.png'))
-            abilities = ['left', 'right', 'up', 'down']
-            for x in ['shoot', 'shield', 'velocity', 'health','missile']:
-                if random.choice([True, False]):
-                    abilities.append(x)
+            try:
+                g = Generator()
+                img = g.generateShipSurf()
+                # save img as generated.png
+                State.ship_types[self.ship_number]['image'] = img
+                pygame.image.save(img, os.path.join('assets', 'ships', 'generated.png'))
+                abilities = ['left', 'right', 'up', 'down']
+                for x in ['shoot', 'shield', 'velocity', 'health','missile']:
+                    if random.choice([True, False]):
+                        abilities.append(x)
 
-            State.ship_types['generated']['rotation_rate'] = max(1.0, random.random() * 5)
-            State.ship_types['generated']['acceleration'] = max(0.1, random.random())
-            State.ship_types['generated']['deacceleration'] = max(0.1, random.random())
-            State.ship_types['generated']['env_deacceleration'] = max(
-                min(State.ship_types['generated']['acceleration'] - 0.05, random.random()),
-                0.01)
-            State.ship_types['generated']['acceleration_tank'] = max(1.0, random.random() * 5)
-            State.ship_types['generated']['hull'] = max(1.0, random.random() * 10)
-            State.ship_types['generated']['shields'] = 3
-            State.ship_types['generated']['mass'] = 1
-            State.ship_types['generated']['missile'] = random.choice(['light_missile', 'heavy_missile', 'medium_missile'])
-            State.ship_types['generated']['bolt'] = random.choice(['light_bolt', 'heavy_bolt', 'medium_bolt', 'big_bolt'])
-            State.ship_types['generated']['abilities'] = abilities
+                State.ship_types['generated']['rotation_rate'] = max(1.0, random.random() * 5)
+                State.ship_types['generated']['acceleration'] = max(0.1, random.random())
+                State.ship_types['generated']['deacceleration'] = max(0.1, random.random())
+                State.ship_types['generated']['env_deacceleration'] = max(
+                    min(State.ship_types['generated']['acceleration'] - 0.05, random.random()),
+                    0.01)
+                State.ship_types['generated']['acceleration_tank'] = max(1.0, random.random() * 5)
+                State.ship_types['generated']['hull'] = max(1.0, random.random() * 10)
+                State.ship_types['generated']['shields'] = 3
+                State.ship_types['generated']['mass'] = 1
+                State.ship_types['generated']['missile'] = random.choice(['light_missile', 'heavy_missile', 'medium_missile'])
+                State.ship_types['generated']['bolt'] = random.choice(['light_bolt', 'heavy_bolt', 'medium_bolt', 'big_bolt'])
+                State.ship_types['generated']['abilities'] = abilities
+            except Exception as e:
+                print(f'error generating ship: {e}\n{traceback.format_exc()}')
+
         self.main_image = State.ship_types[self.ship_number]['image']
         ship_rect = self.main_image.get_rect()
         self.ship_img_pos = (self.rect[2] // 2 - ship_rect.width // 2,

@@ -1,3 +1,5 @@
+import copy
+
 import gym
 import numpy as np
 import pygame as pg
@@ -34,14 +36,18 @@ class SpaceShooter(gym.Env):
         self.lidar_resolution = 16
         # Define the observation space
         self.observation_space = gym.spaces.Box(
-            low=0.0, high=1.0, shape=(self.lidar_resolution + 5,), dtype=np.float32
+            low=0.0, high=1.0, shape=(self.lidar_resolution*2 + 5,), dtype=np.float32
         )
+
+        self.prev_lidar_scan = np.zeros(self.lidar_resolution)
 
         self.pg_initialized = False
         self.env_steps = 0
 
         self.reset()
         self.usewandb = False
+        self.ep_lengths = []
+        self.last_ep_i = 0
         self.rollout_reward = 0
         self.rollout_count = 0
         self.rollout_length = 1000
@@ -71,7 +77,8 @@ class SpaceShooter(gym.Env):
         Player.ship_assign(self.game_state.picked_ship, 1, self.game_state)
         self.game_state.pl.rect.center = (
             self.game_state.W // 2 + np.random.randint(-200, 200),
-            self.game_state.H // 2 + np.random.randint(-200, 200))
+            self.game_state.H // 2 + np.random.randint(-200, 200)
+        )
 
         spawn_wave(self.game_state, wave_config=wave_config)
 
@@ -80,14 +87,19 @@ class SpaceShooter(gym.Env):
         return self.state
 
     def lidar_scan(self):
+        lidar_scan = np.zeros(self.lidar_resolution)
         # find asteroid distances
         for asteroid in self.game_state.asteroids:
             dist, angle = self.game_state.pl.get_real_distance(asteroid)
             # rel_angle = abs_angle - self.game_state.pl.look_dir
-            lidar_i = int(self.lidar_resolution*angle / 360)
-            lidar_scan = 1 if dist < 1 else 1 / dist
-            if self.state[lidar_i] < lidar_scan:
-                self.state[lidar_i] = lidar_scan
+            lidar_i = int((self.lidar_resolution-1)*angle / 360)
+            lidar_d = 1 if dist < 1 else 1 / dist
+            if lidar_scan[lidar_i] < lidar_d:
+                lidar_scan[lidar_i] = lidar_d
+        # set state to differences between current and previous lidar scan
+        self.state[:self.lidar_resolution] = lidar_scan
+        self.state[self.lidar_resolution:2*self.lidar_resolution] = lidar_scan - self.prev_lidar_scan
+        self.prev_lidar_scan = lidar_scan
 
     def step(self, action):
         """
@@ -156,10 +168,18 @@ class SpaceShooter(gym.Env):
         if self.usewandb:
             self.rollout_reward += reward
             self.rollout_count+= 1
-            if self.rollout_count == self.rollout_length:
-                wandb.log({"rewards": self.rollout_reward})
+            if self.rollout_count > self.rollout_length and game_over:
+                wandb.log({
+                    "rewards": self.rollout_reward/self.rollout_count,
+                    "avg_length": sum(self.ep_lengths)/len(self.ep_lengths)
+                })
                 self.rollout_count = 0
                 self.rollout_reward = 0
+                self.ep_lengths = []
+                self.last_ep_i = 0
+            elif game_over:
+                self.ep_lengths.append(self.rollout_count - self.last_ep_i)
+                self.last_ep_i = self.rollout_count
 
         return self.state, reward, game_over, {}
 

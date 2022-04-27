@@ -82,9 +82,9 @@ class Player(Ship):
 
         ship.addMissiles(State.ship_types[picked_ship]['missiles'])
         msl_type = State.ship_types[picked_ship]['missile']
-        Animation.prepareExplosions(State.missile_types[msl_type]['expl_params'], state)
+        Animation.prepareExplosions(State.missile_types[msl_type]['expl_params'], state, True)
         blt_type = State.ship_types[picked_ship]['bolt']
-        Animation.prepareExplosions(State.projectile_types[blt_type]["expl_params"], state)
+        Animation.prepareExplosions(State.projectile_types[blt_type]["expl_params"], state, True)
 
         if state.pl:
             state.pl.kill()

@@ -1,4 +1,6 @@
 import copy
+import os.path
+import pickle
 import random
 import threading
 
@@ -550,16 +552,36 @@ class Animation(GObject):
 
     # this method shall be called when we know the properties of the required explosion
     @staticmethod
-    def prepareExplosions(params, state):
+    def prepareExplosions(params, state, cache=False):
         prm_hash = dict_hash(params)
+        if cache and os.path.exists(os.path.join(state.cache_dir, prm_hash + '.pkl')):
+            state.buff_explosions[prm_hash] = []
+            with open(os.path.join(state.cache_dir, prm_hash + '.pkl'), 'rb') as f:
+                npAnimations = pickle.load(f)
+                for npAnimation in npAnimations:
+                    state.buff_explosions[prm_hash].append([Animation.npToSurface(img) for img in npAnimation])
+            return
+
+        npAnimations = []
+
         def _work():
             if prm_hash not in state.buff_explosions:
                 state.buff_explosions[prm_hash] = []
-                for i in range(5):
-                    animation = Animation.generateExplosionAnimation(**params)
-                    state.buff_explosions[prm_hash].append(animation)
+            npAnimation = Animation.generateExplosionAnimation(**params, numpy_out=True)
+            if cache:
+                npAnimations.append(npAnimation)
+            animation = [Animation.npToSurface(img) for img in npAnimation]
+            state.buff_explosions[prm_hash].append(animation)
 
-        threading.Thread(target=_work).start()
+            if len(state.buff_explosions[prm_hash]) == 5 and cache:
+                if not os.path.exists(state.cache_dir):
+                    os.makedirs(state.cache_dir)
+                with open(os.path.join(state.cache_dir, prm_hash + '.pkl'), 'wb') as f:
+                    # nparray =  state.buff_explosions[prm_hash]
+                    pickle.dump(npAnimations, f)
+
+        for i in range(5):
+            threading.Thread(target=_work).start()
 
     @staticmethod
     def generateExplosionAnimation(diameter=30, n_frames=30,
@@ -643,6 +665,13 @@ class Animation(GObject):
             final = animation
 
         return final
+
+    @staticmethod
+    def npToSurface(np_img):
+        surf = pygame.surfarray.make_surface(np_img)
+        surf.set_colorkey((0, 0, 0), pygame.RLEACCEL)
+        surf = pygame.transform.scale(surf, (int(np_img.shape[0] * 3), int(np_img.shape[1] * 3)))
+        return surf
 
     @staticmethod
     def FX_explosion(x, y, xpl=Assets.expl, radius=(30, 30), randdir=True, state=None):
