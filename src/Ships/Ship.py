@@ -184,6 +184,10 @@ class Ship(GObject, Vulnerable):
         rotation angle and position"""
         if not self.isrotating and self.av != 0:
             diff_ang = self.target_rotation - self.look_dir
+            if diff_ang > 180:
+                diff_ang -= 360
+            if diff_ang < -180:
+                diff_ang += 360
             diff_avel = self.av
             super().apply_force_angular(
                 + diff_ang * self.rotation_rate_max / 10
