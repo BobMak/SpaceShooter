@@ -607,7 +607,7 @@ class Animation(GObject):
                 img_buffer[int(diameter / 2) - i, int(diameter / 2) - j] = start_rgb
 
         # rule set
-        @numba.jit(nopython=True)
+        @numba.njit
         def automata(x, y, img_buffer):
             # if pixel has 3 or more neighbors that are > 200, it will be set to their average
             # when vlaue is != 0, it will decay by a random amount
@@ -616,7 +616,6 @@ class Animation(GObject):
                 # or faster
                 v = (255 + diameter) // diameter
                 _decay = random.randint(int(v), int(v) + 9)
-                # decay = random.randint(int(diameter/n_frames),int(diameter/n_frames + 10))
                 decay = np.array((_decay + decay_rgb[0], _decay + decay_rgb[1], _decay + decay_rgb[2]), dtype=np.int16)
                 img_buffer[x, y] = img_buffer[x, y] - decay
             # when the value is 0, it will become 255 if it has 3 neighbors that are > 200
@@ -633,11 +632,16 @@ class Animation(GObject):
                     if random.random() > (abs(x - diameter / 2) + abs(y - diameter / 2)) / diameter:
                         img_buffer[x, y] = start_rgb
 
-        for i in range(diameter):
+        @numba.jit(parallel=True)
+        def run_automata(img_buffer, diameter):
             # apply cellular automata
             for x in numba.prange(diameter):
                 for y in numba.prange(diameter):
                     automata(x, y, img_buffer)
+
+        for i in range(diameter):
+
+            run_automata(img_buffer, diameter)
 
             # create animation frame
             img_buffer[img_buffer < 5] = 0

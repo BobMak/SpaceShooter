@@ -7,3 +7,4 @@ gym~=0.21.0
 matplotlib~=3.4.3
 stable-baselines3[extra]
 streamlit
+click<=8.0.4

@@ -1,4 +1,5 @@
 import copy
+import random
 
 import gym
 import numpy as np
@@ -6,12 +7,13 @@ import pygame as pg
 import wandb
 
 import Core.State as State
+from Core import Items
 from Core.Mechanics import GObject
 from Core.Scripts import step, spawn_wave, screen_draw
 from Entities.Player import Player
 
 
-class SpaceShooter(gym.Env):
+class SpaceShooterNav(gym.Env):
     """
     Space Shooter environment
     """
@@ -30,6 +32,7 @@ class SpaceShooter(gym.Env):
         concatenated with lidar linear velocities (16) and an angular velocity.
         The closer the object is to the agent, the higher the value
         """
+        # The game state; includes all objects and the player
         self.game_state = State.State()
         # Define the action space
         self.action_space = gym.spaces.Discrete(5)
@@ -60,15 +63,6 @@ class SpaceShooter(gym.Env):
         """
         Reset the environment
         """
-        wave_config = {
-            'hps': 5,
-            'velocity_deviations': 1.0,
-            'noclip_timers': 10,
-            'densities': (2,3),
-            'number': 10,
-            'init_speed': 5.0,
-            'img_n': 3
-        }
 
         self.env_steps = 0
         # Reset the environment
@@ -80,7 +74,9 @@ class SpaceShooter(gym.Env):
             self.game_state.H // 2 + np.random.randint(-200, 200)
         )
 
-        spawn_wave(self.game_state, wave_config=wave_config)
+        # Spawn the goal object
+        x, y = random.randint(0, self.game_state.W), random.randint(0, self.game_state.H)
+        Items.MissileItem(x, y, 1, state=self.game_state)
 
         self.rollout_reward = 0
         # Return the initial observation
@@ -89,7 +85,7 @@ class SpaceShooter(gym.Env):
     def lidar_scan(self):
         lidar_scan = np.zeros(self.lidar_resolution)
         # find asteroid distances
-        for asteroid in self.game_state.asteroids:
+        for asteroid in self.game_state.pickupables:
             dist, angle = self.game_state.pl.get_real_distance(asteroid)
             # rel_angle = abs_angle - self.game_state.pl.look_dir
             lidar_i = int((self.lidar_resolution-1)*angle / 360)
@@ -107,7 +103,7 @@ class SpaceShooter(gym.Env):
         :return:
         """
         game_over = False
-        reward = 0
+        reward = -1
 
         # Perform the action
         if action == 0:
@@ -142,17 +138,15 @@ class SpaceShooter(gym.Env):
         else:
             self.state[-5] = vel2
 
-        if self.game_state.pl.lives == 0:
-            game_over = True
-            reward += -1000
+        for y in self.game_state.pickupables:
+            # reward getting closer to the goal
+            reward += min(1, 1 / self.game_state.pl.get_real_distance(y)[0])
+            # reward reaching the goal
+            if pg.sprite.collide_circle(y, self.game_state.pl):
+                reward += 1000
+                game_over = True
 
-        # reward for shooting asteroids
-        # for y in self.game_state.asteroids:
-        #     for i in self.game_state.projectiles:
-        #         if pg.sprite.collide_circle(y, i):
-        #             reward += 100
-
-        # reward moving faster
+        # # reward moving faster
         # speed = np.sqrt(self.game_state.pl.v[0]**2 + self.game_state.pl.v[1]**2)
         # reward += speed * 0.1
 
