@@ -35,6 +35,14 @@ class Point:
         points.sort(key=lambda a: self.getDist(a))
         return points
 
+    def __getitem__(self, item):
+        if item==0:
+            return self.x
+        elif item==1:
+            return self.y
+        else:
+            raise IndexError("Index out of range")
+
 
 def generate_skeleton_torus(size, radius, radius_var, symmetry=True):
     points = []
@@ -66,6 +74,33 @@ def generate_skeleton_triangle(size, radius, radius_var, symmetry=True, ang=1.0)
             p.connect(closest)
             all_points.remove(closest)
     return points
+
+
+def make_hull(points):
+    _hull_points = copy.deepcopy(points)
+    # Add hull
+    hull = []
+    _hull_points.sort(key=lambda p: p.x)
+    p1 = _hull_points[0]
+    while True:
+        p2 = r.choice(_hull_points)
+        for p in _hull_points:
+            if Utils.orientation(p1, p2, p) == 1:
+                p2 = p
+        if (p1, p2) in hull or (p2, p1) in hull:  # Exit condition - lines form a cycle
+            break
+        hull.append((p1, p2))
+        p1 = p2
+    for pair in hull:  # remove points from
+        try:
+            _hull_points.remove(pair[0])
+        except:
+            pass
+        try:
+            _hull_points.remove(pair[1])
+        except:
+            pass
+    return hull, _hull_points
 
 
 def generate_tree(size, dist=18, ddist=6, dang=60, branching=0.5, clusterRad=25, symmetry=True):
@@ -108,31 +143,13 @@ def generate_tree(size, dist=18, ddist=6, dang=60, branching=0.5, clusterRad=25,
     # Add hull
     hull = []  # Layers of hulls [ [ (p1, p2), ... ], ... ]
     _layer=0
-    while len(_hull_points):  # add new layers while there are points
-        subHull = []
+    while len(_hull_points)>=3:  # add new layers while there are points
+        subHull, _hull_points = make_hull(_hull_points)
         hull.append(subHull)
-        _hull_points.sort(key=lambda p: p.x)
-        print('layer', _layer,'points left', len(_hull_points))
-        _layer+=1
-        p1 = _hull_points[0]
-        while True:
-            p2 = r.choice(_hull_points)
-            for p in _hull_points:
-                if Utils.orientation(p1, p2, p) == 1:
-                    p2 = p
-            if (p1, p2) in subHull or (p2, p1) in subHull:  # Exit condition - lines form a cycle
-                break
-            subHull.append((p1, p2))
-            p1 = p2
-        for pair in subHull:  # remove points from
-            try:_hull_points.remove(pair[0])
-            except: pass
-            try:_hull_points.remove(pair[1])
-            except: pass
     return points, cds, hull
 
 
-def shrink(hull: [[(Point, Point)]], a):
+def shrink(hull: [[(Point, Point)]], a, symmetry=False):
     """given a hull with n layers and a parameter A, replace connections in
     outer layers with connections to inner layers.
     Replace a line in the outer layer with two lines going to an inner layer
@@ -146,31 +163,72 @@ def shrink(hull: [[(Point, Point)]], a):
         if idx >= len(outer):
             break
         p1, p2 = outer[idx]  # outer edge to be removed
-        # corresponding line on the other side
-        inv_p1 = Point(-p1.x, p1.y).getClosest(_outer_points)[0]  # [x for line in outer for x in line]
-        inv_p2 = Point(-p2.x, p2.y).getClosest(_outer_points)[0]  # get the inverse side of that
+
         # find closest line from the inner edge
         # TODO: don't cut the line if it leaves a hanging point.
         # TODO: cut shorter lines first.
         new_p1 = p1.getClosest(_inner_points)[0]
+        _inner_points.remove(new_p1)
         new_p2 = p2.getClosest(_inner_points)[0]
-        if (inv_p2, inv_p1) in outer:
-            inv_idx = outer.index((inv_p2, inv_p1))
-        elif (inv_p1, inv_p2) in outer:
-            inv_idx = outer.index((inv_p1, inv_p2))
-        else:
-            print('no inverse point')
-            continue
-        # a new opposite side line in the inner layer
-        new_inv_p1 = Point(-new_p1.x, new_p1.y).getClosest(_inner_points)[0]
-        new_inv_p2 = Point(-new_p2.x, new_p2.y).getClosest(_inner_points)[0]
-        del outer[idx]
-        del outer[inv_idx-1]
         p1.color, new_p1.color = (255, 0, 0, 150), (255, 0, 0, 150)
         p2.color, new_p2.color = (255, 0, 0, 150), (255, 0, 0, 150)
-        inv_p1.color, new_inv_p2.color = (255, 0, 0, 150), (255, 0, 0, 150)
-        inv_p2.color, new_inv_p2.color = (255, 0, 0, 150), (255, 0, 0, 150)
-        outer.extend([(inv_p1, new_inv_p1), (inv_p2, new_inv_p2)])
         outer.extend([(p1, new_p1), (p2, new_p2)])
+        del outer[idx]
+        if symmetry:
+            # corresponding line on the other side
+            inv_p1 = Point(-p1.x, p1.y).getClosest(_outer_points)[0]  # [x for line in outer for x in line]
+            inv_p2 = Point(-p2.x, p2.y).getClosest(_outer_points)[0]  # get the inverse side of that
+            if (inv_p2, inv_p1) in outer:
+                inv_idx = outer.index((inv_p2, inv_p1))
+            elif (inv_p1, inv_p2) in outer:
+                inv_idx = outer.index((inv_p1, inv_p2))
+            else:
+                print('no inverse point')
+                continue
+            # a new opposite side line in the inner layer
+            new_inv_p1 = Point(-new_p1.x, new_p1.y).getClosest(_inner_points)[0]
+            new_inv_p2 = Point(-new_p2.x, new_p2.y).getClosest(_inner_points)[0]
+            del outer[inv_idx-1]
+            inv_p1.color, new_inv_p2.color = (255, 0, 0, 150), (255, 0, 0, 150)
+            inv_p2.color, new_inv_p2.color = (255, 0, 0, 150), (255, 0, 0, 150)
+            outer.extend([(inv_p1, new_inv_p1), (inv_p2, new_inv_p2)])
     return hull
 
+
+def normal_points(center_point, n=5, std=5.0):
+    return [Point(r.normalvariate(center_point[0], std), r.normalvariate(center_point[1], std)) for _ in range(n)]
+
+
+def generate_normals(center, npoints=5, std=5.0, nrecurs=1, dstd=1.0, leafhull=False):
+    """
+    generates a few point clusters with random points scattered around those
+    :param nclusers:
+    :param npoints:
+    :param std:
+    :return:
+    """
+    all_points = []
+    points = normal_points(center, npoints, std)
+    hull = []
+    if nrecurs > 0:
+        for p in points:
+            p.color = (255, 0, 0, 150)
+            _points, _hull = generate_normals(p, npoints, std-dstd, nrecurs-1, leafhull=leafhull)
+            all_points.extend(_points)
+            if leafhull:
+                hull.extend(_hull)
+    all_points.extend(points)
+    _hull_points = copy.deepcopy(all_points)
+    # Add hull
+    _layer = 0
+    if leafhull:
+        subHull, _hull_points = make_hull(_hull_points)
+        if len(subHull) > 2:
+            hull.append(subHull)
+        hull = hull[::-1]
+    else:
+        while len(_hull_points) >= 3:  # add new layers while there are points
+            subHull, _hull_points = make_hull(_hull_points)
+            if len(subHull)>2:
+                hull.append(subHull)
+    return all_points, hull
