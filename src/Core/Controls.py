@@ -2,53 +2,59 @@ from Core.Assets import *
 from Core.Mechanics import Animation
 from Core.Missile import Missile
 from Ships.Shield import Shield
+from Ships.Jump import Jump
 
 
-def listen_acceleration(player, keys):
+def listen_acceleration(entity, keys):
     if keys[pygame.K_UP]:
-        player.accelerate(player.acceleration)
-        Animation.FX_engine_mark(player)
+        entity.accelerate(entity.acceleration)
+        Animation.FX_engine_mark(entity)
 
 
-def listen_reverse(player, keys):
+def listen_reverse(entity, keys):
     if keys[pygame.K_DOWN]:
-        player.accelerate(-player.deacceleration)
+        entity.accelerate(-entity.deacceleration)
 
 
-def listen_right(player, keys):
+def listen_right(entity, keys):
     if keys[pygame.K_RIGHT]:
-        player.rotate(1)
+        entity.rotate(1)
     elif not keys[pygame.K_LEFT]:
-        player.rotation_rate = 0
+        entity.rotation_rate = 0
 
 
-def listen_left(player, keys):
+def listen_left(entity, keys):
     if keys[pygame.K_LEFT]:
-        player.rotate(-1)
+        entity.rotate(-1)
     elif not keys[pygame.K_RIGHT]:
-        player.rotation_rate = 0
+        entity.rotation_rate = 0
 
 
-def listen_shot(player, keys):
+def listen_shot(entity, keys):
     if keys[pygame.K_SPACE]:
-        player.fire()
+        entity.fire()
 
 
-def listen_shot_missile(player, keys):
-    if keys[pygame.K_x] and player.locks[2] == False:
-        player.locks[2] = True
-        if player.missiles > 0:
-            player.missiles -= 1
-            Missile.shot(player, player.look_dir, player.missile)
+def listen_shot_missile(entity, keys):
+    if keys[pygame.K_x] and entity.locks[2] == False:
+        entity.locks[2] = True
+        if entity.missiles > 0:
+            entity.missiles -= 1
+            Missile.shot(entity, entity.look_dir, entity.missile)
 
 
-def listen_shield(player, keys):
-    if keys[pygame.K_c] and player.locks[3] == False:
-        Shield.shields(player)
+def listen_shield(entity, keys):
+    if keys[pygame.K_c] and entity.locks[3] == False:
+        Shield.shields(entity)
     else:
-        for x in player.shields:
+        for x in entity.shields:
             x.down()
-            player.shields.remove(x)
+            entity.shields.remove(x)
+
+
+def listen_blink(entity, keys):
+    if keys[pygame.K_b] and entity.locks[3] == False:
+        Jump(entity, entity.look_dir, 200.0, state=entity.state)
 
 
 controls = {
@@ -58,5 +64,6 @@ controls = {
     "down": listen_reverse,
     "shoot": listen_shot,
     "missile": listen_shot_missile,
-    "shield": listen_shield
+    "shield": listen_shield,
+    "blink": listen_blink
 }

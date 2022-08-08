@@ -107,7 +107,7 @@ class SpaceShooter(gym.Env):
         :return:
         """
         game_over = False
-        reward = 0
+        reward = 0.1
 
         # Perform the action
         if action == 0:

@@ -175,6 +175,9 @@ class FX(pygame.sprite.Sprite, Moving):
     def draw_rotating(self):
         pass
 
+    def update(self):
+        self.time_count+=1
+
 
 class FX_Glow(FX):
     """
@@ -486,7 +489,7 @@ class Animation(GObject):
     "hold_f" - noumber of frame in "images_arr" animatino will
     pause on in hold type animation.
     '''
-
+    buffer = {}
     def __init__(self, images_arr, width, height, x, y, rand=False, finit=True,
                 type=0, hold_f=None, delay=0, state=None):
         super().__init__(images_arr[0], x, y, width=width, height=height, state=state)
@@ -502,6 +505,7 @@ class Animation(GObject):
         self.delay = delay
         self.hold_frame = hold_f
         self.finit = finit
+        state.effects.add(self)
 
     def hold(self):
         if self.frames_count == self.hold_frame:
@@ -678,7 +682,6 @@ class Animation(GObject):
         obj = Animation(xpl, radius[0], radius[1], x, y, randdir, state=state)
         obj.rect.centerx += - 20
         obj.rect.centery += - 20
-        state.effects.add(obj)
         return obj
 
     @staticmethod
@@ -696,4 +699,6 @@ class Animation(GObject):
         object.look_dir = source.look_dir
         object.v = source.v
 
-        source.state.effects.add(object)
+    @staticmethod
+    def cache_animation(anim, id):
+        Animation.buffer[id] = anim

@@ -3,8 +3,6 @@ from Core.Mechanics import Animation
 
 
 class Shield(Animation):
-
-    source = 0
     def __init__(self, images_arr, width, height, x, y, source, type=0, state=None):
         super().__init__(images_arr, width, height, x, y, type, state=state)
         self.source = source

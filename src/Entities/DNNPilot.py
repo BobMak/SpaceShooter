@@ -1,7 +1,7 @@
 import math
 
 import numpy as np
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, DQN
 from stable_baselines3.common.callbacks import BaseCallback
 
 import wandb
@@ -44,6 +44,25 @@ def train_ppo():
     env.close()
 
 
+def train_dqn():
+    env = gym.make("SpaceShooter-v0")
+    batch_size = 14000
+    mini_batch_size = 3000
+    n_epochs = 80
+    model = DQN(
+        "MlpPolicy",
+        env, verbose=1,
+        batch_size=mini_batch_size,
+        learning_rate=1e-3,
+        # policy_kwargs={"net_arch": [32, 32, 32, {'pi': [20], 'vf': [5]}]},
+    )
+    model.learn(total_timesteps=batch_size*n_epochs)  # total_timesteps=100000
+    # model.learn(total_timesteps=1048576, callback=MyCallback())
+    model.save("dqn_pilot")
+
+    env.close()
+
+
 def train_ppo_wandb():
     with wandb.init(project="SpaceShooter"):
         env = gym.make("SpaceShooter-v0")
@@ -70,6 +89,30 @@ def train_ppo_wandb():
         model.save("ppo_pilot")
 
         env.close()
+def train_td3_wandb():
+    with wandb.init(project="SpaceShooter", id="td3_pilot"):
+        env = gym.make("SpaceShooter-v0")
+
+        config = wandb.config
+        hidden_layers = [config.hidden_size_common] * config.n_common_layers
+        actor_cirtic = {
+            'pi': [config.hidden_size_actor] * config.n_actor_layers,
+            'vf': [config.hidden_size_critic] * config.n_critic_layers
+        }
+        env.setUseWandBParams(True, config.batch_size)
+        model = TD3(
+            "MlpPolicy",
+            env, verbose=1,
+            batch_size=max(1024, 1+config.batch_size // 4),
+            learning_rate=1e-3,
+            policy_kwargs={"net_arch": [*hidden_layers, actor_cirtic]},
+        )
+        model.learn(total_timesteps=config.n_epochs * config.batch_size, callback=WandbCallback())
+        # model.learn(total_timesteps=1048576, callback=MyCallback())
+        model.save("td3_pilot")
+
+        env.close()
+
 
 def sweep(count=10):
     sweep_config = {
@@ -139,5 +182,6 @@ def evaulate(load=False):
 
 if __name__ == '__main__':
     # train_ppo()
-    evaulate(load=True)
+    # evaulate(load=True)
+    train_dqn()
     # sweep(100)

@@ -30,7 +30,7 @@ ship_types = {
         'acceleration_tank': 20.0,
         'acceleration_burn_rate': 0.01,
         'acceleration_reserve_regeneration': 0.008,
-        'controls': ['left', 'right', 'up', 'down', 'shoot', 'shield'],
+        'controls': ['left', 'right', 'up', 'down', 'shoot', 'shield', 'blink'],
         'controls_text': 'shoot - space\nleft - a\nright - d\nup - w\ndown - s\nshield - c',
         'hit_box':[[20,20,0,0]]
     },
