@@ -69,4 +69,3 @@ class Jump(pygame.sprite.Sprite):
     def update(self):
         if self.time_count == self.timer-1:
             self.source.pos = (self.new_x, self.new_y)
-        self.time_count += 1

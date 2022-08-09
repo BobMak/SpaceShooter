@@ -47,7 +47,7 @@ class Ship(GObject, Vulnerable):
 
         self.max_hp = hp
         self.max_shield_hp = shield
-        self.rotation_rate = rotation_rate / 100
+        self.rotation_rate = rotation_rate // 2
         self.rotation_rate_max = rotation_rate
         self.acceleration = acceleration
         self.deacceleration = deacceleration
@@ -164,7 +164,7 @@ class Ship(GObject, Vulnerable):
         if manual:
             self.isrotating = True
             self.target_rotation = self.look_dir
-        self.rotation_rate = np.min([self.rotation_rate_max, self.rotation_rate + self.rotation_rate_max/30])
+        self.rotation_rate = np.min([self.rotation_rate_max, self.rotation_rate + self.rotation_rate_max/300])
         sign = np.sign(ang)
         super().apply_force_angular(self.rotation_rate*sign)
         for x in self.turrets:
@@ -180,7 +180,7 @@ class Ship(GObject, Vulnerable):
                                x.distance, x.orbit_ang)
 
     def stabilize(self):
-        """if the user is not rotating, the ship should stick to the current
+        """if the user is not pressing rotate, the ship should stick to the current
         rotation angle and position"""
         if not self.isrotating and self.av != 0:
             diff_ang = self.target_rotation - self.look_dir

@@ -171,6 +171,7 @@ def step(state, events=True):
             i.kill()
         else:
             i.update()
+            i.time_count += 1
 
     if len(state.asteroids) == 0 and not state.wave_spawning:
         print('spawning...')

@@ -176,7 +176,7 @@ class FX(pygame.sprite.Sprite, Moving):
         pass
 
     def update(self):
-        self.time_count+=1
+        pass
 
 
 class FX_Glow(FX):

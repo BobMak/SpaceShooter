@@ -17,7 +17,7 @@ from Entities.Player import Player
 ship_types = {
     'tick': {
         'image': pygame.image.load(os.path.join('assets', 'ships', 'tick.png')),
-        'rotation_rate': .666,
+        'rotation_rate': 9.966,
         'deacceleration': 0.4166,
         'acceleration': 0.1333,
         'env_deacceleration': 0.1,

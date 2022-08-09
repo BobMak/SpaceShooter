@@ -102,8 +102,6 @@ class Missile(Projectile):
             self.compute_count = 0
             self.aim = self.lock_closest()
 
-        self.time_count += 1
-
     def blow_up(self):
         x = Zone(self.pos[0], self.pos[1], self.hit_range, self.hp, 2)
         prm_hash = dict_hash(self.expl_params)
