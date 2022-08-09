@@ -629,6 +629,7 @@ class Animation(GObject):
                 for i in range(-1, 2):
                     for j in range(-1, 2):
                         try:
+                            assert x+i <= diameter-1 and x+i >= 0 and y+j <= diameter-1 and y+j >= 0
                             count += img_buffer[x + i, y + j, 0] > spawn_threshold
                         except:
                             pass
