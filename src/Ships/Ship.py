@@ -12,19 +12,19 @@ class Ship(GObject, Vulnerable):
                  x, y,
                  hp,
                  shield=0,
-                 rotation_rate=3,
+                 rotation_rate=3.0,
                  bolt='',
                  missile='',
-                 max_acceleration_reserve=0,
-                 acceleration_burn_rate=0,
-                 acceleration_reserve_regeneration=0,
-                 deacceleration=0,
-                 env_friction=0,
-                 acceleration=0,
+                 max_acceleration_reserve=0.0,
+                 acceleration_burn_rate=0.0,
+                 acceleration_reserve_regeneration=0.0,
+                 deacceleration=0.0,
+                 env_friction=0.0,
+                 acceleration=0.0,
                  complex_sh=(),
                  width=None,
                  height=None,
-                 mass=1,
+                 mass=1.0,
                  state=None):
 
         self.bolt = bolt
@@ -166,7 +166,7 @@ class Ship(GObject, Vulnerable):
         # super().rotate(ang)
         self.rotation_rate = np.min([self.rotation_rate_max, self.rotation_rate + self.rotation_rate_max/300])
         if manual:
-            self.isrotating = 10
+            self.isrotating = 5
             self.target_rotation = self.look_dir + ang * self.rotation_rate
         sign = np.sign(ang)
         super().apply_force_angular(self.rotation_rate*sign)
@@ -185,16 +185,16 @@ class Ship(GObject, Vulnerable):
     def stabilize(self):
         """if the user is not pressing rotate, the ship should stick to the current
         rotation angle and position"""
-        if not self.isrotating and self.av != 0:
-            diff_ang = self.target_rotation - self.look_dir
+        diff_ang = self.target_rotation - self.look_dir
+        if not self.isrotating and abs(diff_ang) > 0.01:
             if diff_ang > 180:
                 diff_ang -= 360
             if diff_ang < -180:
                 diff_ang += 360
             diff_avel = self.av
             super().apply_force_angular(
-                + diff_ang * self.rotation_rate_max / 10
-                - diff_avel * self.rotation_rate_max
+                + np.min([np.abs(diff_ang), self.rotation_rate_max])*np.sign(diff_ang) \
+                - np.min([np.abs(diff_avel), self.rotation_rate_max])
             )
 
     def draw_rotating(self):

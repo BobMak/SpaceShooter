@@ -54,24 +54,20 @@ def main_loop(state):
             # To unblock esc button
             pg.time.set_timer(pg.USEREVENT + 1, 300)
             state.t = (False, False, False, False)
+            # re-init pause menu to capture current screen
             pause_menu = PauseMenu(state)
             state.state = 'paused'
-
         if state.state == 'paused':
-            # screen_draw(state)
             pause_menu()
         elif state.state == 'game_over':
             step(state)
             screen_draw(state)
             death_menu()
-        elif state.state == 'exit':
-            return
         elif state.state == 'game':
             # Perform player input
             for pl in state.player_group:
                 for x in pl.arr_input:
                     x(pl, keys)
-
             # everything else non-player input specific
             step(state)
             screen_draw(state)
@@ -84,10 +80,10 @@ def main_loop(state):
             spawn_wave(state)
         elif state.state == 'menu':
             main_menu()
-        # logic tick
+
         state.clock.tick(state.LOGIC_PER_SECOND)
         pg.display.flip()
-    # teardown
+    print("quitting")
     pg.event.post(pg.event.Event(pg.QUIT, {'QUIT': True}))
     pg.quit()
 
@@ -264,7 +260,7 @@ class PauseMenu:
         for event in pg.event.get():
             # Propagate exit into main loop
             if event.type == pg.QUIT:
-                state.state = 'exit'
+                state.state = 'quit'
                 pg.event.post(pg.event.Event(pg.QUIT, {'QUIT': True}))
                 sys.exit()
 
