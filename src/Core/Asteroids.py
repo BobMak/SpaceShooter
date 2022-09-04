@@ -42,7 +42,7 @@ class Asteroid(GObject, Vulnerable):
         self.state.asteroids.add(self)
 
     def crash(self):
-        if self.type >2:
+        if self.type > 2:
             for x in range(6):
                 FX_Track(particle, self.rect, 50,
                          look_dir=(random.randint(0,350)),

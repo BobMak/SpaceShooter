@@ -3,7 +3,7 @@ Initial script
 """
 import pygame
 import pickle
-from Core.Scripts import player_set
+from Core.Scripts import main_loop
 from Core import State
 
 
@@ -16,4 +16,4 @@ if __name__ == '__main__':
     except:
         print('No save file found.')
 
-    player_set(state)
+    main_loop(state)

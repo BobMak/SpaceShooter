@@ -159,12 +159,15 @@ class Ship(GObject, Vulnerable):
         else:
             self.acceleration_lock = True
 
+    def control_rotate(self, dir):
+        super()._rotate(self.rotation_rate*dir)
+
     def rotate(self, ang, manual=True):
         # super().rotate(ang)
-        if manual:
-            self.isrotating = True
-            self.target_rotation = self.look_dir
         self.rotation_rate = np.min([self.rotation_rate_max, self.rotation_rate + self.rotation_rate_max/300])
+        if manual:
+            self.isrotating = 10
+            self.target_rotation = self.look_dir + ang * self.rotation_rate
         sign = np.sign(ang)
         super().apply_force_angular(self.rotation_rate*sign)
         for x in self.turrets:
@@ -202,12 +205,14 @@ class Ship(GObject, Vulnerable):
     def update(self):
         self.acceleration_reserve = min(self.max_acceleration_reserve,
                                         self.acceleration_reserve_regeneration + self.acceleration_reserve)
-        self.stabilize()
+        if self.isrotating==0:
+            self.stabilize()
+        else:
+            self.isrotating -= 1
+
         for n in range(len(self.locks)):
             if self.locks[n]:
                 self.counts[n] += 1
                 if self.timers[n] < self.counts[n]:
                     self.counts[n] = 0
                     self.locks[n] = False
-
-        self.isrotating = False

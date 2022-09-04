@@ -28,8 +28,8 @@ def thrusters(state):
 if __name__ == '__main__':
     pygame.init()
     state = State.State()
+    state.pl = Player.ship_assign("tick", 1, state)
     display = pygame.display.set_mode((1200, 720))
-    State.pl = Player.ship_assign("tick", 1, state)
     threading.Thread(target=thrusters, args=(state,)).start()
     Scripts.main_loop(state)
 

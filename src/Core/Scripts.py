@@ -1,15 +1,12 @@
-import pickle
 import random
 import threading
 import sys
-import time
 
 import pygame as pg
 
 import Core.Assets as Assets
 from Core.Asteroids import AdvAsteroid
 from Core.Mechanics import Moving
-from Entities.Player import Player
 import Core.State as State
 from Utils import orbit_eliptic, orbit_rotate
 
@@ -34,21 +31,20 @@ def spawn_wave(state, wave_config=None):
 
     state.level += 1
     state.wave_spawning = False
+    state.state = 'game'
 
 
 def main_loop(state):
-    for x, y in enumerate(state.pl.turrets):
-        y.number = x
-
-    # terminate previous graphics thread if needed
-    if state.graphics_thread:
-        state.graphics.alive = False
-        state.graphics_thread.join()
-    state.graphics = Graphics(state)
-    state.graphics_thread = threading.Thread(target=state.graphics.screen_redraw)
-    state.graphics_thread.start()
+    main_menu = MainMenu(state)
+    pause_menu = PauseMenu(state)
+    death_menu = DeathMenu(state)
+    old_state = ''
 
     while state.state is not "quit":
+        if state.state is not old_state:
+            print(f"state: {state.state}")
+            old_state = state.state
+
         keys = pg.key.get_pressed()
 
         # Getting in pause menue
@@ -58,24 +54,42 @@ def main_loop(state):
             # To unblock esc button
             pg.time.set_timer(pg.USEREVENT + 1, 300)
             state.t = (False, False, False, False)
+            pause_menu = PauseMenu(state)
             state.state = 'paused'
 
         if state.state == 'paused':
-            time.sleep(0.5)
-            continue
+            # screen_draw(state)
+            pause_menu()
+        elif state.state == 'game_over':
+            step(state)
+            screen_draw(state)
+            death_menu()
         elif state.state == 'exit':
             return
+        elif state.state == 'game':
+            # Perform player input
+            for pl in state.player_group:
+                for x in pl.arr_input:
+                    x(pl, keys)
 
-        # Perform player input
-        for pl in state.player_group:
-            for x in pl.arr_input:
-                x(pl, keys)
-
-        # everything else non-player input specific
-        step(state)
+            # everything else non-player input specific
+            step(state)
+            screen_draw(state)
+        elif state.state == 'new_game':
+            state.reset()
+            state.spawn_player()
+            spawn_wave(state)
+            state.state = 'game'
+        elif state.state == 'next_wave':
+            spawn_wave(state)
+        elif state.state == 'menu':
+            main_menu()
         # logic tick
         state.clock.tick(state.LOGIC_PER_SECOND)
-
+        pg.display.flip()
+    # teardown
+    pg.event.post(pg.event.Event(pg.QUIT, {'QUIT': True}))
+    pg.quit()
 
 def terminate_graphics(state):
     state.graphics.alive = False
@@ -219,57 +233,33 @@ def screen_draw(state):
         state.screen.blit(object.image, object.rect)
 
 
-class Graphics:
-
+class PauseMenu:
     def __init__(self, state):
-        # Alive until player quits
-        self.alive = True
         self.state = state
+        print(state.t)
+        W = state.W
+        H = state.H
+        bW = 200
+        bH = 30
+        bHd = 50
 
-    def screen_redraw(self):
-        """
-        Drwaing
-        """
-        while self.alive:
-            screen_draw(self.state)
-            pg.display.flip()
-            self.state.clock.tick(self.state.FRAMES_PER_SECOND)
+        self.temporary_bg = state.screen.copy()
+        # Define button positions
+        b_continue =  bt.B_Continue(  (W//2 - bW//2, H//3, bW, bH), state)
+        b_startover = bt.B_Start_Over((W//2 - bW//2, H//3 + bHd, bW, bH), state)
+        b_exit =      bt.B_Exit(      (W//2 - bW//2, H//3 + 2*bHd, bW, bH), state)
+        menu = [b_continue, b_startover, b_exit]
+        self.selection = 0
+        menu[0].select()
+        self.menu = menu
+        state.screen.blit(menu_BG, (0, 0))  # Draw a background
 
-            if self.state.state== 'paused':
-                pause_menu(self.state)
-            if self.state.state== 'game_over':
-                death_menu(self.state)
-            if self.state.state == 'exit':
-                self.alive = False
-
-
-def pause_menu(state):
-    print(state.t)
-    W = state.W
-    H = state.H
-    bW = 200
-    bH = 30
-    bHd = 50
-
-    temporary_bg = state.screen.copy()
-    # Define button positions
-    b_continue =  bt.B_Continue(  (W//2 - bW//2, H//3, bW, bH), state)
-    b_startover = bt.B_Start_Over((W//2 - bW//2, H//3 + bHd, bW, bH), state)
-    b_exit =      bt.B_Exit(      (W//2 - bW//2, H//3 + 2*bHd, bW, bH), state)
-    menu = [b_continue, b_startover, b_exit]
-    selection = 0
-    menu[0].select()
-    state.screen.blit(menu_BG, (0, 0))  # Draw a background
-
-    while state.state == 'paused':
-
-        screen_draw(state)
-
-        for x in menu:
+    def __call__(self, *args, **kwargs):
+        state = self.state
+        # screen_draw(state)
+        for x in self.menu:
             state.screen.blit(x.image, x.rect)
             state.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
-
-        pg.display.flip()
 
         for event in pg.event.get():
             # Propagate exit into main loop
@@ -286,19 +276,19 @@ def pause_menu(state):
 
             if (keys[pg.K_UP] or keys[pg.K_DOWN]) and state.t[0]:
                 if keys[pg.K_UP]:
-                    new_selection = max(0, selection -1)
+                    new_selection = max(0, self.selection -1)
                 else:
-                    new_selection = min(len(menu)-1, selection + 1)
+                    new_selection = min(len(self.menu)-1, self.selection + 1)
 
-                menu[selection].deselect()
-                menu[new_selection].select()
-                state.screen.blit(temporary_bg, (0, 0))
+                self.menu[self.selection].deselect()
+                self.menu[new_selection].select()
+                state.screen.blit(self.temporary_bg, (0, 0))
                 state.screen.blit(menu_BG, (0, 0))
-                for x in menu:
+                for x in self.menu:
                     state.screen.blit(x.image, x.rect)
                     state.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
-                selection = new_selection
-                print(selection)
+                self.selection = new_selection
+                print(self.selection)
                 state.t = (False, False, False, False)
                 pg.time.set_timer(pg.USEREVENT + 1, 100)
 
@@ -312,43 +302,40 @@ def pause_menu(state):
                     pg.time.set_timer(pg.USEREVENT + 1, 100)
 
             if keys[pg.K_RETURN]:
-                menu[selection].action()
+                self.menu[self.selection].action()
 
 
-def death_menu(state):
-    temporary_bg = state.screen.copy()
-    b_exit = bt.B_Exit((Assets.WIDTH // 2 - 50, 320, 100, 30), state)
-    b_startover = bt.B_Start_Over((Assets.WIDTH // 2 - 50, 200, 100, 30), state)
-    menu = [b_startover, b_exit]
-    selection = 0
-    menu[0].select()
-    state.screen.blit(menu_BG, (0, 0))  # draw dark background on previous
-    # draw buttons
-    for x in menu:
-        state.screen.blit(x.image, x.rect)
-        state.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
+class DeathMenu:
+    def __init__(self, state):
+        self.state = state
+        self.temporary_bg = state.screen.copy()
+        b_exit = bt.B_Exit((Assets.WIDTH // 2 - 50, 320, 100, 30), state)
+        b_startover = bt.B_Start_Over((Assets.WIDTH // 2 - 50, 200, 100, 30), state)
+        menu = [b_startover, b_exit]
+        self.selection = 0
+        menu[0].select()
+        self.menu = menu
+        state.screen.blit(menu_BG, (0, 0))  # draw dark background on previous
+        # draw buttons
+        for x in menu:
+            state.screen.blit(x.image, x.rect)
+            state.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
 
-    # remove player from screen
-    state.player_group.empty()
+        # remove player from screen
+        state.player_group.empty()
 
-    while (state.state == 'game_over'):
-        Moving.move_movable(state)
-
-        for i in state.time_dependent:
+    def __call__(self):
+        for i in self.state.time_dependent:
             if i.timer - i.time_count < 0:
                 i.remove()
             else:
                 i.time_count += 1
 
-        screen_draw(state)
+        for x in self.menu:
+            self.state.screen.blit(x.image, x.rect)
+            self.state.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
 
-        for x in menu:
-            state.screen.blit(x.image, x.rect)
-            state.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
-
-        pg.display.flip()
-
-        for object in state.effects:
+        for object in self.state.effects:
             object.update()
 
         for event in pg.event.get():
@@ -356,77 +343,74 @@ def death_menu(state):
                 sys.exit()
             keys = pg.key.get_pressed()
 
-            if (keys[pg.K_UP] or keys[pg.K_DOWN]) and state.t[0]:
+            if (keys[pg.K_UP] or keys[pg.K_DOWN]) and self.state.t[0]:
                 if keys[pg.K_UP]:
-                    new_selection = max(0, selection -1)
+                    new_selection = max(0, self.selection -1)
                 else:
-                    new_selection = min(len(menu)-1, selection + 1)
+                    new_selection = min(len(self.menu)-1, self.selection + 1)
 
-                menu[selection].deselect()
-                menu[new_selection].select()
-                state.screen.blit(temporary_bg, (0, 0))
-                state.screen.blit(menu_BG, (0, 0))
-                for x in menu:
-                    state.screen.blit(x.image, x.rect)
-                    state.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
-                selection = new_selection
-                print(selection)
-                state.t = (False, False, False, False)
+                self.menu[self.selection].deselect()
+                self.menu[new_selection].select()
+                self.state.screen.blit(self.temporary_bg, (0, 0))
+                self.state.screen.blit(menu_BG, (0, 0))
+                for x in self.menu:
+                    self.state.screen.blit(x.image, x.rect)
+                    self.state.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
+                self.selection = new_selection
+                self.state.t = (False, False, False, False)
                 pg.time.set_timer(pg.USEREVENT + 1, 100)
 
             if keys[pg.K_RETURN]:
-                menu[selection].action()
-                # state.t = (False, False, False, False)
+                self.menu[self.selection].action()
+                # self.state.t = (False, False, False, False)
 
+class MainMenu:
+    def __init__(self, state):
+        self.state = state
+        self.temporary_BG = pg.transform.scale(BG, [WIDTH, HEIGHT])
+        state.screen.blit(self.temporary_BG, (0, 0))
+        self.W = state.screen.get_width()
+        self.H = state.screen.get_height()
+        shiphighlights = []
+        sh_width_padding = self.W // (len(State.ship_types.keys()) + 1)
+        sh_width = 20
+        for i, shipname in enumerate(State.ship_types.keys()):
+            shiphighlights.append(bt.B_Ship_Highlihgts(
+                (sh_width_padding + i * sh_width_padding - sh_width // 2,
+                 sh_width,
+                 60,
+                 200),
+                shipname,
+                state
+            ))
+        menu = [
+            shiphighlights,
+            [
+                bt.B_New_Game((self.W // 2 - 150, self.H * 2 // 3, 100, 30), state),
+                bt.B_Exit((self.W // 2 + 50, self.H * 2 // 3, 100, 30), state)]
+        ]
+        self.selection = [0, 0]
+        self.ship_selected = 0
+        menu[0][0].select()
+        self.menu = menu
+        self.menu_run = True
 
-def player_set(state):
-    temporary_BG = pg.transform.scale(BG, [WIDTH, HEIGHT])
-    state.screen.blit(temporary_BG, (0, 0))
-    W = state.screen.get_width()
-    H = state.screen.get_height()
-    shiphighlights = []
-    sh_width_padding = W // (len(State.ship_types.keys()) + 1)
-    sh_width = 20
-    for i, shipname in enumerate(State.ship_types.keys()):
-        shiphighlights.append(bt.B_Ship_Highlihgts(
-            (sh_width_padding + i*sh_width_padding - sh_width//2,
-             sh_width,
-             60,
-             200),
-            shipname,
-            state
-        ))
-    menu = [
-        shiphighlights,
-        [
-            bt.B_New_Game((W//2 - 150, H*2//3, 100, 30), state),
-            bt.B_Exit((W//2 + 50, H*2//3, 100, 30), state)]
-    ]
-    selection = [0, 0]
-    ship_selected = 0
-    menu[0][0].select()
-
-    menu_run = True
-
-    # draw buttons and ship abilities
-
-    while (menu_run):
-
-        state.screen.blit(temporary_BG, (0, 0))
-        for y in menu:
+    def __call__(self):
+        self.state.screen.blit(self.temporary_BG, (0, 0))
+        for y in self.menu:
             for x in y:
-                state.screen.blit(x.image, x.rect)
+                self.state.screen.blit(x.image, x.rect)
 
-        for x in menu[1]:
-            state.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
+        for x in self.menu[1]:
+            self.state.screen.blit(pg.font.Font.render(x.font, x.text, 0, WHITE), x.rect)
 
-        for i, line in enumerate(menu[0][ship_selected].text.split('\n')):
-            state.screen.blit(pg.font.Font.render(menu[0][ship_selected].font,
+        for i, line in enumerate(self.menu[0][self.ship_selected].text.split('\n')):
+            self.state.screen.blit(pg.font.Font.render(self.menu[0][self.ship_selected].font,
                                                   line,
                                                   0, WHITE),
-                              pg.Rect(W//2 -50, H//2 + i*20 - 50, 5, 5))
+                              pg.Rect(self.W//2 -50, self.H//2 + i*20 - 50, 5, 5))
 
-        pg.display.flip()
+        # pg.display.flip()
 
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -435,64 +419,64 @@ def player_set(state):
 
             if keys[pg.K_UP]:
 
-                if selection[0] > 0:
+                if self.selection[0] > 0:
 
-                    if selection[1] >= len(menu[selection[0]]) - 1:
-                        menu[selection[0] - 1][len(menu[selection[0]]) - 1].select()
-                        menu[selection[0]][selection[1]].deselect()
-                        selection[1] = len(menu[selection[0]]) - 1
+                    if self.selection[1] >= len(self.menu[self.selection[0]]) - 1:
+                        self.menu[self.selection[0] - 1][len(self.menu[self.selection[0]]) - 1].select()
+                        self.menu[self.selection[0]][self.selection[1]].deselect()
+                        self.selection[1] = len(self.menu[self.selection[0]]) - 1
 
                     else:
-                        menu[selection[0] - 1][selection[1]].select()
-                        menu[selection[0]][selection[1]].deselect()
+                        self.menu[self.selection[0] - 1][self.selection[1]].select()
+                        self.menu[self.selection[0]][self.selection[1]].deselect()
 
-                    selection[0] += -1
+                    self.selection[0] += -1
 
-                if selection[1] >= len(menu[selection[0]]):
-                    selection[1] = len(menu[selection[0]]) - 1
-                print(selection)
+                if self.selection[1] >= len(self.menu[self.selection[0]]):
+                    self.selection[1] = len(self.menu[self.selection[0]]) - 1
+                print(self.selection)
 
             if keys[pg.K_DOWN]:
 
-                if selection[0] < len(menu) - 1:
+                if self.selection[0] < len(self.menu) - 1:
 
-                    if selection[1] >= len(menu[selection[0] + 1]) - 1:
+                    if self.selection[1] >= len(self.menu[self.selection[0] + 1]) - 1:
 
-                        menu[selection[0] + 1][len(menu[selection[0] + 1]) - 1].select()
-                        menu[selection[0]][selection[1]].deselect()
-                        selection[1] = len(menu[selection[0] + 1]) - 1
+                        self.menu[self.selection[0] + 1][len(self.menu[self.selection[0] + 1]) - 1].select()
+                        self.menu[self.selection[0]][self.selection[1]].deselect()
+                        self.selection[1] = len(self.menu[self.selection[0] + 1]) - 1
 
                     else:
-                        menu[selection[0] + 1][selection[1]].select()
-                        menu[selection[0]][selection[1]].deselect()
-                    selection[0] += 1
-                print(selection)
+                        self.menu[self.selection[0] + 1][self.selection[1]].select()
+                        self.menu[self.selection[0]][self.selection[1]].deselect()
+                    self.selection[0] += 1
+                print(self.selection)
 
             if keys[pg.K_RIGHT]:
 
-                if selection[1] < len(menu[selection[0]]) - 1:
-                    menu[selection[0]][selection[1] + 1].select()
-                    menu[selection[0]][selection[1]].deselect()
-                    selection[1] += 1
+                if self.selection[1] < len(self.menu[self.selection[0]]) - 1:
+                    self.menu[self.selection[0]][self.selection[1] + 1].select()
+                    self.menu[self.selection[0]][self.selection[1]].deselect()
+                    self.selection[1] += 1
 
-                if selection[0] == 0:
-                    ship_selected = selection[1]
+                if self.selection[0] == 0:
+                    self.ship_selected = self.selection[1]
 
             if keys[pg.K_LEFT]:
 
-                if selection[1] > 0:
-                    menu[selection[0]][selection[1] - 1].select()
-                    menu[selection[0]][selection[1]].deselect()
-                    selection[1] += -1
+                if self.selection[1] > 0:
+                    self.menu[self.selection[0]][self.selection[1] - 1].select()
+                    self.menu[self.selection[0]][self.selection[1]].deselect()
+                    self.selection[1] += -1
 
-                if selection[0] == 0:
-                    ship_selected = selection[1]
+                if self.selection[0] == 0:
+                    self.ship_selected = self.selection[1]
 
             if keys[pg.K_RETURN]:
 
-                menu[selection[0]][selection[1]].action()
+                self.menu[self.selection[0]][self.selection[1]].action()
 
-                if selection[0] == 1 and selection[1] == 0:
-                    state.t = (False, False, False, False)
-                    menu_run = False
+                if self.selection[0] == 1 and self.selection[1] == 0:
+                    self.state.t = (False, False, False, False)
+                    self.menu_run = False
 

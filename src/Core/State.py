@@ -309,7 +309,7 @@ class State:
         # Collection of all current objects
         self.all_objects = []
 
-        self.state = 'game_started'
+        self.state = 'menu'
 
         self.movable = pg.sprite.Group()
 
@@ -380,9 +380,12 @@ class State:
 
         self.level = 0
         self.wave_spawning = False
-        self.pl = None
+        self.pl = Player.ship_assign(
+            self.picked_ship,
+            self.start_lives,
+            self
+        )
         # Game is paused or not
-        self.state = 'game_started'
         # 'paused'
         # 'game_over'
         # 'game_won'

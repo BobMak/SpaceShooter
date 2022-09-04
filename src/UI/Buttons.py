@@ -44,7 +44,7 @@ class B_Continue(Button):
 
     def action(self):
         self.state.t = (True, True, True, True)
-        self.state.state = "game_start"
+        self.state.state = "game"
 
 
 class B_Start_Over(Button):
@@ -65,18 +65,11 @@ class B_Start_Over(Button):
         for object in self.state.interface:
             object.kill()
 
-        Player.ship_assign(
-            self.state.picked_ship,
-            self.state.start_lives,
-            self.state
-        )
-
         self.state.save['level'] = 0
         self.state.config = 0
 
         Scripts.spawn_wave(self.state)
-        self.state.state = 'game_started'
-        # Scripts.main_loop(State.pl)
+        self.state.state = 'new_game'
 
 
 class B_New_Game(Button):
@@ -87,9 +80,7 @@ class B_New_Game(Button):
 
     def action(self):
         self.state.config = 0
-        Player.ship_assign(self.state.picked_ship, self.state.start_lives, self.state)
-
-        Scripts.main_loop(self.state)
+        self.state.state = 'new_game'
 
 
 class B_Stats(Button):
@@ -110,9 +101,6 @@ class B_Exit(Button):
         self.text = 'Exit'
 
     def action(self):
-        self.state.paused = False
-        pg.event.post(pg.event.Event(pg.QUIT, {'QUIT': True}))
-        pg.quit()
         self.state.state = "quit"
 
 
