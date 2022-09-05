@@ -125,7 +125,7 @@ projectile_types = {
             "n_frames": 10,
             "decay_rgb": (0, 7, 4),
             "start_rgb": (235, 120, 130),
-            "spawn_points": 190
+            "spawn_threshold": 190
         },
     },
     'big_bolt': {
@@ -139,7 +139,7 @@ projectile_types = {
             "n_frames": 10,
             "decay_rgb": (0, 10, 1),
             "start_rgb": (90, 200, 130),
-            "spawn_points": 60
+            "spawn_threshold": 60
         },
 
     },
@@ -154,7 +154,7 @@ projectile_types = {
             "n_frames": 15,
             "decay_rgb": (18, 2, 4),
             "start_rgb": (235, 50, 50),
-            "spawn_points": 200
+            "spawn_threshold": 200
         },
     },
     'heavy_bolt': {
@@ -168,7 +168,7 @@ projectile_types = {
             "n_frames": 15,
             "decay_rgb": (0, 2, 10),
             "start_rgb": (40, 190, 90),
-            "spawn_points": 10
+            "spawn_threshold": 10
         },
     },
 }
