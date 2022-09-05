@@ -1,1 +1,2 @@
 from space_shooter_env.envs.space_shooter import SpaceShooter
+from space_shooter_env.envs.space_shooter_nav import SpaceShooterNav

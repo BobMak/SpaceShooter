@@ -7,6 +7,7 @@ from stable_baselines3.common.callbacks import BaseCallback
 import wandb
 from matplotlib import pyplot as plt
 
+import torch
 import gym
 import space_shooter_env
 
@@ -22,11 +23,12 @@ class WandbCallback(BaseCallback):
             print("step: ", self.steps)
             # wandb.log({"rewards": self.rewards})
 
-def train_ppo():
-    env = gym.make("SpaceShooter-v0")
+
+def train_ppo(env_id="SpaceShooter-v0"):
+    env = gym.make(env_id)
     batch_size = 14000
     mini_batch_size = 3000
-    n_epochs = 80
+    n_epochs = 200
     model = PPO(
         "MlpPolicy",
         env, verbose=1,
@@ -35,7 +37,7 @@ def train_ppo():
         n_epochs=n_epochs,
         batch_size=mini_batch_size,
         learning_rate=1e-3,
-        policy_kwargs={"net_arch": [32, 32, 32, {'pi': [20], 'vf': [5]}]},
+        policy_kwargs={"net_arch": [256, 256, {'pi': [128], 'vf': [128]}]},
     )
     model.learn(total_timesteps=batch_size*n_epochs)  # total_timesteps=100000
     # model.learn(total_timesteps=1048576, callback=MyCallback())
@@ -44,28 +46,9 @@ def train_ppo():
     env.close()
 
 
-def train_dqn():
-    env = gym.make("SpaceShooter-v0")
-    batch_size = 14000
-    mini_batch_size = 3000
-    n_epochs = 80
-    model = DQN(
-        "MlpPolicy",
-        env, verbose=1,
-        batch_size=mini_batch_size,
-        learning_rate=1e-3,
-        # policy_kwargs={"net_arch": [32, 32, 32, {'pi': [20], 'vf': [5]}]},
-    )
-    model.learn(total_timesteps=batch_size*n_epochs)  # total_timesteps=100000
-    # model.learn(total_timesteps=1048576, callback=MyCallback())
-    model.save("dqn_pilot")
-
-    env.close()
-
-
-def train_ppo_wandb():
+def train_ppo_wandb(env_id="SpaceShooter-v0"):
     with wandb.init(project="SpaceShooter"):
-        env = gym.make("SpaceShooter-v0")
+        env = gym.make(env_id)
 
         config = wandb.config
         hidden_layers = [config.hidden_size_common] * config.n_common_layers
@@ -113,7 +96,6 @@ def train_td3_wandb():
 
         env.close()
 
-
 def sweep(count=10):
     sweep_config = {
         'method': 'random',
@@ -147,11 +129,11 @@ def sweep(count=10):
     wandb.agent(sweep_id, function=train_ppo_wandb, count=count)
 
 
-def evaulate(load=False):
-    env = gym.make("SpaceShooter-v0")
+def evaulate(load=False, env_id="SpaceShooter-v0"):
+    env = gym.make(env_id)
     print("evaluating...")
     actor_cirtic = {
-        'pi': [10, 10],
+        'pi': [256, 128, 10],
         'vf': [10, 10]
     }
     n_epochs = 8
@@ -163,7 +145,7 @@ def evaulate(load=False):
         n_steps=batch_size,
         batch_size=batch_size,
         n_epochs=n_epochs,
-        policy_kwargs={"net_arch": [28, 20, actor_cirtic]},
+        policy_kwargs={"net_arch": [256, 256, actor_cirtic]},
     )
     if load:
         model = PPO.load("ppo_pilot")
@@ -181,7 +163,7 @@ def evaulate(load=False):
 
 
 if __name__ == '__main__':
-    # train_ppo()
+    print("cuda is available:", torch.cuda.is_available())
+    train_ppo(env_id="SpaceShooterNav-v0")
     # evaulate(load=True)
-    train_dqn()
     # sweep(100)
