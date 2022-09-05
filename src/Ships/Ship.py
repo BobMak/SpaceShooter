@@ -185,16 +185,10 @@ class Ship(GObject, Vulnerable):
     def stabilize(self):
         """if the user is not pressing rotate, the ship should stick to the current
         rotation angle and position"""
-        diff_ang = self.target_rotation - self.look_dir
-        if not self.isrotating and abs(diff_ang) > 0.01:
-            if diff_ang > 180:
-                diff_ang -= 360
-            if diff_ang < -180:
-                diff_ang += 360
+        if not self.isrotating and abs(self.av) > 0.01:
             diff_avel = self.av
             super().apply_force_angular(
-                + np.min([np.abs(diff_ang), self.rotation_rate_max])*np.sign(diff_ang)
-                - np.min([np.abs(diff_avel)/5, self.rotation_rate_max])*np.sign(diff_avel)
+                -np.min([np.abs(diff_avel), self.rotation_rate_max])*np.sign(diff_avel)
             )
 
     def draw_rotating(self):
