@@ -193,8 +193,8 @@ class Ship(GObject, Vulnerable):
                 diff_ang += 360
             diff_avel = self.av
             super().apply_force_angular(
-                + np.min([np.abs(diff_ang), self.rotation_rate_max])*np.sign(diff_ang) \
-                - np.min([np.abs(diff_avel), self.rotation_rate_max])
+                + np.min([np.abs(diff_ang), self.rotation_rate_max])*np.sign(diff_ang)
+                - np.min([np.abs(diff_avel)/5, self.rotation_rate_max])*np.sign(diff_avel)
             )
 
     def draw_rotating(self):
