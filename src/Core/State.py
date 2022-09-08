@@ -31,7 +31,7 @@ ship_types = {
         'acceleration_burn_rate': 0.01,
         'acceleration_reserve_regeneration': 0.008,
         'controls': ['left', 'right', 'up', 'down', 'shoot', 'shield', 'blink'],
-        'controls_text': 'shoot - space\nleft - a\nright - d\nup - w\ndown - s\nshield - c',
+        'controls_text': 'shoot - space\nleft - a\nright - d\nup - w\ndown - s\nshield - c\nblink - b',
         'hit_box':[[20,20,0,0]]
     },
     'hippo': {
