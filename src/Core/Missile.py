@@ -24,7 +24,7 @@ class Missile(Projectile):
                          mass=mass,
                          env_friction=0.3,
                          state=state)
-        self.compute_period = 5
+        self.compute_period = 2
         self.compute_count = 0
         self.d_ang =        rotation_velocity
         self.thrust =       thrust

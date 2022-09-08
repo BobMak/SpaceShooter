@@ -1,3 +1,5 @@
+import time
+
 import Utils
 from Core.Mechanics import *
 
@@ -47,7 +49,7 @@ class Ship(GObject, Vulnerable):
 
         self.max_hp = hp
         self.max_shield_hp = shield
-        self.rotation_rate = rotation_rate // 2
+        self.rotation_rate = rotation_rate #// 2
         self.rotation_rate_max = rotation_rate
         self.acceleration = acceleration
         self.deacceleration = deacceleration
@@ -104,6 +106,8 @@ class Ship(GObject, Vulnerable):
         # stabilizers should be applied.
         self.target_rotation = self.look_dir
         self.isrotating = False
+        # don't allow the ship to accelerate more if it's momentum is too big
+        self.dostabilize = True
 
     def addMissiles(self, number):
         self.missiles += number
@@ -162,40 +166,52 @@ class Ship(GObject, Vulnerable):
     def control_rotate(self, dir):
         super()._rotate(self.rotation_rate*dir)
 
-    def rotate(self, ang, manual=True):
+    def rotate(self, ang, manual=True, pow=1.0):
         # super().rotate(ang)
-        self.rotation_rate = np.min([self.rotation_rate_max, self.rotation_rate + self.rotation_rate_max/300])
-        if manual:
-            self.isrotating = 5
-            self.target_rotation = self.look_dir + ang * self.rotation_rate
         sign = np.sign(ang)
-        super().apply_force_angular(self.rotation_rate*sign)
+        acc = True
+        if manual:
+            self.rotation_rate = np.min([self.rotation_rate_max, self.rotation_rate + self.rotation_rate_max / 300])
+            rotation_rate = self.rotation_rate
+            self.isrotating = True
+            self.target_rotation = self.look_dir #+ ang * self.rotation_rate_max
+            if self.dostabilize:
+                # don't acclererate in that direction if the angular momentum is too big
+                mdiff = self.av * self.m - self.rotation_rate_max * sign * 30
+                if mdiff * sign > 0:
+                    acc = False
+        else:
+            rotation_rate = self.rotation_rate_max * pow
+        if acc:
+            super().apply_force_angular(rotation_rate*sign)
+            # if self.rotation_rate_max > 0.1:
+            # 90+90*self.rect.width/self.rect.height
+            Animation.FX_engine_mark(self, 90 + 165*sign, direction=sign*90, h=int(self.rotation_rate_max), w=int(self.rotation_rate/2))
+
         for x in self.turrets:
-            x.apply_force_angular(self.rotation_rate)
-            Utils.orbit_rotate(self, x, -self.rotation_rate * sign,
+            # x.apply_force_angular(self.rotation_rate_max)
+            Utils.orbit_rotate(self, x, -self.rotation_rate_max * sign,
                                x.distance, x.orbit_ang)
 
         for x in self.shields:
-            x.apply_force_angular(self.rotation_rate*sign)
+            # x.apply_force_angular(self.rotation_rate_max*sign)
+            x._rotate(self.av)
 
         for x in self.hull_group:
-            Utils.orbit_rotate(self, x, -self.rotation_rate * sign,
+            Utils.orbit_rotate(self, x, -self.rotation_rate_max * sign,
                                x.distance, x.orbit_ang)
 
     def stabilize(self):
         """if the user is not pressing rotate, the ship should stick to the current
         rotation angle and position"""
-        diff_ang = self.target_rotation - self.look_dir
+        diff_ang = Utils.angle_diff(self.target_rotation, self.look_dir+self.av)
         if not self.isrotating and abs(diff_ang) > 0.01:
             if diff_ang > 180:
                 diff_ang -= 360
             if diff_ang < -180:
                 diff_ang += 360
-            diff_avel = self.av
-            super().apply_force_angular(
-                + np.min([np.abs(diff_ang), self.rotation_rate_max])*np.sign(diff_ang) \
-                - np.min([np.abs(diff_avel), self.rotation_rate_max])
-            )
+            pow = np.min([1.0, abs(diff_ang) / self.rotation_rate_max])
+            self.rotate(np.sign(diff_ang), manual=False, pow=pow)
 
     def draw_rotating(self):
         super().draw_rotating()
@@ -205,10 +221,11 @@ class Ship(GObject, Vulnerable):
     def update(self):
         self.acceleration_reserve = min(self.max_acceleration_reserve,
                                         self.acceleration_reserve_regeneration + self.acceleration_reserve)
-        if self.isrotating==0:
+        if not self.isrotating:
             self.stabilize()
-        else:
-            self.isrotating -= 1
+        self.isrotating = False
+        # else:
+        #     self.isrotating -= 1
 
         for n in range(len(self.locks)):
             if self.locks[n]:

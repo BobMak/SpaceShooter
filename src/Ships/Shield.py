@@ -4,7 +4,7 @@ from Core.Mechanics import Animation
 
 class Shield(Animation):
     def __init__(self, images_arr, width, height, x, y, source, type=0, state=None):
-        super().__init__(images_arr, width, height, x, y, type, state=state)
+        super().__init__(images_arr, width, height, x, y, type=type, rand=False, look_dir=90, state=state)
         self.source = source
         self.v = source.v
         self.type = type
@@ -44,6 +44,6 @@ class Shield(Animation):
                               source.rect.top, source, 1,
                               state=source.state)
 
-            # shld_obj.rotate(source.look_dir)
+            shld_obj._rotate(source.look_dir+90)
             source.sh_add(shld_obj)
             source.state.effects.add(shld_obj)

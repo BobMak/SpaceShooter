@@ -53,7 +53,7 @@ class Moving:
         self.a = acceleration
         self.aa = angular_acceleration
         # non-elastic collision
-        self.COLLISION_ELASTICITY = -0.2
+        self.COLLISION_ELASTICITY = 0.2
         # float representation of the position, since rect.x and rect.y are ints
         # we will lose a lot of precision when moving if we just update ints
         self.pos = (self.rect.x, self.rect.y)
@@ -491,7 +491,7 @@ class Animation(GObject):
     '''
     buffer = {}
     def __init__(self, images_arr, width, height, x, y, rand=False, finit=True,
-                type=0, hold_f=None, delay=0, state=None):
+                type=0, hold_f=None, delay=0, look_dir=-90, state=None):
         super().__init__(images_arr[0], x, y, width=width, height=height, state=state)
         self.frames_count = 0
         self.delay_count = 0
@@ -499,7 +499,7 @@ class Animation(GObject):
         if rand:
             self.look_dir = random.randint(-180, 180)
         else:
-            self.look_dir = -90
+            self.look_dir = look_dir
         self.frames = len(images_arr)
         self.type = type
         self.delay = delay
@@ -686,18 +686,20 @@ class Animation(GObject):
         return obj
 
     @staticmethod
-    def FX_engine_mark(source):
+    def FX_engine_mark(source, rotation=90, direction=0, dist=None, w=10, h=10):
+        if not dist:
+            dist = source.rect.height // 2
         object = Animation(
-            Assets.engi, 10, 10,
+            Assets.engi, w, h,
             source.rect.centerx
-               + source.rect.height // 2
-               * np.cos(np.deg2rad(source.look_dir + 90)),
+               + dist
+               * np.cos(np.deg2rad(source.look_dir + rotation)),
             source.rect.centery
-               + source.rect.height // 2
-               * np.sin(np.deg2rad(source.look_dir + 90)),
+               + dist
+               * np.sin(np.deg2rad(source.look_dir + rotation)),
             state=source.state
         )
-        object.look_dir = source.look_dir
+        object.look_dir = source.look_dir + direction
         object.v = source.v
 
     @staticmethod
